@@ -2,7 +2,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
 
-const TMP_STORE_PATH = path.join(os.tmpdir(), 'zalwill-vercel-store-v10.json');
+const TMP_STORE_PATH = path.join(os.tmpdir(), 'zalwill-vercel-store-v11.json');
 
 function getInitialStore() {
   return {
@@ -127,14 +127,29 @@ function getInitialStore() {
         skills: ['Java', 'Spring Batch', 'Oracle', 'SQL튜닝', 'ProFrame'],
         domains: ['퇴직연금', '계정계 코어'],
         availability_status: '즉시투입가능', available_date: '2026-11-22', current_end_date: '2026-11-15',
-        desired_rate: 1080, contract_rate: 1050, rating: 4.8,
-        review_summary: '[기검증 우수 인력] 농협은행·우리은행 퇴직연금 디폴트옵션 및 대용량 일마감 정산 배치 최적화 전문가.',
-        verified: 1, resourced_count: 2, parse_seconds: 58,
+        desired_rate: 1080, contract_rate: 0, rating: 0,
+        review_summary: '[신규 지원 인력] 당사 프로젝트 수행 이력 없음 (타사 농협·우리은행 퇴직연금 배치 수행 · 인터뷰 검증 완료)',
+        verified: 0, resourced_count: 0, parse_seconds: 58,
         career_history: [
           { project: 'NH농협은행 퇴직연금 디폴트옵션 및 수수료 정산 구축', client: 'NH농협은행', period: '2024.05 ~ 2026.10', role: '배치 선임개발', tech: 'Java, Spring Batch, Oracle' },
           { project: '우리은행 차세대 퇴직연금 원장/배치 고도화', client: '우리은행', period: '2022.03 ~ 2024.02', role: '코어/배치 개발', tech: 'ProFrame, Oracle, SQL튜닝' }
         ],
         updated_at: '2026-11-11'
+      },
+      {
+        id: 'p_9', name: '이준호', employment_type: '외주 프리랜서', is_internal: 0, tech_grade: '고급', experience_years: 9, birth_year: 1992,
+        phone: '010-3901-8821', email: 'jh.lee.pension@naver.com', education: '동국대학교 컴퓨터공학과 학사',
+        certifications: ['정보처리기사', 'SQLD'],
+        skills: ['Java', 'Spring Boot', 'Spring Batch', 'Oracle'],
+        domains: ['퇴직연금', '수신/신탁'],
+        availability_status: '즉시투입가능', available_date: '2026-11-28', current_end_date: '2026-11-20',
+        desired_rate: 960, contract_rate: 0, rating: 0,
+        review_summary: '[신규 파싱 인력] 당사 프로젝트 수행 이력 없음 (오픈 구인 신규 지원자)',
+        verified: 0, resourced_count: 0, parse_seconds: 51,
+        career_history: [
+          { project: '기업은행 퇴직연금 비대면 운용지시 및 정산 개선', client: 'IBK기업은행', period: '2024.04 ~ 2026.09', role: '백엔드/배치 개발', tech: 'Java, Spring Batch, Oracle' }
+        ],
+        updated_at: '2026-11-12'
       }
     ],
     projects: [
@@ -534,12 +549,19 @@ function getInitialStore() {
       {
         id: 'int_3', posting_id: 'post_1', project_id: 'prj_1', slot_id: 'slot_103', candidate_profile_id: 'p_8',
         candidate_name: '김도현', candidate_type: '외주 프리랜서', candidate_phone: '010-5512-7789', candidate_email: 'dh.kim.batch@gmail.com',
-        available_from: '2026-11-22', recommender: '타겟소싱 지원', desired_rate: 1080,
+        available_from: '2026-11-22', recommender: '타겟소싱 지원 (신규)', desired_rate: 1080,
         resume_summary: '농협은행·우리은행 퇴직연금 디폴트옵션 및 일마감 정산 배치 개발 11년차 고급/특급 개발자.',
         tech_grade: '특급', skills: ['Java', 'Spring Batch', 'Oracle', 'SQL튜닝', 'ProFrame'], domains: ['퇴직연금', '계정계 코어'],
-        status: '인터뷰통보완료', interview_date: '2026-11-17 15:00', interview_method: '화상(Zoom/Teams)',
+        status: '면접진행완료', interview_date: '2026-11-13 15:00', interview_method: '화상(Zoom/Teams)',
         interviewer_user_id: 'u_master', interviewer_name: '조성현 상무', template_id: 'tpl_pension_batch',
-        checklist_results: [], total_score: 0, interviewer_opinion: '', final_decision_note: '', created_at: '2026-11-12'
+        checklist_results: [
+          { question: 'DB/DC/IRP 제도별 퇴직연금 부담금 산출 및 수수료 정산 배치 설계 경험이 있는가?', score: 4.5, checked: true, note: '농협·우리은행 디폴트옵션 정산 배치 직접 구현' },
+          { question: 'Spring Batch Chunk/Tasklet 대용량 처리 시 데드락 및 재처리 아키텍처를 설명할 수 있는가?', score: 4.5, checked: true, note: 'Skip/Retry 및 일마감 재시작 설계 이해도 우수' },
+          { question: '야간 일마감 배치 장애나 현업의 급박한 요건 변경 상황에서 동료·PL과 어떻게 소통하며 해결하는가?', score: 4.5, checked: true, note: '침착하게 원인 공유 후 해결하는 태도' },
+          { question: '장기 금융 SI 상주 프로젝트에서 팀워크를 해치지 않고 본인의 책임을 끝까지 완수하는 성향인가?', score: 5.0, checked: true, note: '성실하고 책임감이 높음' }
+        ],
+        total_score: 4.6, interviewer_opinion: '당사 프로젝트 수행 이력은 없으나, 타사 퇴직연금 배치 경험과 직무·성향 인터뷰 평가 결과가 우수하여 신규 투입 추천함.',
+        final_decision_note: '', created_at: '2026-11-12'
       },
       {
         id: 'int_4', posting_id: 'post_3', project_id: 'prj_2', slot_id: 'slot_202', candidate_profile_id: 'p_7',

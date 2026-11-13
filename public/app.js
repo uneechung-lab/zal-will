@@ -1541,54 +1541,26 @@ const PROFILE_EVALUATIONS_MAP = {
       reviewDate: '2026.10.31.',
       comment: '채권·펀드 수탁 및 기준가(NAV) 도메인 지식이 탄탄하여 증권사/운용사 프로젝트 투입 시 즉시 전력감이 되는 인재입니다.'
     }
-  ],
-  p_8: [
-    {
-      evaluatorType: 'PL',
-      evaluatorName: '정윤희 부장',
-      evaluatorOrg: '사내 연금신탁개발팀 (수행 PL)',
-      overallScore: 5.0,
-      metrics: { expertise: 5.0, satisfaction: 5.0, communication: 5.0, schedule: 5.0, proactivity: 5.0 },
-      projectTitle: 'NH농협은행 퇴직연금 디폴트옵션 및 대용량 수수료 정산 배치 구축',
-      contractTags: ['기간제(상주)', '배치·코어개발', '금융코어'],
-      contractAmount: '86,400,000원',
-      durationDays: '180일',
-      contractDate: '2024년 05월 07일',
-      reviewDate: '2026.10.21.',
-      comment: '대용량 일마감 정산 배치 튜닝 및 장애 대응 역량이 매우 우수하며, 오픈 초기부터 안정화 단계까지 책임감 있게 완수해 주셨습니다.'
-    },
-    {
-      evaluatorType: '팀원',
-      evaluatorName: '윤서연 차장',
-      evaluatorOrg: '사내 데이터아키텍처팀 (함께 수행한 DA)',
-      overallScore: 4.8,
-      metrics: { expertise: 5.0, satisfaction: 4.8, communication: 4.8, schedule: 4.9, proactivity: 4.7 },
-      projectTitle: 'NH농협은행 퇴직연금 디폴트옵션 및 대용량 수수료 정산 배치 구축',
-      contractTags: ['기간제(상주)', '배치 튜닝 협업', '동료 평가'],
-      contractAmount: '86,400,000원',
-      durationDays: '180일',
-      contractDate: '2024년 05월 07일',
-      reviewDate: '2026.10.23.',
-      comment: '대용량 파티션 테이블 조회 및 인덱스 힌트 적용 등 DA 가이드를 가장 정확하게 이해하고 배치 코드에 반영해 주셨습니다.'
-    },
-    {
-      evaluatorType: '고객사',
-      evaluatorName: '4v****** (협력·발주처 PM)',
-      evaluatorOrg: 'NH농협은행 퇴직연금부 (주관: 포밸류소프트)',
-      overallScore: 5.0,
-      metrics: { expertise: 5.0, satisfaction: 5.0, communication: 5.0, schedule: 5.0, proactivity: 5.0 },
-      projectTitle: 'NH농협은행 퇴직연금 디폴트옵션 및 대용량 수수료 정산 배치 구축',
-      contractTags: ['기간제(상주)', '배치·코어개발', '고객사 평가'],
-      contractAmount: '86,400,000원',
-      durationDays: '180일',
-      contractDate: '2024년 05월 07일',
-      reviewDate: '2026.10.25.',
-      comment: '디폴트옵션 만기 재예치 및 수수료 정산 배치를 기한 내 완벽히 구축해 주셔서 감사드립니다.'
-    }
   ]
 };
 
+function hasWorkedWithCompany(person) {
+  if (!person) return false;
+  if (person.is_internal) return true;
+  if (Number(person.resourced_count || 0) > 0) return true;
+  const matchedProfile = (state.data?.profiles || []).find(
+    p => p.id === person.id || p.name === person.name
+  );
+  if (matchedProfile) {
+    return Boolean(matchedProfile.is_internal) || Number(matchedProfile.resourced_count || 0) > 0;
+  }
+  return false;
+}
+
 function getProfileEvaluations(person) {
+  if (!hasWorkedWithCompany(person)) {
+    return [];
+  }
   if (person.id && PROFILE_EVALUATIONS_MAP[person.id]) {
     return PROFILE_EVALUATIONS_MAP[person.id];
   }
@@ -1616,20 +1588,6 @@ function getProfileEvaluations(person) {
       contractDate: '2025년 03월 07일',
       reviewDate: '2026.10.21.',
       comment: person.review_summary || '프로젝트 수행 기간 동안 높은 기술 전문성과 책임감으로 핵심 과업을 완수하였으며 팀원들과의 호흡도 우수했습니다.'
-    },
-    {
-      evaluatorType: 'PM',
-      evaluatorName: '김지영 이사',
-      evaluatorOrg: '사내 전략제안·소싱팀 (프로젝트 PM)',
-      overallScore: 4.8,
-      metrics: { expertise: 4.8, satisfaction: 4.8, communication: 4.9, schedule: 4.9, proactivity: 4.7 },
-      projectTitle: firstCareer.project,
-      contractTags: ['기간제(상주)', '일정·품질관리', '내부 PM 평가'],
-      contractAmount: `${((Number(person.contract_rate || person.desired_rate || 950) * 6) * 10000).toLocaleString()}원`,
-      durationDays: '180일',
-      contractDate: '2025년 03월 07일',
-      reviewDate: '2026.10.24.',
-      comment: '진척도 관리와 이슈 공유가 투명하고 일정 준수 의지가 강해 PM 입장에서 매우 든든했던 인력입니다.'
     }
   ];
 }
@@ -1703,15 +1661,99 @@ function getEvaluatorBadgeMeta(type) {
   return map[type] || map['PL'];
 }
 
+function renderInterviewEvaluationSection(person, interviewOverride = null) {
+  const interviews = state.data?.interviews || [];
+  const permissions = state.data?.permissions || {};
+  const currentUser = state.data?.currentUser || null;
+  const inv = interviewOverride || interviews.find(
+    i => (person.id && i.candidate_profile_id === person.id) || i.candidate_name === person.name
+  );
+  if (!inv) return '';
+
+  const hasResults = Array.isArray(inv.checklist_results) && inv.checklist_results.length > 0;
+  const canEval = permissions.can_evaluate_interviews || (currentUser && inv.interviewer_user_id === currentUser.id);
+  const scoreVal = Number(inv.total_score || 0);
+
+  return `
+    <div class="profile-eval-section">
+      <div class="profile-eval-header">
+        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+          <h4 class="profile-eval-title">인터뷰 평가 ${hasResults ? `(검증 ★ ${scoreVal.toFixed(1)}점)` : '(면접 예정)'}</h4>
+          <span style="font-size:12px; color:#64748b;">직무역량 및 성향·태도 필수질문 체크리스트 검증 (수행 평가와 별도 관리)</span>
+        </div>
+        ${canEval ? `
+          <button type="button" class="btn btn-outline btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="openEvaluateChecklistModal('${inv.id}')">
+            ${svgIcon('check', 13)} ${hasResults ? '인터뷰 평가 수정' : '인터뷰 평가 입력'}
+          </button>
+        ` : ''}
+      </div>
+
+      <div class="profile-eval-card">
+        <div class="eval-client-row">
+          <div class="eval-client-logo" style="background-color:#334155;">면접</div>
+          <div class="eval-client-info">
+            <div class="eval-client-top">
+              <span class="eval-client-tag" style="background-color:#f1f5f9; color:#334155;">인터뷰 면접관</span>
+              <strong class="eval-client-code">${inv.interviewer_name || '조성현 상무'}</strong>
+              <span class="eval-client-sep">|</span>
+              <span class="eval-client-name">일시: ${inv.interview_date || '미지정'} (${inv.interview_method || '화상'}) · 상태: ${inv.status}</span>
+            </div>
+            ${hasResults ? `
+              <div class="eval-client-rating">
+                ${renderStarIcons(scoreVal)}
+                <strong class="eval-score-num">${scoreVal.toFixed(2)}</strong>
+              </div>
+            ` : `
+              <div style="font-size:13px; color:#d97706; font-weight:500; margin-top:2px;">
+                아직 인터뷰 평가 입력 전입니다. 면접 진행 후 필수질문 체크리스트 평가를 등록하세요.
+              </div>
+            `}
+          </div>
+        </div>
+
+        ${hasResults ? `
+          <div class="eval-detail-box">
+            <div style="padding:14px 18px; background:#ffffff; display:flex; flex-direction:column; gap:10px;">
+              ${inv.checklist_results.map((item, idx) => `
+                <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; font-size:13px; border-bottom:${idx < inv.checklist_results.length - 1 ? '1px solid #f1f5f9' : 'none'}; padding-bottom:${idx < inv.checklist_results.length - 1 ? '8px' : '0'};">
+                  <div style="flex:1; min-width:220px; color:#1e293b; font-weight:500;">
+                    <span style="color:#64748b; font-weight:600; margin-right:4px;">Q${idx + 1}.</span>${item.question}
+                  </div>
+                  <div style="display:flex; align-items:center; gap:10px;">
+                    <span style="font-size:12px; color:#64748b; background:#f8fafc; padding:2px 8px; border-radius:6px; border:1px solid #e2e8f0;">${item.note || '검증 완료'}</span>
+                    ${renderSegmentedEvalBar(item.score)}
+                    <strong class="eval-metric-val">${Number(item.score || 4.5).toFixed(1)}</strong>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+
+          <div class="eval-comment-block">
+            <div class="eval-comment-head">
+              <strong>면접관 종합 평가 의견</strong>
+              <span>${(inv.interview_date || '2026.11.13').slice(0, 10).replace(/-/g, '.')}.</span>
+            </div>
+            <div class="eval-comment-body">${inv.interviewer_opinion || '직무 역량 및 협업 태도 검증 완료.'}</div>
+          </div>
+        ` : ''}
+      </div>
+    </div>
+  `;
+}
+
 function renderProfileEvaluationSection(person) {
   const evaluations = getProfileEvaluations(person);
+  if (!evaluations || evaluations.length === 0) {
+    return '';
+  }
   const avgTotal = (evaluations.reduce((s, e) => s + Number(e.overallScore || 5), 0) / evaluations.length).toFixed(2);
   return `
     <div class="profile-eval-section">
       <div class="profile-eval-header">
         <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
           <h4 class="profile-eval-title">프로젝트 수행 다면 평가 (${evaluations.length}건 · 평균 ★ ${avgTotal})</h4>
-          <span style="font-size:12px; color:#64748b;">사내 임원 · PM · PL · 동료 팀원 및 고객사 통합 평가</span>
+          <span style="font-size:12px; color:#64748b;">당사 프로젝트 수행 인력 대상 — 사내 임원 · PM · PL · 동료 팀원 및 고객사 평가</span>
         </div>
         <span class="profile-eval-more">${evaluations.length}개 모두 보기 ›</span>
       </div>
@@ -1800,16 +1842,22 @@ function openProfileDetailModal(profileId) {
   const isOwn = currentUser && currentUser.linked_profile_id === p.id;
   const canEdit = permissions?.can_view_all_profiles || isOwn;
   const careerHistory = p.career_history || [];
+  const workedBefore = hasWorkedWithCompany(p);
 
-  openModal(`인재 상세 프로필 및 프로젝트 수행 평가 — ${p.name} (${p.tech_grade})`, `
+  openModal(`인재 상세 프로필 — ${p.name} (${p.tech_grade})`, `
     <div style="display:flex; flex-direction:column; gap:18px;">
       <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
         ${renderProfileIdentityHeader(p)}
-        ${canEdit ? `
-          <button type="button" class="btn btn-outline btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="openEditProfileModal('${p.id}')">
-            ${svgIcon('edit', 13)} 프로필·가용일 수정
-          </button>
-        ` : ''}
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span class="zal-status-pill ${workedBefore ? 'green' : 'gray'}">
+            ${workedBefore ? (p.is_internal ? '사내 재직 인력' : `당사 수행이력 보유 (재소싱 ${p.resourced_count}회)`) : '당사 프로젝트 수행이력 없음'}
+          </span>
+          ${canEdit ? `
+            <button type="button" class="btn btn-outline btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="openEditProfileModal('${p.id}')">
+              ${svgIcon('edit', 13)} 프로필·가용일 수정
+            </button>
+          ` : ''}
+        </div>
       </div>
 
       <div class="form-grid" style="margin-bottom:0;">
@@ -1864,6 +1912,7 @@ function openProfileDetailModal(profileId) {
         </table>
       </div>
 
+      ${renderInterviewEvaluationSection(p)}
       ${renderProfileEvaluationSection(p)}
     </div>
   `);
@@ -1896,16 +1945,24 @@ function openCandidateResumeModal(interviewId) {
     skills: inv.skills || ['Java', 'Oracle'],
     availability_status: '즉시투입가능',
     desired_rate: inv.desired_rate,
-    rating: inv.total_score > 0 ? inv.total_score : 5.0,
+    rating: inv.total_score > 0 ? inv.total_score : 0,
     review_summary: inv.interviewer_opinion || inv.resume_summary,
-    career_history: careerHistory
+    career_history: careerHistory,
+    is_internal: 0,
+    resourced_count: 0
   };
+  const workedBefore = hasWorkedWithCompany(personObj);
 
-  openModal(`지원자 상세 프로필 및 평가 — ${inv.candidate_name} (${inv.tech_grade})`, `
+  openModal(`지원자 상세 프로필 — ${inv.candidate_name} (${inv.tech_grade})`, `
     <div style="display:flex; flex-direction:column; gap:18px;">
       <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
         ${renderProfileIdentityHeader(personObj)}
-        <span class="zal-status-pill ${inv.status === '면접진행완료' || inv.status === '최종선정' ? 'green' : 'amber'}">${inv.status}</span>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span class="zal-status-pill ${workedBefore ? 'green' : 'gray'}">
+            ${workedBefore ? `당사 수행이력 보유 (재소싱 ${personObj.resourced_count || 1}회)` : '신규 지원 (당사 수행이력 없음)'}
+          </span>
+          <span class="zal-status-pill ${inv.status === '면접진행완료' || inv.status === '최종선정' ? 'green' : 'amber'}">${inv.status}</span>
+        </div>
       </div>
 
       <div class="form-grid" style="margin-bottom:0;">
@@ -1960,13 +2017,8 @@ function openCandidateResumeModal(interviewId) {
         </table>
       </div>
 
+      ${renderInterviewEvaluationSection(personObj, inv)}
       ${renderProfileEvaluationSection(personObj)}
-
-      <div style="display:flex; justify-content:space-between; align-items:center; padding-top:8px; border-top:1px solid #f1f5f9;">
-        <span style="font-size:13px; color:#64748b;">
-          면접 일정: <strong>${inv.interview_date || '미지정'} (${inv.interview_method || '화상'})</strong> · 면접관: <strong>${inv.interviewer_name || '조성현 상무'}</strong>
-        </span>
-      </div>
     </div>
   `);
 }
