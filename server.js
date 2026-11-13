@@ -22,7 +22,9 @@ const server = http.createServer(async (req, res) => {
   const urlObj = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
 
   if (urlObj.pathname.startsWith('/api/')) {
-    return apiHandler(req, res);
+    delete require.cache[require.resolve('./api/index.js')];
+    const freshApiHandler = require('./api/index.js');
+    return freshApiHandler(req, res);
   }
 
   let filePath = path.join(PUBLIC_DIR, urlObj.pathname === '/' ? 'index.html' : urlObj.pathname);
