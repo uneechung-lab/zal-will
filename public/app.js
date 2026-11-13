@@ -1204,6 +1204,74 @@ function renderPostingApplicantBox(post) {
   `;
 }
 
+function renderInterviewVerticalCard(inv, idx, permissions, currentUser) {
+  const skills = Array.isArray(inv.skills) ? inv.skills : ['Java', 'Oracle'];
+  const visibleSkills = skills.slice(0, 2);
+  const extraSkillCount = Math.max(0, skills.length - 2);
+  const isDone = inv.status === '면접진행완료' || inv.status === '최종선정';
+  const dateBadgeText = inv.interview_date
+    ? `면접 ${inv.interview_date.slice(5)}`
+    : '일정조율중';
+  const primarySkill = skills[0] || 'Java';
+  const primaryDomain = (inv.domains && inv.domains[0]) || '금융SI';
+
+  return `
+    <article class="inv-vertical-card">
+      <div class="inv-vcard-top">
+        <div class="inv-vcard-badges">
+          <span class="inv-vbadge-gray">${inv.status}</span>
+          <span class="${isDone ? 'inv-vbadge-green' : 'inv-vbadge-red'}">${isDone && inv.total_score > 0 ? `검증 ★ ${inv.total_score}` : dateBadgeText}</span>
+        </div>
+        <span class="inv-vcard-heart">♡</span>
+      </div>
+
+      <div class="inv-vcard-banner theme-${idx % 3}">
+        <div class="inv-banner-mark">
+          <span style="color:#f26544;">●</span>
+          <span>${inv.candidate_name}</span>
+          <span style="font-size:13.5px; font-weight:500; opacity:0.85;">(${inv.tech_grade})</span>
+        </div>
+        <div class="inv-banner-sub">🗓️ ${inv.interview_date || '일정 미지정'} · ${inv.interview_method || '화상'}</div>
+        <div class="inv-banner-sub">면접관: ${inv.interviewer_name || '미배정'}</div>
+      </div>
+
+      <div class="inv-vcard-title">
+        [${inv.tech_grade} 개발자/${primarySkill}/${primaryDomain}/${inv.candidate_type}] ${inv.resume_summary}
+      </div>
+
+      <div class="inv-vcard-skills">
+        ${visibleSkills.map(sk => `<span class="inv-skill-pill">${sk}</span>`).join('')}
+        ${extraSkillCount > 0 ? `<span class="inv-skill-more">외 +${extraSkillCount}개</span>` : ''}
+      </div>
+
+      <div class="inv-vcard-meta">
+        <div class="inv-vcard-meta-row">
+          <span>${inv.tech_grade}</span>
+          <span style="color:#cbd5e1;">/</span>
+          <span>📍 가용일 ${inv.available_from}</span>
+        </div>
+        <div class="inv-vcard-meta-row">
+          <span style="color:#64748b;">희망 단가</span>
+          <strong style="color:#0f172a; font-weight:600;">
+            ${inv.desired_rate !== null ? `월 ${Number(inv.desired_rate).toLocaleString()}만원` : '🔒 단가비공개'}
+          </strong>
+        </div>
+      </div>
+
+      ${(permissions.can_schedule_interviews || permissions.can_evaluate_interviews || (currentUser && inv.interviewer_user_id === currentUser.id)) ? `
+        <div class="inv-vcard-actions">
+          ${permissions.can_schedule_interviews ? `
+            <button class="btn btn-outline btn-sm" style="flex:1;" onclick="openScheduleInterviewModal('${inv.id}')">🗓️ 일정·면접관</button>
+          ` : ''}
+          ${(permissions.can_evaluate_interviews || (currentUser && inv.interviewer_user_id === currentUser.id)) ? `
+            <button class="btn btn-primary btn-sm" style="flex:1;" onclick="openEvaluateChecklistModal('${inv.id}')">✅ 필수질문·평가</button>
+          ` : ''}
+        </div>
+      ` : ''}
+    </article>
+  `;
+}
+
 function renderProjectDetailView(el, prj, postings, interviews, templates, permissions, currentUser, canManagePrj) {
   const totalSlots = prj.to_slots.length;
   const filledSlots = prj.to_slots.filter(s => s.assigned_profile_id).length;
@@ -1412,55 +1480,16 @@ function renderProjectDetailView(el, prj, postings, interviews, templates, permi
       `}
     </div>
 
-    <!-- 해당 프로젝트 지원자 인터뷰(면접) & 필수질문 검증 섹션 -->
+    <!-- 해당 프로젝트 지원자 인터뷰 섹션 -->
     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:14px;">
-      <h3 style="font-size:16.5px; font-weight:600;">🎤 지원자 인터뷰(면접) 및 직무별 필수질문 검증 (${projectInterviews.length}건)</h3>
+      <h3 style="font-size:16.5px; font-weight:600;">🎤 지원자 인터뷰</h3>
       ${permissions.can_evaluate_interviews || permissions.can_schedule_interviews ? `
         <button class="btn btn-outline btn-sm" onclick="openQuestionTemplatesModal()">📋 직무별 필수 질문 리스트(${templates.length}종)</button>
       ` : ''}
     </div>
 
-    <div class="dashboard-feed-masonry">
-      ${projectInterviews.length > 0 ? projectInterviews.map(inv => `
-        <article class="zal-feed-card">
-          <div class="zal-card-header">
-            <div class="zal-author-box">
-              <div class="zal-avatar-circle"><img src="/pic2_thumb.png" alt="${inv.candidate_name}" /></div>
-              <div>
-                <span class="zal-author-name">${inv.candidate_name}</span>
-                <span class="zal-author-role">${inv.tech_grade} · ${inv.candidate_type}</span>
-                <div class="zal-card-time">🕒 경로: ${inv.recommender || '직접지원'}</div>
-              </div>
-            </div>
-            <span class="zal-status-pill ${inv.status === '최종선정' || inv.status === '면접진행완료' ? 'green' : 'amber'}">${inv.status}</span>
-          </div>
-
-          <div class="zal-card-title">${inv.resume_summary}</div>
-
-          <div class="zal-meta-list">
-            <div class="zal-meta-row"><span class="zal-meta-label">📅 가용일</span><span class="zal-meta-val">${inv.available_from} (${inv.desired_rate !== null ? `희망 월 ${inv.desired_rate}만` : '🔒 단가비공개'})</span></div>
-            <div class="zal-meta-row"><span class="zal-meta-label">🗓️ 면접일정</span><span class="zal-meta-val">${inv.interview_date || '일정 미지정'} ${inv.interview_method ? `(${inv.interview_method})` : ''}</span></div>
-            <div class="zal-meta-row"><span class="zal-meta-label">👨‍💼 면접관</span><span class="zal-meta-val">${inv.interviewer_name || '미배정'}</span></div>
-          </div>
-
-          ${inv.total_score > 0 ? `
-            <div class="zal-request-banner" style="background:#ecfdf5; border-color:#a7f3d0; color:#059669;">
-              <span>⭐ 필수질문 체크리스트 평균 ${inv.total_score} / 5.0점 — "${inv.interviewer_opinion}"</span>
-            </div>
-          ` : ''}
-
-          <div class="zal-card-footer">
-            <div class="zal-reaction-group">
-              ${permissions.can_schedule_interviews ? `
-                <button class="btn btn-outline btn-sm" onclick="openScheduleInterviewModal('${inv.id}')">🗓️ 일정지정 · 면접관 배정</button>
-              ` : ''}
-              ${(permissions.can_evaluate_interviews || (currentUser && inv.interviewer_user_id === currentUser.id)) ? `
-                <button class="btn btn-primary btn-sm" onclick="openEvaluateChecklistModal('${inv.id}')">✅ 필수질문 평가 · 최종선발</button>
-              ` : ''}
-            </div>
-          </div>
-        </article>
-      `).join('') : `
+    <div class="inv-vertical-grid">
+      ${projectInterviews.length > 0 ? projectInterviews.map((inv, idx) => renderInterviewVerticalCard(inv, idx, permissions, currentUser)).join('') : `
         <div class="zal-feed-card" style="grid-column: 1 / -1; text-align:center; color:#64748b; padding:28px;">
           현재 이 프로젝트에 등록된 지원자 인터뷰 내역이 없습니다.
         </div>
@@ -2006,53 +2035,14 @@ function renderInterviewsTab() {
 
   el.innerHTML = `
     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:18px;">
-      <h3 style="font-size:17px; font-weight:600;">표준 인터뷰(면접) 일정 조율 · 내부 면접관 배정 · 직무별 필수질문 검증</h3>
+      <h3 style="font-size:17px; font-weight:600;">🎤 지원자 인터뷰</h3>
       ${permissions.can_evaluate_interviews || permissions.can_schedule_interviews ? `
         <button class="btn btn-outline btn-sm" onclick="openQuestionTemplatesModal()">📋 직무별 필수 질문 리스트(${templates.length}종) 관리</button>
       ` : ''}
     </div>
 
-    <div class="dashboard-feed-masonry">
-      ${interviews.map(inv => `
-        <article class="zal-feed-card">
-          <div class="zal-card-header">
-            <div class="zal-author-box">
-              <div class="zal-avatar-circle"><img src="/pic2_thumb.png" alt="${inv.candidate_name}" /></div>
-              <div>
-                <span class="zal-author-name">${inv.candidate_name}</span>
-                <span class="zal-author-role">${inv.tech_grade} · ${inv.candidate_type}</span>
-                <div class="zal-card-time">🕒 추천/경로: ${inv.recommender || '직접지원'}</div>
-              </div>
-            </div>
-            <span class="zal-status-pill ${inv.status === '최종선정' || inv.status === '면접진행완료' ? 'green' : 'amber'}">${inv.status}</span>
-          </div>
-
-          <div class="zal-card-title">${inv.resume_summary}</div>
-
-          <div class="zal-meta-list">
-            <div class="zal-meta-row"><span class="zal-meta-label">📅 가용일</span><span class="zal-meta-val">${inv.available_from} (${inv.desired_rate !== null ? `희망 월 ${inv.desired_rate}만` : '🔒 단가비공개'})</span></div>
-            <div class="zal-meta-row"><span class="zal-meta-label">🗓️ 면접일정</span><span class="zal-meta-val">${inv.interview_date || '일정 미지정'} ${inv.interview_method ? `(${inv.interview_method})` : ''}</span></div>
-            <div class="zal-meta-row"><span class="zal-meta-label">👨‍💼 면접관</span><span class="zal-meta-val">${inv.interviewer_name || '미배정'}</span></div>
-          </div>
-
-          ${inv.total_score > 0 ? `
-            <div class="zal-request-banner" style="background:#ecfdf5; border-color:#a7f3d0; color:#059669;">
-              <span>⭐ 필수질문 체크리스트 평균 ${inv.total_score} / 5.0점 — "${inv.interviewer_opinion}"</span>
-            </div>
-          ` : ''}
-
-          <div class="zal-card-footer">
-            <div class="zal-reaction-group">
-              ${permissions.can_schedule_interviews ? `
-                <button class="btn btn-outline btn-sm" onclick="openScheduleInterviewModal('${inv.id}')">🗓️ 일정지정 · 면접관 배정</button>
-              ` : ''}
-              ${(permissions.can_evaluate_interviews || (currentUser && inv.interviewer_user_id === currentUser.id)) ? `
-                <button class="btn btn-primary btn-sm" onclick="openEvaluateChecklistModal('${inv.id}')">✅ 필수질문 평가 · 최종선발</button>
-              ` : ''}
-            </div>
-          </div>
-        </article>
-      `).join('')}
+    <div class="inv-vertical-grid">
+      ${interviews.map((inv, idx) => renderInterviewVerticalCard(inv, idx, permissions, currentUser)).join('')}
     </div>
   `;
 }

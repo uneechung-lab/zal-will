@@ -2,7 +2,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
 
-const TMP_STORE_PATH = path.join(os.tmpdir(), 'zalwill-vercel-store-v6.json');
+const TMP_STORE_PATH = path.join(os.tmpdir(), 'zalwill-vercel-store-v7.json');
 
 function getInitialStore() {
   return {
@@ -506,6 +506,26 @@ function getInitialStore() {
         ],
         total_score: 4.8, interviewer_opinion: '비대면 퇴직연금/IRP 채널 경험이 매우 탁월함. 즉시 선발 강력 추천.',
         final_decision_note: '', created_at: '2026-11-11'
+      },
+      {
+        id: 'int_3', posting_id: 'post_1', project_id: 'prj_1', slot_id: 'slot_103', candidate_profile_id: 'p_7',
+        candidate_name: '김도현', candidate_type: '외주 프리랜서', candidate_phone: '010-5512-7789', candidate_email: 'dh.kim.batch@gmail.com',
+        available_from: '2026-11-22', recommender: '타겟소싱 지원', desired_rate: 1080,
+        resume_summary: '농협은행·우리은행 퇴직연금 디폴트옵션 및 일마감 정산 배치 개발 11년차 고급/특급 개발자.',
+        tech_grade: '특급', skills: ['Java', 'Spring Batch', 'Oracle', 'SQL튜닝', 'ProFrame'], domains: ['퇴직연금', '계정계 코어'],
+        status: '인터뷰통보완료', interview_date: '2026-11-17 15:00', interview_method: '화상(Zoom/Teams)',
+        interviewer_user_id: 'u_internal_pl', interviewer_name: '정윤희 부장', template_id: 'tpl_pension_batch',
+        checklist_results: [], total_score: 0, interviewer_opinion: '', final_decision_note: '', created_at: '2026-11-12'
+      },
+      {
+        id: 'int_4', posting_id: 'post_3', project_id: 'prj_2', slot_id: 'slot_202', candidate_profile_id: 'p_7',
+        candidate_name: '오세훈', candidate_type: '외주 반프리', candidate_phone: '010-4119-7723', candidate_email: 'sh.oh.bond@daum.net',
+        available_from: '2026-12-05', recommender: '김지영 이사 (기검증풀 초청)', desired_rate: 1030,
+        resume_summary: '한국자산평가 채권/장외파생 시가평가 엔진 및 외화펀드 기준가(NAV) 결제 개발 10년차.',
+        tech_grade: '고급', skills: ['Java', 'Spring Boot', 'Oracle', '채권평가', '펀드회계'], domains: ['채권', '펀드'],
+        status: '인터뷰통보완료', interview_date: '2026-11-18 11:00', interview_method: '대면(여의도)',
+        interviewer_user_id: 'u_manager', interviewer_name: '김지영 이사', template_id: 'tpl_bond_fund',
+        checklist_results: [], total_score: 0, interviewer_opinion: '', final_decision_note: '', created_at: '2026-11-12'
       }
     ],
     notifications: [
