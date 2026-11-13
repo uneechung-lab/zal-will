@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>잘될 (ZAL-WILL) | 사내외 통합 인재 프로필 DB 및 제안·소싱 관리 플랫폼</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <!-- Top Header with Role Switcher & Permission Bar -->
+  <header class="top-header">
+    <div class="brand-area">
+      <div class="logo-badge">잘될</div>
+      <div>
+        <div class="brand-title-row">
+          <h1>사내외 통합 인재 프로필 DB 및 제안·소싱 관리 플랫폼</h1>
+          <span class="mvp-pill">금융 IT SI·SM 특화 MVP</span>
+        </div>
+        <p class="brand-sub">AI 무정차 이력서 파싱 · RFP 적임자 매칭 및 제안 장표 원클릭 생성 · 타겟 소싱 · 표준 필수질문 인터뷰 자산화</p>
+      </div>
+    </div>
+
+    <div class="role-switcher-box">
+      <label for="userRoleSelect" class="role-label">현재 접속 역할 (실시간 권한 시뮬레이션)</label>
+      <div class="role-select-row">
+        <select id="userRoleSelect" class="role-select"></select>
+        <button id="openMyProfileBtn" class="btn btn-outline btn-sm" title="본인 프로필 및 차기 투입 가능일 현행화">
+          내 프로필·가용일 현행화
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Active Role Permission Matrix Strip -->
+  <section id="permissionStrip" class="permission-strip"></section>
+
+  <!-- Main Navigation Tabs -->
+  <nav class="main-nav" id="mainNav">
+    <button class="nav-tab active" data-tab="dashboard">
+      <span class="tab-num">01</span> 대시보드 & KPI 지표
+    </button>
+    <button class="nav-tab" data-tab="profiles">
+      <span class="tab-num">02</span> 사내외 통합 인재 DB & AI 파싱 등록
+    </button>
+    <button class="nav-tab" data-tab="projects">
+      <span class="tab-num">03</span> 프로젝트·제안 관리 (RFP 매칭·장표 추출)
+    </button>
+    <button class="nav-tab" data-tab="sourcing">
+      <span class="tab-num">04</span> 외주 구인 보드 & 타겟 소싱
+    </button>
+    <button class="nav-tab" data-tab="interviews">
+      <span class="tab-num">05</span> 표준 인터뷰(면접) & 필수질문 검증
+    </button>
+    <button class="nav-tab" data-tab="permissions">
+      <span class="tab-num">06</span> 권한 체계 및 선별 권한 운영
+    </button>
+  </nav>
+
+  <!-- Main Content Area -->
+  <main class="main-container">
+    <!-- TAB 1: DASHBOARD -->
+    <section id="tab-dashboard" class="tab-panel active"></section>
+
+    <!-- TAB 2: PROFILES & AI PARSING -->
+    <section id="tab-profiles" class="tab-panel"></section>
+
+    <!-- TAB 3: PROJECTS & RFP PROPOSAL -->
+    <section id="tab-projects" class="tab-panel"></section>
+
+    <!-- TAB 4: JOB BOARD & TARGET SOURCING -->
+    <section id="tab-sourcing" class="tab-panel"></section>
+
+    <!-- TAB 5: STANDARD INTERVIEW & CHECKLIST -->
+    <section id="tab-interviews" class="tab-panel"></section>
+
+    <!-- TAB 6: PERMISSIONS & SENSITIVE INFO -->
+    <section id="tab-permissions" class="tab-panel"></section>
+  </main>
+
+  <!-- Modal Container -->
+  <div id="modalBackdrop" class="modal-backdrop hidden">
+    <div id="modalDialog" class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="modalTitle">모달 제목</h3>
+        <button id="modalCloseBtn" class="modal-close-btn">&times;</button>
+      </div>
+      <div id="modalBody" class="modal-body"></div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <script src="/app.js"></script>
+</body>
+</html>

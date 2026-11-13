@@ -1,0 +1,9 @@
+{
+  "name": "zal-will-mvp",
+  "version": "1.0.0",
+  "description": "사내외 통합 인재 프로필 DB 및 제안·소싱 관리 플랫폼 (잘될) MVP",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  }
+}
