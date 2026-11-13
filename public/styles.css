@@ -1428,6 +1428,85 @@ button, input, select, textarea {
   }
 }
 
+/* Open Job Posting Applicant Badge & Overlapping Circles */
+.posting-body-split {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.posting-applicant-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: #f8fafc;
+  border: 1px solid #eef2f6;
+  border-radius: 14px;
+  min-width: 148px;
+  flex-shrink: 0;
+}
+
+.posting-applicant-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #1e293b;
+  letter-spacing: -0.3px;
+  white-space: nowrap;
+}
+
+.posting-applicant-count {
+  color: #f26544;
+  font-weight: 700;
+  margin-left: 3px;
+}
+
+.posting-applicant-avatars {
+  display: inline-flex;
+  align-items: center;
+}
+
+.posting-applicant-circle {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #ffffff;
+  margin-left: -9px;
+  border: 3px solid #f8fafc;
+  letter-spacing: -0.3px;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.posting-applicant-circle:first-child {
+  margin-left: 0;
+}
+
+.posting-applicant-circle.color-0 {
+  background-color: #f26544;
+}
+
+.posting-applicant-circle.color-1 {
+  background-color: #0b1c8c;
+}
+
+.posting-applicant-circle.color-2 {
+  background-color: #8c92e8;
+}
+
+.posting-applicant-circle.color-3 {
+  background-color: #10b981;
+}
+
 @media print {
   .left-nav-rail, .zal-top-header-wrap, .zal-composer-outer, .zal-sticky-tabs-bar, .zal-subheader-bar, .no-print {
     display: none !important;

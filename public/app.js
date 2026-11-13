@@ -1180,6 +1180,30 @@ function renderProjectSummaryCard(prj) {
   `;
 }
 
+function renderPostingApplicantBox(post) {
+  const defaultMap = {
+    post_1: ['신**', '김**', '이**'],
+    post_2: ['한**', '박**'],
+    post_3: ['오**', '김**', '최**']
+  };
+  const applicants = Array.isArray(post.applicants)
+    ? post.applicants
+    : (defaultMap[post.id] || []);
+  const count = typeof post.applicant_count === 'number' ? post.applicant_count : applicants.length;
+  return `
+    <div class="posting-applicant-box">
+      <div class="posting-applicant-title">
+        프로젝트 참여신청 <span class="posting-applicant-count">${count}명</span>
+      </div>
+      <div class="posting-applicant-avatars">
+        ${applicants.length > 0 ? applicants.map((masked, idx) => `
+          <span class="posting-applicant-circle color-${idx % 4}">${masked}</span>
+        `).join('') : `<span style="font-size:12.5px; color:#94a3b8;">신청 대기중</span>`}
+      </div>
+    </div>
+  `;
+}
+
 function renderProjectDetailView(el, prj, postings, interviews, templates, permissions, currentUser, canManagePrj) {
   const totalSlots = prj.to_slots.length;
   const filledSlots = prj.to_slots.filter(s => s.assigned_profile_id).length;
@@ -1358,10 +1382,13 @@ function renderProjectDetailView(el, prj, postings, interviews, templates, permi
 
           <div class="zal-card-title">${post.title}</div>
 
-          <div class="zal-meta-list">
-            <div class="zal-meta-row"><span class="zal-meta-label">📅 기간</span><span class="zal-meta-val">${post.period} (${post.work_location})</span></div>
-            <div class="zal-meta-row"><span class="zal-meta-label">💰 단가</span><span class="zal-meta-val">${post.rate_guide}</span></div>
-            <div class="zal-meta-row"><span class="zal-meta-label">🛠️ 스킬</span><span class="zal-meta-val">${post.required_skills.join(', ')}</span></div>
+          <div class="posting-body-split">
+            <div class="zal-meta-list" style="flex:1; min-width:220px;">
+              <div class="zal-meta-row"><span class="zal-meta-label">📅 기간</span><span class="zal-meta-val">${post.period} (${post.work_location})</span></div>
+              <div class="zal-meta-row"><span class="zal-meta-label">💰 단가</span><span class="zal-meta-val">${post.rate_guide}</span></div>
+              <div class="zal-meta-row"><span class="zal-meta-label">🛠️ 스킬</span><span class="zal-meta-val">${post.required_skills.join(', ')}</span></div>
+            </div>
+            ${renderPostingApplicantBox(post)}
           </div>
 
           <div class="zal-card-footer">
@@ -1790,10 +1817,13 @@ function renderSourcingTab() {
 
           <div class="zal-card-title">${post.title}</div>
 
-          <div class="zal-meta-list">
-            <div class="zal-meta-row"><span class="zal-meta-label">📅 기간</span><span class="zal-meta-val">${post.period} (${post.work_location})</span></div>
-            <div class="zal-meta-row"><span class="zal-meta-label">💰 단가</span><span class="zal-meta-val">${post.rate_guide}</span></div>
-            <div class="zal-meta-row"><span class="zal-meta-label">🛠️ 스킬</span><span class="zal-meta-val">${post.required_skills.join(', ')}</span></div>
+          <div class="posting-body-split">
+            <div class="zal-meta-list" style="flex:1; min-width:220px;">
+              <div class="zal-meta-row"><span class="zal-meta-label">📅 기간</span><span class="zal-meta-val">${post.period} (${post.work_location})</span></div>
+              <div class="zal-meta-row"><span class="zal-meta-label">💰 단가</span><span class="zal-meta-val">${post.rate_guide}</span></div>
+              <div class="zal-meta-row"><span class="zal-meta-label">🛠️ 스킬</span><span class="zal-meta-val">${post.required_skills.join(', ')}</span></div>
+            </div>
+            ${renderPostingApplicantBox(post)}
           </div>
 
           <div class="zal-card-footer">
