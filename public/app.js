@@ -3,7 +3,7 @@ const state = {
   userId: 'u_master',
   activeTab: 'projects',
   selectedProjectId: null,
-  selectedProjectFilter: 'ALL',
+  selectedProjectFilter: 'PLANNED',
   data: null,
   profileFilters: {
     empType: 'ALL',
@@ -1010,7 +1010,7 @@ function renderProjectsTab() {
   const ongoingProjects = projects.filter(p => p.project_group === 'ONGOING');
   const completedProjects = projects.filter(p => p.project_group === 'COMPLETED');
 
-  const activeGroup = state.selectedProjectFilter || 'ALL';
+  const activeGroup = state.selectedProjectFilter || 'PLANNED';
 
   const sections = [
     { key: 'PLANNED', title: '예정(입찰) 프로젝트', badgeClass: 'purple', items: plannedProjects },
