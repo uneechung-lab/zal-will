@@ -1086,36 +1086,95 @@ function renderProjectSummaryCard(prj) {
     ? `<span class="zal-status-pill amber">ONGOING</span>`
     : prj.project_group === 'COMPLETED'
       ? `<span class="zal-status-pill green">COMPLETED</span>`
-      : `<span class="zal-status-pill purple">예정(입찰)</span>`;
+      : `<span class="zal-status-pill green">모집 중 · 입찰예정</span>`;
+
+  const mainRole = prj.to_slots[0]?.role_name || '금융 IT 개발자';
+  const extraRoleCount = Math.max(0, totalSlots - 1);
+  const grades = Array.from(new Set(prj.to_slots.map(s => s.required_grade))).join(' · ') || '특급 · 고급';
+  const allSkills = Array.from(new Set(prj.to_slots.flatMap(s => s.required_skills || []))).slice(0, 4);
 
   return `
-    <article
-      class="zal-feed-card"
-      style="cursor:pointer; padding:18px 24px;"
-      onclick="selectProjectDetail('${prj.id}')"
-    >
-      <div style="display:flex; justify-content:space-between; align-items:center; gap:16px;">
+    <article class="prj-split-card" onclick="selectProjectDetail('${prj.id}')">
+      <!-- Left Column: Core Project Info -->
+      <div class="prj-split-left">
         <div>
-          <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px; flex-wrap:wrap;">
-            <span class="zal-status-pill blue">${categoryLabel}</span>
-            ${statusPill}
-            <span class="zal-status-pill ${filledSlots === totalSlots ? 'green' : 'amber'}">충원 ${filledSlots} / ${totalSlots}명</span>
-            ${isPlanned ? `
-              <span class="zal-status-pill" style="background:#fef2f2; color:#dc2626; border:1px solid #fecaca; font-weight:800;">
-                ⏰ 충원완료일 ${deadline} (${dDayLabel})
-              </span>
-              <span class="zal-status-pill" style="background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; font-weight:800;">
-                🙋 지원자 ${applicantCount}명
-              </span>
-            ` : ''}
+          <div class="prj-split-top-row">
+            <div style="display:flex; align-items:center; gap:8px;">
+              ${statusPill}
+              <span class="zal-status-pill blue">${categoryLabel}</span>
+            </div>
+            <span style="color:#cbd5e1; font-size:18px;">♡</span>
           </div>
-          <h3 class="zal-card-title" style="font-size:16.5px; margin:0;">${prj.name}</h3>
-          <div style="font-size:12.5px; color:#64748b; margin-top:6px;">
-            🏢 고객사: <strong>${prj.client}</strong> · 📅 수행년도: ${periodText} · 📍 ${prj.location} · 💰 ${prj.budget_rate_info}
+
+          <h3 class="prj-split-title">${prj.name}</h3>
+
+          <div class="prj-metrics-bar">
+            <span class="metric-item">단가 가이드 <strong>${prj.budget_rate_info}</strong></span>
+            <span class="prj-metrics-divider"></span>
+            <span class="metric-item">수행 기간 <strong>${periodText}</strong></span>
+            <span class="prj-metrics-divider"></span>
+            <span class="metric-item">투입 시작일 <strong>${prj.start_date}</strong></span>
+          </div>
+
+          <div class="prj-role-summary-row">
+            <span>☰ ${mainRole}${extraRoleCount > 0 ? ` 외 ${extraRoleCount}개 포지션` : ''}</span>
+            <span>🧰 ${grades} 레벨</span>
           </div>
         </div>
-        <div style="color:#94a3b8; font-size:13px; font-weight:700; white-space:nowrap; flex-shrink:0;">
-          상세보기 ›
+
+        <div class="prj-bottom-row">
+          <div class="prj-skill-pills">
+            <span class="prj-gray-tag">🕒 ${prj.contract_type || '일괄도급'}</span>
+            ${allSkills.map(sk => `<span class="prj-gray-tag">${sk}</span>`).join('')}
+          </div>
+          <div class="prj-loc-date">
+            📍 ${prj.location} · 등록일자 ${(prj.created_at || '2026-11-10').replace(/-/g, '.')}.
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: D-Day, Applicant Count, Staffing & Client Box -->
+      <div class="prj-split-right">
+        <div class="prj-right-meta-list">
+          ${isPlanned ? `
+            <div class="prj-right-meta-item">
+              <span style="color:#64748b;">🕒 충원완료일</span>
+              <strong style="color:#dc2626;">${dDayLabel}</strong>
+              <span style="font-size:12px; color:#94a3b8;">(${deadline.replace(/-/g, '.')})</span>
+            </div>
+            <div class="prj-right-meta-item">
+              <span style="color:#64748b;">👤 지원자</span>
+              <strong style="color:#0f172a;">${applicantCount}명</strong>
+            </div>
+          ` : `
+            <div class="prj-right-meta-item">
+              <span style="color:#64748b;">🕒 진행상태</span>
+              <strong style="color:#0f172a;">${prj.project_group === 'ONGOING' ? '수행 진행중' : '수행 완료'}</strong>
+            </div>
+            <div class="prj-right-meta-item">
+              <span style="color:#64748b;">👤 참여인력</span>
+              <strong style="color:#0f172a;">총 ${totalSlots}명 투입</strong>
+            </div>
+          `}
+          <div style="display:flex; align-items:center; gap:12px; font-size:12px; color:#64748b; margin-top:2px;">
+            <span>👁️ 충원 <strong>${filledSlots}/${totalSlots}명</strong></span>
+            <span>💬 TO ${totalSlots}</span>
+            <span style="margin-left:auto; color:#2563eb; font-weight:700;">상세보기 ›</span>
+          </div>
+        </div>
+
+        <div class="prj-client-box">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <div style="width:22px; height:22px; border-radius:50%; background:#0f172a; color:#fff; font-size:10px; font-weight:800; display:inline-flex; align-items:center; justify-content:center;">
+              ${prj.client.slice(0, 1)}
+            </div>
+            <strong style="font-size:13px; color:#0f172a;">${prj.client}</strong>
+            <span style="font-size:11px; font-weight:700; color:#2563eb; background:#eff6ff; padding:2px 7px; border-radius:6px;">고객사</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px; font-size:11.5px; color:#475569; font-weight:600;">
+            <span>💙 ${prj.domain} 도메인</span>
+            <span>🏅 ${filledSlots === totalSlots ? '배정 완료' : `미충원 ${totalSlots - filledSlots}석`}</span>
+          </div>
         </div>
       </div>
     </article>
@@ -1131,6 +1190,7 @@ function renderProjectDetailView(el, prj, postings, interviews, templates, permi
   const deadline = prj.staffing_deadline || '2026-11-25';
   const dDayLabel = getDdayText(deadline);
   const applicantCount = getProjectApplicantCount(prj);
+  const periodText = prj.period_label || `${prj.start_date} ~ ${prj.end_date}`;
 
   el.innerHTML = `
     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:16px;">
@@ -1149,37 +1209,75 @@ function renderProjectDetailView(el, prj, postings, interviews, templates, permi
       </div>
     </div>
 
-    <!-- 프로젝트 기본 정보, 상세 설명 및 TO 배정·매칭 카드 -->
+    <!-- 프로젝트 기본 정보, 우측 요약 및 상세 설명 카드 -->
     <div class="zal-feed-card" style="margin-bottom:28px;">
-      <div class="zal-card-header" style="border-bottom:1px solid #f1f5f9; padding-bottom:14px;">
-        <div style="width:100%;">
-          <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px; flex-wrap:wrap;">
-            <span class="zal-status-pill blue">${prj.category || 'PENSION'}</span>
-            ${prj.project_group === 'ONGOING'
-              ? `<span class="zal-status-pill amber">ONGOING</span>`
-              : prj.project_group === 'COMPLETED'
-                ? `<span class="zal-status-pill green">COMPLETED</span>`
-                : `<span class="zal-status-pill purple">예정(입찰)</span>`}
-            <span class="zal-status-pill ${filledSlots === totalSlots ? 'green' : 'amber'}">충원 ${filledSlots} / ${totalSlots}명</span>
-            ${isPlanned ? `
-              <span class="zal-status-pill" style="background:#fef2f2; color:#dc2626; border:1px solid #fecaca; font-weight:800;">
-                ⏰ 충원완료일 ${deadline} (${dDayLabel})
-              </span>
-              <span class="zal-status-pill" style="background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; font-weight:800;">
-                🙋 지원자 ${applicantCount}명
-              </span>
-            ` : ''}
-          </div>
-          <h3 class="zal-card-title" style="font-size:18px;">${prj.name}</h3>
-          <div style="font-size:12.5px; color:#64748b; margin-top:4px;">
-            🏢 고객사: <strong>${prj.client}</strong> · 📅 수행년도: ${prj.period_label || `${prj.start_date} ~ ${prj.end_date}`} · 📍 ${prj.location} · 💰 ${prj.budget_rate_info}
+      <div class="prj-split-card" style="border:none; padding:0 0 18px 0; cursor:default; transform:none; box-shadow:none; border-bottom:1px solid #f1f5f9;">
+        <div class="prj-split-left">
+          <div>
+            <div class="prj-split-top-row">
+              <div style="display:flex; align-items:center; gap:8px;">
+                ${prj.project_group === 'ONGOING'
+                  ? `<span class="zal-status-pill amber">ONGOING</span>`
+                  : prj.project_group === 'COMPLETED'
+                    ? `<span class="zal-status-pill green">COMPLETED</span>`
+                    : `<span class="zal-status-pill green">모집 중 · 입찰예정</span>`}
+                <span class="zal-status-pill blue">${prj.category || 'PENSION'}</span>
+              </div>
+            </div>
+            <h3 class="prj-split-title" style="font-size:20px;">${prj.name}</h3>
+            <div class="prj-metrics-bar">
+              <span class="metric-item">단가 가이드 <strong>${prj.budget_rate_info}</strong></span>
+              <span class="prj-metrics-divider"></span>
+              <span class="metric-item">수행 기간 <strong>${periodText}</strong></span>
+              <span class="prj-metrics-divider"></span>
+              <span class="metric-item">근무지 <strong>${prj.location}</strong></span>
+            </div>
           </div>
 
-          <div style="margin-top:14px; padding:14px 16px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px;">
+          <div style="margin-top:10px; padding:14px 16px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px;">
             <div style="font-size:12.5px; font-weight:800; color:#0f172a; margin-bottom:4px;">📌 프로젝트 상세 설명 (과업 범위 및 수행 요건)</div>
             <p style="font-size:13px; color:#334155; line-height:1.6; margin:0;">
               ${prj.description || `${prj.client}의 ${prj.name} 사업으로, ${prj.domain} 도메인 전문 인력 중심의 설계·개발·이행을 수행합니다.`}
             </p>
+          </div>
+        </div>
+
+        <div class="prj-split-right">
+          <div class="prj-right-meta-list">
+            ${isPlanned ? `
+              <div class="prj-right-meta-item">
+                <span style="color:#64748b;">🕒 충원완료일</span>
+                <strong style="color:#dc2626;">${dDayLabel}</strong>
+                <span style="font-size:12px; color:#94a3b8;">(${deadline.replace(/-/g, '.')})</span>
+              </div>
+              <div class="prj-right-meta-item">
+                <span style="color:#64748b;">👤 지원자</span>
+                <strong style="color:#0f172a;">${applicantCount}명</strong>
+              </div>
+            ` : `
+              <div class="prj-right-meta-item">
+                <span style="color:#64748b;">🕒 진행상태</span>
+                <strong style="color:#0f172a;">${prj.project_group === 'ONGOING' ? '수행 진행중' : '수행 완료'}</strong>
+              </div>
+            `}
+            <div class="prj-right-meta-item">
+              <span style="color:#64748b;">👥 TO 충원현황</span>
+              <strong style="color:#2563eb;">${filledSlots} / ${totalSlots}명 배정</strong>
+            </div>
+          </div>
+
+          <div class="prj-client-box">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <div style="width:22px; height:22px; border-radius:50%; background:#0f172a; color:#fff; font-size:10px; font-weight:800; display:inline-flex; align-items:center; justify-content:center;">
+                ${prj.client.slice(0, 1)}
+              </div>
+              <strong style="font-size:13px; color:#0f172a;">${prj.client}</strong>
+              <span style="font-size:11px; font-weight:700; color:#2563eb; background:#eff6ff; padding:2px 7px; border-radius:6px;">고객사</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px; font-size:11.5px; color:#475569; font-weight:600;">
+              <span>💙 ${prj.domain} 도메인</span>
+              <span>🏅 ${prj.contract_type || '일괄도급'}</span>
+            </div>
           </div>
         </div>
       </div>
