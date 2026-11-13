@@ -1340,7 +1340,6 @@ function openCandidateResumeModal(interviewId) {
         <span style="font-size:13px; color:#64748b;">
           면접 일정: <strong>${inv.interview_date || '미지정'} (${inv.interview_method || '화상'})</strong> · 면접관: <strong>${inv.interviewer_name || '조성현 상무'}</strong>
         </span>
-        <button type="button" class="btn btn-primary btn-sm" onclick="closeModal()">닫기</button>
       </div>
     </div>
   `);
@@ -1612,7 +1611,7 @@ function renderProjectDetailView(el, prj, postings, interviews, templates, permi
               ` : ''}
             </div>
             ${permissions.can_manage_postings ? `
-              <button type="button" class="btn btn-primary btn-sm" style="margin-left:auto;" onclick="event.stopPropagation(); togglePostingStatus('${post.id}')">${post.status === 'OPEN' ? '마감하기' : '재오픈'}</button>
+              <button type="button" class="btn btn-primary btn-sm" style="margin-left:auto;" onclick="event.stopPropagation(); togglePostingStatus('${post.id}')">${post.status === 'OPEN' ? '채용마감' : '재오픈'}</button>
             ` : ''}
           </div>
         </article>
@@ -2011,7 +2010,7 @@ function renderSourcingTab() {
               ` : ''}
             </div>
             ${permissions.can_manage_postings ? `
-              <button type="button" class="btn btn-primary btn-sm" style="margin-left:auto;" onclick="event.stopPropagation(); togglePostingStatus('${post.id}')">${post.status === 'OPEN' ? '마감하기' : '재오픈'}</button>
+              <button type="button" class="btn btn-primary btn-sm" style="margin-left:auto;" onclick="event.stopPropagation(); togglePostingStatus('${post.id}')">${post.status === 'OPEN' ? '채용마감' : '재오픈'}</button>
             ` : ''}
           </div>
         </article>
@@ -2078,10 +2077,10 @@ function openPostingDetailModal(postingId) {
       </div>
 
       <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; padding-top:8px; border-top:1px solid #f1f5f9;">
-        <button type="button" class="btn btn-outline btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="copyPostingWebLink('${post.id}')">
-          ${svgIcon('link', 13)} 오픈 구인 웹 링크 복사하기
-        </button>
-        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+          <button type="button" class="btn btn-outline btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="copyPostingWebLink('${post.id}')">
+            ${svgIcon('link', 13)} 오픈 구인 웹 링크 복사하기
+          </button>
           ${post.status === 'OPEN' && currentUser?.role_group !== 'MASTER' ? `
             <button type="button" class="btn btn-primary btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="openEasyApplyModal('${post.id}')">
               ${svgIcon('edit', 13)} ${currentUser?.role_group === 'INTERNAL' ? '사내 지인 추천' : '간편 지원하기'}
@@ -2092,15 +2091,20 @@ function openPostingDetailModal(postingId) {
               ${svgIcon('target', 13)} 타겟 소싱 발송
             </button>
           ` : ''}
-          <button type="button" class="btn btn-outline btn-sm" onclick="closeModal()">닫기</button>
         </div>
+        ${permissions.can_manage_postings ? `
+          <button type="button" class="btn btn-primary btn-sm" style="margin-left:auto;" onclick="togglePostingStatus('${post.id}', true)">
+            ${post.status === 'OPEN' ? '채용마감' : '재오픈'}
+          </button>
+        ` : ''}
       </div>
     </div>
   `);
 }
 
-async function togglePostingStatus(postingId) {
+async function togglePostingStatus(postingId, fromModal = false) {
   await apiCall('/api/postings/toggle', 'POST', { posting_id: postingId });
+  if (fromModal) closeModal();
   showToast('구인 공고 상태가 변경되었습니다.');
   await loadState();
 }
