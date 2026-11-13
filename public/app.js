@@ -728,7 +728,7 @@ function renderProfileCard(p, permissions, currentUser) {
   const canEdit = permissions.can_view_all_profiles || isOwn;
 
   return `
-    <article class="zal-feed-card">
+    <article class="zal-feed-card" style="cursor:pointer;" onclick="openProfileDetailModal('${p.id}')" title="클릭하여 상세 프로필 및 프로젝트 수행 평가 열람">
       <div class="zal-card-header">
         <div class="zal-author-box">
           <div class="zal-avatar-circle">
@@ -788,9 +788,9 @@ function renderProfileCard(p, permissions, currentUser) {
       <div class="zal-card-footer">
         <div class="zal-reaction-group">
           <span class="zal-reaction-pill">${svgIcon('folder', 13)} 수행이력 ${p.career_history.length}건</span>
-          ${canEdit ? `<button type="button" class="zal-reaction-pill" onclick="openEditProfileModal('${p.id}')">${svgIcon('edit', 13)} 프로필·가용일 수정</button>` : ''}
+          ${canEdit ? `<button type="button" class="zal-reaction-pill" onclick="event.stopPropagation(); openEditProfileModal('${p.id}')">${svgIcon('edit', 13)} 프로필·가용일 수정</button>` : ''}
         </div>
-        <span style="font-size:11.5px; color:#94a3b8; font-weight:600;">AI 파싱 ${p.parse_seconds}초</span>
+        <span style="font-size:11.5px; color:#94a3b8; font-weight:600;">상세·평가 보기 ›</span>
       </div>
     </article>
   `;
@@ -1303,6 +1303,377 @@ function renderPostingApplicantBox(post) {
   `;
 }
 
+const PROFILE_EVALUATIONS_MAP = {
+  p_1: [
+    {
+      clientCode: 'sh******',
+      clientName: '신한은행 연금사업본부',
+      overallScore: 5.0,
+      metrics: { expertise: 5.0, satisfaction: 5.0, communication: 5.0, schedule: 5.0, proactivity: 5.0 },
+      projectTitle: '신한은행 퇴직연금 차세대 원장 및 정산 시스템 구축',
+      contractTags: ['기간제(상주)', '개발·PL', '금융코어'],
+      contractAmount: '112,500,000원',
+      durationDays: '270일',
+      contractDate: '2024년 03월 04일',
+      reviewDate: '2026.10.28.',
+      comment: 'DB/DC/IRP 전 영역의 정산 및 상품운용 아키텍처 이해도가 매우 높고, 대용량 일마감 배치 성능 이슈를 선제적으로 해결해 주셨습니다. 현업 및 유관 부서와의 소통도 완벽했습니다.'
+    }
+  ],
+  p_2: [
+    {
+      clientCode: 'ss******',
+      clientName: '삼성자산운용 글로벌운용본부',
+      overallScore: 4.9,
+      metrics: { expertise: 5.0, satisfaction: 5.0, communication: 4.8, schedule: 5.0, proactivity: 4.8 },
+      projectTitle: '삼성자산운용 글로벌 채권·펀드 수탁 결제 플랫폼 구축',
+      contractTags: ['기간제(상주)', '아키텍트·개발', '웹·MSA'],
+      contractAmount: '94,500,000원',
+      durationDays: '240일',
+      contractDate: '2024년 06월 10일',
+      reviewDate: '2026.11.02.',
+      comment: '글로벌 채권/외화펀드 실시간 결제 전문 연동 및 Kafka 기반 비동기 정합성 설계를 안정적으로 리딩했습니다. 일정 준수와 기술적 문제 해결력이 탁월합니다.'
+    }
+  ],
+  p_3: [
+    {
+      clientCode: 'nh******',
+      clientName: 'NH농협은행 디지털연금부',
+      overallScore: 4.8,
+      metrics: { expertise: 4.8, satisfaction: 4.8, communication: 5.0, schedule: 4.8, proactivity: 4.8 },
+      projectTitle: 'NH농협은행 퇴직연금 비대면 채널 및 스마트고지 고도화',
+      contractTags: ['기간제(상주)', '응용개발', '웹·채널'],
+      contractAmount: '68,000,000원',
+      durationDays: '210일',
+      contractDate: '2025년 01월 06일',
+      reviewDate: '2026.10.30.',
+      comment: '금융 표준 프레임워크 및 WebSquare 화면·API 개발 속도가 매우 빠르며, 요구사항 변경에도 적극적으로 대응해 프로젝트 일정을 앞당기는 데 크게 기여했습니다.'
+    }
+  ],
+  p_4: [
+    {
+      clientCode: 'mr******',
+      clientName: '미래에셋증권 연금솔루션본부',
+      overallScore: 5.0,
+      metrics: { expertise: 5.0, satisfaction: 5.0, communication: 5.0, schedule: 5.0, proactivity: 5.0 },
+      projectTitle: '미래에셋증권 퇴직연금 데이터마트 및 수익률 공시 시스템',
+      contractTags: ['기간제(상주)', 'DA·데이터모델링', 'DW/DM'],
+      contractAmount: '91,800,000원',
+      durationDays: '240일',
+      contractDate: '2024년 02월 15일',
+      reviewDate: '2026.10.25.',
+      comment: '퇴직연금 수익률 공시 및 대용량 배치 SQL 튜닝에서 압도적인 전문성을 보여주셨습니다. 배치 수행 시간을 기존 대비 65% 단축하여 고객사 만족도가 매우 높았습니다.'
+    }
+  ],
+  p_5: [
+    {
+      clientCode: 'kb******',
+      clientName: '교보생명 퇴직연금지원실',
+      overallScore: 5.0,
+      metrics: { expertise: 5.0, satisfaction: 5.0, communication: 5.0, schedule: 5.0, proactivity: 5.0 },
+      projectTitle: '교보생명 퇴직연금 수수료 정산 및 결산 배치 코어 고도화',
+      contractTags: ['기간제(상주)', '배치·정산리드', '금융코어'],
+      contractAmount: '100,800,000원',
+      durationDays: '240일',
+      contractDate: '2025년 02월 03일',
+      reviewDate: '2026.11.05.',
+      comment: '당사 핵심 프로젝트를 2회 연속 무결점으로 완수한 검증된 특급 개발자입니다. 복잡한 원리금·실적배당 결산 배치 로직을 오차 없이 구현하고 일정 준수율 100%를 달성했습니다.'
+    }
+  ],
+  p_6: [
+    {
+      clientCode: 'kk******',
+      clientName: '주식회사 카카오뱅크',
+      overallScore: 4.9,
+      metrics: { expertise: 5.0, satisfaction: 4.9, communication: 5.0, schedule: 4.8, proactivity: 4.9 },
+      projectTitle: '카카오뱅크 개인형IRP 및 마이데이터 자산관리 모바일 채널 개편',
+      contractTags: ['기간제(상주)', '프론트엔드·UI', '모바일·웹'],
+      contractAmount: '76,000,000원',
+      durationDays: '180일',
+      contractDate: '2025년 01월 13일',
+      reviewDate: '2026.10.18.',
+      comment: 'React/TypeScript 기반 비대면 연금 가입 퍼널 및 대시보드 UI 구현 완성도가 매우 높으며, 기획자·디자이너와의 협업 커뮤니케이션이 뛰어납니다.'
+    }
+  ],
+  p_7: [
+    {
+      clientCode: 'ka******',
+      clientName: '한국자산평가 금융공학본부',
+      overallScore: 4.8,
+      metrics: { expertise: 5.0, satisfaction: 4.8, communication: 4.7, schedule: 4.8, proactivity: 4.8 },
+      projectTitle: '한국자산평가 채권 시가평가 및 장외파생 기준가 산출 엔진 고도화',
+      contractTags: ['기간제(상주)', '응용·엔진개발', '채권·펀드'],
+      contractAmount: '82,400,000원',
+      durationDays: '210일',
+      contractDate: '2024년 08월 12일',
+      reviewDate: '2026.10.29.',
+      comment: '투자자산운용사 자격 기반의 채권 시가평가·경과이자 산출 도메인 지식이 탁월하여 현업 요건을 빠르게 코드로 구현했습니다.'
+    }
+  ],
+  p_8: [
+    {
+      clientCode: '4v******',
+      clientName: 'NH농협은행 퇴직연금부 (주관: 포밸류소프트)',
+      overallScore: 5.0,
+      metrics: { expertise: 5.0, satisfaction: 5.0, communication: 5.0, schedule: 5.0, proactivity: 5.0 },
+      projectTitle: 'NH농협은행 퇴직연금 디폴트옵션 및 대용량 수수료 정산 배치 구축',
+      contractTags: ['기간제(상주)', '배치·코어개발', '금융코어'],
+      contractAmount: '86,400,000원',
+      durationDays: '180일',
+      contractDate: '2024년 05월 07일',
+      reviewDate: '2026.10.21.',
+      comment: '대용량 일마감 정산 배치 튜닝 및 장애 대응 역량이 매우 우수하며, 오픈 초기부터 안정화 단계까지 책임감 있게 완수해 주셨습니다.'
+    }
+  ]
+};
+
+function getProfileEvaluations(person) {
+  if (person.id && PROFILE_EVALUATIONS_MAP[person.id]) {
+    return PROFILE_EVALUATIONS_MAP[person.id];
+  }
+  const byName = Object.values( state.data?.profiles || [] ).find(p => p.name === person.name);
+  if (byName && PROFILE_EVALUATIONS_MAP[byName.id]) {
+    return PROFILE_EVALUATIONS_MAP[byName.id];
+  }
+  const firstCareer = (person.career_history && person.career_history[0]) || {
+    project: `${(person.domains && person.domains[0]) || '금융권'} 스마트 코어·채널 시스템 구축`,
+    client: '주식회사 포밸류소프트',
+    role: '선임 개발/기획'
+  };
+  const baseScore = Number(person.rating || 5.0);
+  return [
+    {
+      clientCode: '4v******',
+      clientName: firstCareer.client || '주식회사 포밸류소프트',
+      overallScore: baseScore > 0 ? baseScore : 5.0,
+      metrics: { expertise: 5.0, satisfaction: 5.0, communication: 5.0, schedule: 5.0, proactivity: 5.0 },
+      projectTitle: firstCareer.project,
+      contractTags: ['기간제(상주)', firstCareer.role || '개발·기획', (person.domains && person.domains[0]) || '웹'],
+      contractAmount: `${((Number(person.contract_rate || person.desired_rate || 950) * 6) * 10000).toLocaleString()}원`,
+      durationDays: '180일',
+      contractDate: '2025년 03월 07일',
+      reviewDate: '2026.10.21.',
+      comment: person.review_summary || '프로젝트 수행 기간 동안 높은 전문성과 책임감으로 핵심 과업을 무결점으로 완수하였습니다.'
+    }
+  ];
+}
+
+function renderSegmentedEvalBar(score = 5.0) {
+  const filledSegments = Math.max(1, Math.min(5, Math.round(score)));
+  const segs = [];
+  for (let i = 1; i <= 5; i++) {
+    segs.push(`<span class="eval-bar-seg ${i <= filledSegments ? 'filled' : ''}"></span>`);
+  }
+  return `<span class="eval-seg-bar">${segs.join('')}</span>`;
+}
+
+function renderStarIcons(score = 5.0) {
+  const count = Math.max(1, Math.min(5, Math.round(score)));
+  let html = '';
+  for (let i = 1; i <= 5; i++) {
+    html += `<svg width="16" height="16" viewBox="0 0 24 24" fill="${i <= count ? '#facc15' : '#e2e8f0'}" stroke="${i <= count ? '#eab308' : '#cbd5e1'}" stroke-width="1.2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
+  }
+  return `<span style="display:inline-flex; align-items:center; gap:2px;">${html}</span>`;
+}
+
+function renderProfileIdentityHeader(person) {
+  const primaryRole = (person.domains && person.domains[0]) ? `${person.domains[0]} · ${person.tech_grade}` : (person.tech_grade || '전문가');
+  const empCategory = person.employment_type || (person.is_internal ? '사내 정규직' : '외주 프리랜서(개인)');
+  const locationText = person.is_internal ? '서울특별시 영등포구(여의도)' : '서울특별시 동작구 · 을지로';
+  const workPref = person.is_internal ? '본사·상주 프로젝트 선호' : '외주, 기간제(상주) 선호';
+  const isAvailable = (person.availability_status || '즉시투입가능').includes('가능');
+
+  return `
+    <div class="profile-identity-header">
+      <div class="profile-identity-avatar">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 12c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm0 2c-3.33 0-10 1.67-10 5v3h20v-3c0-3.33-6.67-5-10-5z"/>
+        </svg>
+      </div>
+      <div class="profile-identity-body">
+        <div class="profile-identity-top">
+          <span class="profile-identity-name">${person.name}</span>
+          <span class="profile-badge-verified">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            신원 인증
+          </span>
+          <span class="profile-badge-active">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="16 9 10.5 14.5 8 12"/></svg>
+            ${isAvailable ? '활동 가능' : (person.availability_status || '활동 가능')}
+          </span>
+        </div>
+        <div class="profile-identity-meta">
+          <span class="profile-meta-item">${svgIcon('file', 13)} ${primaryRole}</span>
+          <span class="profile-meta-sep">|</span>
+          <span class="profile-meta-item">${svgIcon('user', 13)} ${empCategory}</span>
+          <span class="profile-meta-sep">|</span>
+          <span class="profile-meta-item">${svgIcon('pin', 13)} ${locationText}</span>
+          <span class="profile-meta-sep">|</span>
+          <span class="profile-meta-item">${workPref}</span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderProfileEvaluationSection(person) {
+  const evaluations = getProfileEvaluations(person);
+  return `
+    <div class="profile-eval-section">
+      <div class="profile-eval-header">
+        <h4 class="profile-eval-title">평가</h4>
+        <span class="profile-eval-more">${evaluations.length}개 모두 보기 ›</span>
+      </div>
+      ${evaluations.map(ev => `
+        <div class="profile-eval-card">
+          <div class="eval-client-row">
+            <div class="eval-client-logo">${ev.clientName.slice(0, 2)}</div>
+            <div class="eval-client-info">
+              <div class="eval-client-top">
+                <span class="eval-client-tag">클라이언트</span>
+                <strong class="eval-client-code">${ev.clientCode}</strong>
+                <span class="eval-client-sep">|</span>
+                <span class="eval-client-name">${ev.clientName}</span>
+              </div>
+              <div class="eval-client-rating">
+                ${renderStarIcons(ev.overallScore)}
+                <strong class="eval-score-num">${Number(ev.overallScore).toFixed(2)}</strong>
+              </div>
+            </div>
+          </div>
+
+          <div class="eval-detail-box">
+            <div class="eval-metrics-grid">
+              <div class="eval-metric-item">
+                <span class="eval-metric-label">전문성</span>
+                ${renderSegmentedEvalBar(ev.metrics.expertise)}
+                <strong class="eval-metric-val">${ev.metrics.expertise.toFixed(2)}</strong>
+              </div>
+              <div class="eval-metric-item">
+                <span class="eval-metric-label">만족도</span>
+                ${renderSegmentedEvalBar(ev.metrics.satisfaction)}
+                <strong class="eval-metric-val">${ev.metrics.satisfaction.toFixed(2)}</strong>
+              </div>
+              <div class="eval-metric-item">
+                <span class="eval-metric-label">의사소통</span>
+                ${renderSegmentedEvalBar(ev.metrics.communication)}
+                <strong class="eval-metric-val">${ev.metrics.communication.toFixed(2)}</strong>
+              </div>
+              <div class="eval-metric-item">
+                <span class="eval-metric-label">일정 준수</span>
+                ${renderSegmentedEvalBar(ev.metrics.schedule)}
+                <strong class="eval-metric-val">${ev.metrics.schedule.toFixed(2)}</strong>
+              </div>
+              <div class="eval-metric-item">
+                <span class="eval-metric-label">적극성</span>
+                ${renderSegmentedEvalBar(ev.metrics.proactivity)}
+                <strong class="eval-metric-val">${ev.metrics.proactivity.toFixed(2)}</strong>
+              </div>
+            </div>
+
+            <div class="eval-project-box">
+              <div class="eval-project-title">${ev.projectTitle} ›</div>
+              <div class="eval-project-tags">
+                ${ev.contractTags.map(t => `<span>${t}</span>`).join('<span class="eval-tag-sep">|</span>')}
+              </div>
+              <div class="eval-project-meta">
+                <span>계약금액 <strong>${ev.contractAmount}</strong></span>
+                <span class="eval-tag-sep">|</span>
+                <span>프로젝트 기간 <strong>${ev.durationDays}</strong></span>
+                <span class="eval-tag-sep">|</span>
+                <span>최초 계약일 <strong>${ev.contractDate}</strong></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="eval-comment-block">
+            <div class="eval-comment-head">
+              <strong>함께 일한 소감</strong>
+              <span>${ev.reviewDate}</span>
+            </div>
+            <div class="eval-comment-body">${ev.comment}</div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function openProfileDetailModal(profileId) {
+  const { profiles, permissions, currentUser } = state.data || {};
+  const p = (profiles || []).find(x => x.id === profileId);
+  if (!p) return;
+  const isOwn = currentUser && currentUser.linked_profile_id === p.id;
+  const canEdit = permissions?.can_view_all_profiles || isOwn;
+  const careerHistory = p.career_history || [];
+
+  openModal(`인재 상세 프로필 및 프로젝트 수행 평가 — ${p.name} (${p.tech_grade})`, `
+    <div style="display:flex; flex-direction:column; gap:18px;">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
+        ${renderProfileIdentityHeader(p)}
+        ${canEdit ? `
+          <button type="button" class="btn btn-outline btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="openEditProfileModal('${p.id}')">
+            ${svgIcon('edit', 13)} 프로필·가용일 수정
+          </button>
+        ` : ''}
+      </div>
+
+      <div class="form-grid" style="margin-bottom:0;">
+        <div style="padding:12px 14px; border:1px solid #e2e8f0; border-radius:12px;">
+          <div style="font-size:12px; color:#64748b; margin-bottom:4px;">최종 학력 · 보유 자격증 (${p.experience_years}년차)</div>
+          <div style="font-size:14px; font-weight:600; color:#0f172a;">${p.education}</div>
+          <div style="font-size:12.5px; color:#475569; margin-top:2px;">자격증: ${(p.certifications || []).join(', ') || '-'}</div>
+        </div>
+        <div style="padding:12px 14px; border:1px solid #e2e8f0; border-radius:12px;">
+          <div style="font-size:12px; color:#64748b; margin-bottom:4px;">투입 가용일 · 기준/희망 단가</div>
+          <div style="font-size:14px; font-weight:600; color:#059669;">${p.availability_status} (가용일: ${p.available_date})</div>
+          <div style="font-size:12.5px; color:#0f172a; margin-top:2px;">
+            ${p.is_internal ? `기준 단가: 월 ${(p.contract_rate || 0).toLocaleString()}만원` : `희망 단가: 월 ${(p.desired_rate || 0).toLocaleString()}만원`} · 연락처: ${p.phone || '-'}
+          </div>
+        </div>
+      </div>
+
+      <div style="padding:14px 16px; border:1px solid #e2e8f0; border-radius:12px;">
+        <div style="font-size:13px; font-weight:600; color:#0f172a; margin-bottom:6px;">전문 도메인 및 핵심 기술 스택</div>
+        <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px;">
+          ${(p.domains || []).map(d => `<span class="badge badge-domain">${d}</span>`).join('')}
+          ${(p.skills || []).map(s => `<span class="badge badge-skill">${s}</span>`).join('')}
+        </div>
+        <div style="font-size:13.5px; color:#334155; line-height:1.55;">
+          ${p.review_summary || '-'}
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size:13.5px; font-weight:600; color:#0f172a; margin-bottom:8px;">주요 프로젝트 수행 이력 (${careerHistory.length}건)</div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>프로젝트명</th>
+              <th>고객사</th>
+              <th>수행기간</th>
+              <th>담당역할</th>
+              <th>적용기술</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${careerHistory.map(ch => `
+              <tr>
+                <td style="font-weight:600;">${ch.project}</td>
+                <td>${ch.client}</td>
+                <td>${ch.period}</td>
+                <td>${ch.role}</td>
+                <td>${ch.tech}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+
+      ${renderProfileEvaluationSection(p)}
+    </div>
+  `);
+}
+
 function openCandidateResumeModal(interviewId) {
   const interviews = state.data?.interviews || [];
   const profiles = state.data?.profiles || [];
@@ -1321,29 +1692,30 @@ function openCandidateResumeModal(interviewId) {
         { project: `${(inv.domains && inv.domains[0]) || '금융'} 차세대 코어/배치 시스템 구축`, client: '메이저 금융사', period: '2024.03 ~ 2026.10', role: '선임/리드 개발', tech: (inv.skills || []).join(', ') }
       ];
 
-  openModal(`지원자 상세 이력서 — ${inv.candidate_name} (${inv.tech_grade})`, `
-    <div style="display:flex; flex-direction:column; gap:16px;">
-      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; padding:16px 18px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px;">
-        <div style="display:flex; align-items:center; gap:14px;">
-          <div style="width:48px; height:48px; border-radius:50%; background:#1e293b; color:#ffffff; font-size:16px; font-weight:600; display:inline-flex; align-items:center; justify-content:center;">
-            ${inv.candidate_name.slice(0, 1)}
-          </div>
-          <div>
-            <div style="font-size:18px; font-weight:600; color:#0f172a;">
-              ${inv.candidate_name}
-              <span style="font-size:13.5px; font-weight:500; color:#475569; margin-left:6px;">${inv.candidate_type} · ${inv.tech_grade} (${experienceYears}년차)</span>
-            </div>
-            <div style="font-size:13px; color:#64748b; margin-top:3px;">
-              연락처: ${inv.candidate_phone || prof?.phone || '010-****-****'} · 이메일: ${inv.candidate_email || prof?.email || '-'}
-            </div>
-          </div>
-        </div>
+  const personObj = prof || {
+    id: inv.candidate_profile_id,
+    name: inv.candidate_name,
+    employment_type: inv.candidate_type,
+    tech_grade: inv.tech_grade,
+    domains: inv.domains || ['퇴직연금'],
+    skills: inv.skills || ['Java', 'Oracle'],
+    availability_status: '즉시투입가능',
+    desired_rate: inv.desired_rate,
+    rating: inv.total_score > 0 ? inv.total_score : 5.0,
+    review_summary: inv.interviewer_opinion || inv.resume_summary,
+    career_history: careerHistory
+  };
+
+  openModal(`지원자 상세 프로필 및 평가 — ${inv.candidate_name} (${inv.tech_grade})`, `
+    <div style="display:flex; flex-direction:column; gap:18px;">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
+        ${renderProfileIdentityHeader(personObj)}
         <span class="zal-status-pill ${inv.status === '면접진행완료' || inv.status === '최종선정' ? 'green' : 'amber'}">${inv.status}</span>
       </div>
 
       <div class="form-grid" style="margin-bottom:0;">
         <div style="padding:12px 14px; border:1px solid #e2e8f0; border-radius:12px;">
-          <div style="font-size:12px; color:#64748b; margin-bottom:4px;">최종 학력 · 보유 자격증</div>
+          <div style="font-size:12px; color:#64748b; margin-bottom:4px;">최종 학력 · 보유 자격증 (${experienceYears}년차)</div>
           <div style="font-size:14px; font-weight:600; color:#0f172a;">${education}</div>
           <div style="font-size:12.5px; color:#475569; margin-top:2px;">자격증: ${certifications}</div>
         </div>
@@ -1392,6 +1764,8 @@ function openCandidateResumeModal(interviewId) {
           </tbody>
         </table>
       </div>
+
+      ${renderProfileEvaluationSection(personObj)}
 
       <div style="display:flex; justify-content:space-between; align-items:center; padding-top:8px; border-top:1px solid #f1f5f9;">
         <span style="font-size:13px; color:#64748b;">
@@ -1594,7 +1968,7 @@ function renderProjectDetailView(el, prj, postings, interviews, templates, permi
                 </td>
                 <td>
                   ${slot.assigned_profile_id
-                    ? `<strong style="color:#2563eb; display:inline-flex; align-items:center; gap:4px;">${svgIcon('user', 14)} ${slot.assigned_name}</strong>`
+                    ? `<strong style="color:#2563eb; display:inline-flex; align-items:center; gap:4px; cursor:pointer;" onclick="openProfileDetailModal('${slot.assigned_profile_id}')" title="클릭하여 상세 프로필 및 평가 열람">${svgIcon('user', 14)} ${slot.assigned_name}</strong>`
                     : `<span style="color:#94a3b8;">미배정</span>`}
                 </td>
                 <td style="text-align:center;">
@@ -1767,7 +2141,7 @@ function openRfpMatchModal(projectId, slotId) {
               <div style="font-size:11px; color:#64748b; margin-top:2px;">${reasons.join(' · ')}</div>
             </td>
             <td>
-              <strong>${p.name}</strong><br/>
+              <strong style="color:#2563eb; cursor:pointer;" onclick="openProfileDetailModal('${p.id}')" title="클릭하여 상세 프로필 및 평가 열람">${p.name}</strong><br/>
               <span style="font-size:11.5px; color:#64748b;">${p.employment_type} · ${p.tech_grade} (${p.experience_years}년)</span>
             </td>
             <td>
@@ -2624,9 +2998,9 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('openMyProfileBtn').addEventListener('click', () => {
     const cur = state.data?.currentUser;
     if (cur?.linked_profile_id) {
-      openEditProfileModal(cur.linked_profile_id);
+      openProfileDetailModal(cur.linked_profile_id);
     } else if (state.data?.profiles?.length) {
-      openEditProfileModal(state.data.profiles[0].id);
+      openProfileDetailModal(state.data.profiles[0].id);
     }
   });
 
