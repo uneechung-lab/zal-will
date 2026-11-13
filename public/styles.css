@@ -1142,8 +1142,8 @@ button, input, select, textarea {
 .wbs-action-group {
   display: inline-flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: 8px;
+  justify-content: center;
+  gap: 6px;
   flex-wrap: nowrap;
 }
 
