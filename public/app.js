@@ -2346,8 +2346,8 @@ function renderProjectDetailView(el, prj, postings, interviews, templates, permi
               <th>요구 등급</th>
               <th>도메인 · 핵심 스킬</th>
               <th>배정 인력</th>
-              <th style="width:124px; text-align:center;">상태</th>
-              <th style="width:270px; text-align:right;">액션 (RFP 매칭 / 외주 구인)</th>
+              <th style="width:96px; text-align:center;">상태</th>
+              <th style="width:200px; text-align:right;">액션 (RFP 매칭 / 외주 구인)</th>
             </tr>
           </thead>
           <tbody>
@@ -2365,20 +2365,20 @@ function renderProjectDetailView(el, prj, postings, interviews, templates, permi
                     : `<span style="color:#94a3b8;">미배정</span>`}
                 </td>
                 <td style="text-align:center;">
-                  <span class="zal-status-pill wbs-status-pill ${slot.assigned_profile_id ? 'green' : 'amber'}">${slot.status}</span>
+                  <span class="zal-status-pill wbs-status-pill ${slot.assigned_profile_id ? 'green' : 'amber'}">${slot.assigned_profile_id ? '확정' : '구인중'}</span>
                 </td>
                 <td style="text-align:right;">
                   <div class="wbs-action-group">
                     <button class="btn btn-primary btn-sm wbs-action-btn-main" onclick="openRfpMatchModal('${prj.id}', '${slot.slot_id}')">
-                      ${svgIcon('search', 13)} 적임자 탐색·배정
+                      ${svgIcon('search', 13)} 검색
                     </button>
                     ${!slot.assigned_profile_id ? `
                       <button class="btn btn-outline btn-sm wbs-action-btn-sub" onclick="openSlotToJobBoard('${prj.id}', '${slot.slot_id}')">
-                        ${svgIcon('megaphone', 13)} 구인공고 오픈
+                        ${svgIcon('megaphone', 13)} 공고오픈
                       </button>
                     ` : `
                       <button class="btn btn-outline btn-sm wbs-action-btn-sub" onclick="assignProfileToSlot('${prj.id}', '${slot.slot_id}', null)">
-                        배정 해제
+                        취소
                       </button>
                     `}
                   </div>

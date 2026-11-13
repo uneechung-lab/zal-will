@@ -2,7 +2,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
 
-const TMP_STORE_PATH = path.join(os.tmpdir(), 'zalwill-vercel-store-v11.json');
+const TMP_STORE_PATH = path.join(os.tmpdir(), 'zalwill-vercel-store-v12.json');
 
 function getInitialStore() {
   return {
@@ -174,10 +174,10 @@ function getInitialStore() {
         description: '미래에셋증권의 퇴직연금(DB/DC/IRP) 가입자를 대상으로 AI 로보어드바이저 일임 운용 및 디폴트옵션(사전지정운용제도) 자동 리밸런싱·정산 코어 시스템을 차세대로 전면 재구축하는 프로젝트입니다. 대용량 일마감 배치(Spring Batch/Oracle) 튜닝과 비대면 모바일 IRP 채널 고도화가 핵심 과업입니다.',
         pm_user_id: 'u_internal_pl',
         to_slots: [
-          { slot_id: 'slot_101', role_name: '퇴직연금 정산/코어 PL', required_grade: '특급', required_domain: '퇴직연금', required_skills: ['Java', 'Spring Batch', 'Oracle', 'ProFrame'], assigned_profile_id: 'p_1', assigned_name: '정윤희 (사내 정규직)', status: '배정완료' },
-          { slot_id: 'slot_102', role_name: '데이터 아키텍트 (DA/배치튜닝)', required_grade: '고급', required_domain: '퇴직연금', required_skills: ['Oracle', 'SQL튜닝', 'DW/DM'], assigned_profile_id: 'p_4', assigned_name: '윤서연 (사내 정규직)', status: '배정완료' },
-          { slot_id: 'slot_103', role_name: '연금 로보일임·수수료 배치 선임개발', required_grade: '특급', required_domain: '퇴직연금', required_skills: ['Java', 'Spring Batch', 'Oracle'], assigned_profile_id: null, assigned_name: null, status: '미충원(구인중)' },
-          { slot_id: 'slot_104', role_name: '개인형IRP 비대면 채널 프론트/백엔드', required_grade: '고급', required_domain: '퇴직연금', required_skills: ['React', 'WebSquare', 'Spring Boot'], assigned_profile_id: null, assigned_name: null, status: '미충원(구인중)' }
+          { slot_id: 'slot_101', role_name: '퇴직연금 정산/코어 PL', required_grade: '특급', required_domain: '퇴직연금', required_skills: ['Java', 'Spring Batch', 'Oracle', 'ProFrame'], assigned_profile_id: 'p_1', assigned_name: '정윤희 (사내 정규직)', status: '확정' },
+          { slot_id: 'slot_102', role_name: '데이터 아키텍트 (DA/배치튜닝)', required_grade: '고급', required_domain: '퇴직연금', required_skills: ['Oracle', 'SQL튜닝', 'DW/DM'], assigned_profile_id: 'p_4', assigned_name: '윤서연 (사내 정규직)', status: '확정' },
+          { slot_id: 'slot_103', role_name: '연금 로보일임·수수료 배치 선임개발', required_grade: '특급', required_domain: '퇴직연금', required_skills: ['Java', 'Spring Batch', 'Oracle'], assigned_profile_id: null, assigned_name: null, status: '구인중' },
+          { slot_id: 'slot_104', role_name: '개인형IRP 비대면 채널 프론트/백엔드', required_grade: '고급', required_domain: '퇴직연금', required_skills: ['React', 'WebSquare', 'Spring Boot'], assigned_profile_id: null, assigned_name: null, status: '구인중' }
         ],
         created_at: '2026-11-10'
       },
@@ -201,8 +201,8 @@ function getInitialStore() {
         description: 'KB증권의 해외 채권 및 외화표시 펀드 실시간 매매·중개·환전 결제 프로세스를 단일 MSA 플랫폼으로 통합 구축하는 사업입니다. 글로벌 예탁기관/채권평가사 대외 전문 연동, 실시간 외화 기준가(NAV) 산출, 채권 시가평가 및 경과이자 계산 엔진 개발 역량이 요구됩니다.',
         pm_user_id: 'u_manager',
         to_slots: [
-          { slot_id: 'slot_201', role_name: '채권/외화펀드 수탁 아키텍트 (AA)', required_grade: '고급', required_domain: '채권', required_skills: ['Java', 'Spring Cloud', 'Kafka', 'PostgreSQL'], assigned_profile_id: 'p_2', assigned_name: '강동원 (사내 정규직)', status: '배정완료' },
-          { slot_id: 'slot_202', role_name: '외화채권 시가평가 및 펀드결제 응용개발', required_grade: '고급', required_domain: '채권', required_skills: ['Java', 'Spring Boot', 'Oracle', '펀드회계'], assigned_profile_id: null, assigned_name: null, status: '미충원(구인중)' }
+          { slot_id: 'slot_201', role_name: '채권/외화펀드 수탁 아키텍트 (AA)', required_grade: '고급', required_domain: '채권', required_skills: ['Java', 'Spring Cloud', 'Kafka', 'PostgreSQL'], assigned_profile_id: 'p_2', assigned_name: '강동원 (사내 정규직)', status: '확정' },
+          { slot_id: 'slot_202', role_name: '외화채권 시가평가 및 펀드결제 응용개발', required_grade: '고급', required_domain: '채권', required_skills: ['Java', 'Spring Boot', 'Oracle', '펀드회계'], assigned_profile_id: null, assigned_name: null, status: '구인중' }
         ],
         created_at: '2026-11-11'
       },
@@ -226,8 +226,8 @@ function getInitialStore() {
         description: 'NH투자증권의 차세대 퇴직연금 및 개인연금 통합 자산관리 플랫폼 구축을 위한 사전 ISP/PI(업무 프로세스 혁신) 컨설팅 프로젝트입니다. 연금 제도 개편 대응, 마이데이터 기반 초개인화 은퇴설계 서비스 모델 수립, 차세대 IT 목표 아키텍처 및 본사업 RFP 요건 정의를 수행합니다.',
         pm_user_id: 'u_master',
         to_slots: [
-          { slot_id: 'slot_301', role_name: '퇴직연금 업무/상품 PI 수석 컨설턴트', required_grade: '특급', required_domain: '퇴직연금', required_skills: ['Java', 'Oracle', 'ProFrame'], assigned_profile_id: 'p_1', assigned_name: '정윤희 (사내 정규직)', status: '배정완료' },
-          { slot_id: 'slot_302', role_name: '연금 채널/마이데이터 목표모델 설계', required_grade: '고급', required_domain: '마이데이터', required_skills: ['React', 'Spring Boot', 'MSA'], assigned_profile_id: null, assigned_name: null, status: '미충원' }
+          { slot_id: 'slot_301', role_name: '퇴직연금 업무/상품 PI 수석 컨설턴트', required_grade: '특급', required_domain: '퇴직연금', required_skills: ['Java', 'Oracle', 'ProFrame'], assigned_profile_id: 'p_1', assigned_name: '정윤희 (사내 정규직)', status: '확정' },
+          { slot_id: 'slot_302', role_name: '연금 채널/마이데이터 목표모델 설계', required_grade: '고급', required_domain: '마이데이터', required_skills: ['React', 'Spring Boot', 'MSA'], assigned_profile_id: null, assigned_name: null, status: '구인중' }
         ],
         created_at: '2026-11-12'
       },
@@ -253,9 +253,9 @@ function getInitialStore() {
         description: '하나증권 퇴직연금(IRP/DC) 일임형 로보어드바이저 서비스 구축 프로젝트로, 외부 알고리즘 제휴사 연동, 자동 포트폴리오 리밸런싱 주문 생성, 일별 수익률 및 수수료 정산 배치를 구축합니다.',
         pm_user_id: 'u_internal_pl',
         to_slots: [
-          { slot_id: 'slot_401', role_name: '퇴직연금 일임형 로보 정산 PL', required_grade: '특급', required_domain: '퇴직연금', required_skills: ['Java', 'Spring Batch', 'Oracle'], assigned_profile_id: 'p_1', assigned_name: '정윤희 (사내 정규직)', status: '배정완료' },
-          { slot_id: 'slot_402', role_name: '로보 포트폴리오 리밸런싱 배치 개발', required_grade: '중급', required_domain: '퇴직연금', required_skills: ['Java', 'Spring Boot', 'Oracle'], assigned_profile_id: 'p_3', assigned_name: '조진희 (사내 전문계약직)', status: '배정완료' },
-          { slot_id: 'slot_403', role_name: '퇴직연금 로보 채널 UI/API 연동 개발', required_grade: '고급', required_domain: '퇴직연금', required_skills: ['React', 'WebSquare', 'Spring Boot'], assigned_profile_id: 'p_5', assigned_name: '신은숙 (외주 프리랜서)', status: '배정완료' }
+          { slot_id: 'slot_401', role_name: '퇴직연금 일임형 로보 정산 PL', required_grade: '특급', required_domain: '퇴직연금', required_skills: ['Java', 'Spring Batch', 'Oracle'], assigned_profile_id: 'p_1', assigned_name: '정윤희 (사내 정규직)', status: '확정' },
+          { slot_id: 'slot_402', role_name: '로보 포트폴리오 리밸런싱 배치 개발', required_grade: '중급', required_domain: '퇴직연금', required_skills: ['Java', 'Spring Boot', 'Oracle'], assigned_profile_id: 'p_3', assigned_name: '조진희 (사내 전문계약직)', status: '확정' },
+          { slot_id: 'slot_403', role_name: '퇴직연금 로보 채널 UI/API 연동 개발', required_grade: '고급', required_domain: '퇴직연금', required_skills: ['React', 'WebSquare', 'Spring Boot'], assigned_profile_id: 'p_5', assigned_name: '신은숙 (외주 프리랜서)', status: '확정' }
         ],
         created_at: '2026-08-01'
       },
@@ -279,8 +279,8 @@ function getInitialStore() {
         description: '신영증권 고객이 달러(USD) 등 외화로 직접 펀드를 매수·환매할 수 있는 외화표시펀드 매매 및 외화예탁금 결제 시스템을 구축하는 프로젝트입니다.',
         pm_user_id: 'u_manager',
         to_slots: [
-          { slot_id: 'slot_501', role_name: '외화펀드 매매/환전 결제 아키텍트', required_grade: '고급', required_domain: '펀드', required_skills: ['Java', 'Spring Cloud', 'PostgreSQL'], assigned_profile_id: 'p_2', assigned_name: '강동원 (사내 정규직)', status: '배정완료' },
-          { slot_id: 'slot_502', role_name: '외화펀드 기준가/예탁 결제 개발', required_grade: '고급', required_domain: '채권', required_skills: ['Java', 'Spring Boot', 'Oracle', '펀드회계'], assigned_profile_id: 'p_7', assigned_name: '오세훈 (외주 반프리)', status: '배정완료' }
+          { slot_id: 'slot_501', role_name: '외화펀드 매매/환전 결제 아키텍트', required_grade: '고급', required_domain: '펀드', required_skills: ['Java', 'Spring Cloud', 'PostgreSQL'], assigned_profile_id: 'p_2', assigned_name: '강동원 (사내 정규직)', status: '확정' },
+          { slot_id: 'slot_502', role_name: '외화펀드 기준가/예탁 결제 개발', required_grade: '고급', required_domain: '채권', required_skills: ['Java', 'Spring Boot', 'Oracle', '펀드회계'], assigned_profile_id: 'p_7', assigned_name: '오세훈 (외주 반프리)', status: '확정' }
         ],
         created_at: '2026-07-01'
       },
@@ -304,8 +304,8 @@ function getInitialStore() {
         description: '삼성증권 모바일(mPOP) 연금 고객의 가입·이전·상품교체 UX/UI를 개편하고 개인별 연금 수익률/절세 혜택 시뮬레이션 데이터마트를 고도화하는 사업입니다.',
         pm_user_id: 'u_internal_pl',
         to_slots: [
-          { slot_id: 'slot_601', role_name: '연금 고객 데이터마트 및 수익률 분석 DA', required_grade: '고급', required_domain: '퇴직연금', required_skills: ['Oracle', 'SQL튜닝', 'DW/DM'], assigned_profile_id: 'p_4', assigned_name: '윤서연 (사내 정규직)', status: '배정완료' },
-          { slot_id: 'slot_602', role_name: '모바일 연금 자산관리 대시보드 프론트엔드', required_grade: '고급', required_domain: '채널계', required_skills: ['React', 'TypeScript', 'Next.js'], assigned_profile_id: 'p_6', assigned_name: '한지민 (외주 개인사업자)', status: '배정완료' }
+          { slot_id: 'slot_601', role_name: '연금 고객 데이터마트 및 수익률 분석 DA', required_grade: '고급', required_domain: '퇴직연금', required_skills: ['Oracle', 'SQL튜닝', 'DW/DM'], assigned_profile_id: 'p_4', assigned_name: '윤서연 (사내 정규직)', status: '확정' },
+          { slot_id: 'slot_602', role_name: '모바일 연금 자산관리 대시보드 프론트엔드', required_grade: '고급', required_domain: '채널계', required_skills: ['React', 'TypeScript', 'Next.js'], assigned_profile_id: 'p_6', assigned_name: '한지민 (외주 개인사업자)', status: '확정' }
         ],
         created_at: '2026-03-01'
       },
@@ -331,8 +331,8 @@ function getInitialStore() {
         description: '하나증권 퇴직연금 원장 정산 프로세스 개선 및 대용량 배치 처리 성능 고도화를 성공적으로 완수한 프로젝트입니다.',
         pm_user_id: 'u_internal_pl',
         to_slots: [
-          { slot_id: 'slot_701', role_name: '퇴직연금 원장/배치 고도화 PL', required_grade: '특급', required_domain: '퇴직연금', required_skills: ['Java', 'Spring Batch', 'Oracle'], assigned_profile_id: 'p_1', assigned_name: '정윤희 (사내 정규직)', status: '배정완료' },
-          { slot_id: 'slot_702', role_name: '퇴직연금 정산 배치 개발', required_grade: '특급', required_domain: '퇴직연금', required_skills: ['Java', 'Oracle'], assigned_profile_id: 'p_5', assigned_name: '신은숙 (외주 프리랜서)', status: '배정완료' }
+          { slot_id: 'slot_701', role_name: '퇴직연금 원장/배치 고도화 PL', required_grade: '특급', required_domain: '퇴직연금', required_skills: ['Java', 'Spring Batch', 'Oracle'], assigned_profile_id: 'p_1', assigned_name: '정윤희 (사내 정규직)', status: '확정' },
+          { slot_id: 'slot_702', role_name: '퇴직연금 정산 배치 개발', required_grade: '특급', required_domain: '퇴직연금', required_skills: ['Java', 'Oracle'], assigned_profile_id: 'p_5', assigned_name: '신은숙 (외주 프리랜서)', status: '확정' }
         ],
         created_at: '2025-07-01'
       },
@@ -356,8 +356,8 @@ function getInitialStore() {
         description: '우리투자증권 개인형IRP 및 퇴직연금 계좌 내 실시간 ETF 매매·호가 연동 및 주문 정산 시스템을 구축 완료한 프로젝트입니다.',
         pm_user_id: 'u_manager',
         to_slots: [
-          { slot_id: 'slot_703', role_name: 'IRP ETF 실시간 매매 연동 개발', required_grade: '고급', required_domain: '퇴직연금', required_skills: ['Java', 'Spring Boot', 'Oracle'], assigned_profile_id: 'p_2', assigned_name: '강동원 (사내 정규직)', status: '배정완료' },
-          { slot_id: 'slot_704', role_name: 'IRP ETF 주문 채널 화면 개발', required_grade: '중급', required_domain: '퇴직연금', required_skills: ['WebSquare', 'Java'], assigned_profile_id: 'p_3', assigned_name: '조진희 (사내 전문계약직)', status: '배정완료' }
+          { slot_id: 'slot_703', role_name: 'IRP ETF 실시간 매매 연동 개발', required_grade: '고급', required_domain: '퇴직연금', required_skills: ['Java', 'Spring Boot', 'Oracle'], assigned_profile_id: 'p_2', assigned_name: '강동원 (사내 정규직)', status: '확정' },
+          { slot_id: 'slot_704', role_name: 'IRP ETF 주문 채널 화면 개발', required_grade: '중급', required_domain: '퇴직연금', required_skills: ['WebSquare', 'Java'], assigned_profile_id: 'p_3', assigned_name: '조진희 (사내 전문계약직)', status: '확정' }
         ],
         created_at: '2025-06-01'
       },
@@ -381,8 +381,8 @@ function getInitialStore() {
         description: '키움증권의 퇴직연금 사업 신규 진출에 따른 DB/DC/IRP 전 제도 원장, 상품운용, 수수료 정산 및 비대면 MTS 채널 신시스템을 구축 완료한 프로젝트입니다.',
         pm_user_id: 'u_internal_pl',
         to_slots: [
-          { slot_id: 'slot_705', role_name: '퇴직연금 신시스템 코어 PL', required_grade: '특급', required_domain: '퇴직연금', required_skills: ['Java', 'Spring Batch', 'Oracle'], assigned_profile_id: 'p_1', assigned_name: '정윤희 (사내 정규직)', status: '배정완료' },
-          { slot_id: 'slot_706', role_name: '퇴직연금 데이터 모델링 DA', required_grade: '고급', required_domain: '퇴직연금', required_skills: ['Oracle', 'DW/DM', 'SQL튜닝'], assigned_profile_id: 'p_4', assigned_name: '윤서연 (사내 정규직)', status: '배정완료' }
+          { slot_id: 'slot_705', role_name: '퇴직연금 신시스템 코어 PL', required_grade: '특급', required_domain: '퇴직연금', required_skills: ['Java', 'Spring Batch', 'Oracle'], assigned_profile_id: 'p_1', assigned_name: '정윤희 (사내 정규직)', status: '확정' },
+          { slot_id: 'slot_706', role_name: '퇴직연금 데이터 모델링 DA', required_grade: '고급', required_domain: '퇴직연금', required_skills: ['Oracle', 'DW/DM', 'SQL튜닝'], assigned_profile_id: 'p_4', assigned_name: '윤서연 (사내 정규직)', status: '확정' }
         ],
         created_at: '2025-04-01'
       },
@@ -406,7 +406,7 @@ function getInitialStore() {
         description: '키움증권 퇴직연금 신시스템 본사업 착수 전 업무 프로세스 설계(PI) 및 요건 정의를 수행한 컨설팅 프로젝트입니다.',
         pm_user_id: 'u_master',
         to_slots: [
-          { slot_id: 'slot_707', role_name: '퇴직연금 사업 추진 PI 리드 컨설턴트', required_grade: '특급', required_domain: '퇴직연금', required_skills: ['Java', 'Oracle', 'ProFrame'], assigned_profile_id: 'p_1', assigned_name: '정윤희 (사내 정규직)', status: '배정완료' }
+          { slot_id: 'slot_707', role_name: '퇴직연금 사업 추진 PI 리드 컨설턴트', required_grade: '특급', required_domain: '퇴직연금', required_skills: ['Java', 'Oracle', 'ProFrame'], assigned_profile_id: 'p_1', assigned_name: '정윤희 (사내 정규직)', status: '확정' }
         ],
         created_at: '2025-02-01'
       },
@@ -430,7 +430,7 @@ function getInitialStore() {
         description: '퇴직연금 사업자 간 기존 운용상품 해지 없이 그대로 이전하는 퇴직연금 실물이전 제도 시행에 따른 예탁원/타기관 전문 연동 및 이전 정산 추가개발 프로젝트입니다.',
         pm_user_id: 'u_internal_pl',
         to_slots: [
-          { slot_id: 'slot_708', role_name: '퇴직연금 실물이전 대외전문/결제 개발', required_grade: '특급', required_domain: '퇴직연금', required_skills: ['Java', 'Spring Batch', 'Oracle'], assigned_profile_id: 'p_5', assigned_name: '신은숙 (외주 프리랜서)', status: '배정완료' }
+          { slot_id: 'slot_708', role_name: '퇴직연금 실물이전 대외전문/결제 개발', required_grade: '특급', required_domain: '퇴직연금', required_skills: ['Java', 'Spring Batch', 'Oracle'], assigned_profile_id: 'p_5', assigned_name: '신은숙 (외주 프리랜서)', status: '확정' }
         ],
         created_at: '2024-12-01'
       },
@@ -454,7 +454,7 @@ function getInitialStore() {
         description: '토스뱅크의 집합투자증권(펀드) 투자중개업 본인가 획득을 위한 물적·전산 설비 요건 컨설팅 및 비대면 펀드 판매솔루션 구축을 완료한 사업입니다.',
         pm_user_id: 'u_manager',
         to_slots: [
-          { slot_id: 'slot_709', role_name: '펀드 판매솔루션 아키텍처 컨설팅', required_grade: '고급', required_domain: '펀드', required_skills: ['Java', 'Spring Cloud', 'Kafka'], assigned_profile_id: 'p_2', assigned_name: '강동원 (사내 정규직)', status: '배정완료' }
+          { slot_id: 'slot_709', role_name: '펀드 판매솔루션 아키텍처 컨설팅', required_grade: '고급', required_domain: '펀드', required_skills: ['Java', 'Spring Cloud', 'Kafka'], assigned_profile_id: 'p_2', assigned_name: '강동원 (사내 정규직)', status: '확정' }
         ],
         created_at: '2024-09-01'
       },
@@ -478,7 +478,7 @@ function getInitialStore() {
         description: '현대차증권 차세대 시스템 구축을 앞두고 퇴직연금 부문 현행(As-Is) 업무 분석 및 미래(To-Be) 개선 과제를 도출한 업무컨설팅 프로젝트입니다.',
         pm_user_id: 'u_master',
         to_slots: [
-          { slot_id: 'slot_710', role_name: '퇴직연금 차세대 요건정의 수석 컨설턴트', required_grade: '특급', required_domain: '퇴직연금', required_skills: ['Java', 'Oracle'], assigned_profile_id: 'p_1', assigned_name: '정윤희 (사내 정규직)', status: '배정완료' }
+          { slot_id: 'slot_710', role_name: '퇴직연금 차세대 요건정의 수석 컨설턴트', required_grade: '특급', required_domain: '퇴직연금', required_skills: ['Java', 'Oracle'], assigned_profile_id: 'p_1', assigned_name: '정윤희 (사내 정규직)', status: '확정' }
         ],
         created_at: '2024-06-01'
       }
@@ -811,7 +811,7 @@ module.exports = async (req, res) => {
         required_skills: s.required_skills || ['Java', 'Spring Boot'],
         assigned_profile_id: null,
         assigned_name: null,
-        status: '미충원'
+        status: '구인중'
       })),
       created_at: new Date().toISOString().slice(0, 10)
     });
@@ -827,12 +827,12 @@ module.exports = async (req, res) => {
         const prof = store.profiles.find(p => p.id === body.profile_id);
         slot.assigned_profile_id = prof.id;
         slot.assigned_name = `${prof.name} (${prof.employment_type})`;
-        slot.status = '배정완료';
+        slot.status = '확정';
         if (!prof.is_internal) prof.resourced_count = (prof.resourced_count || 0) + 1;
       } else {
         slot.assigned_profile_id = null;
         slot.assigned_name = null;
-        slot.status = '미충원';
+        slot.status = '구인중';
       }
       saveStore(store);
     }
@@ -843,7 +843,7 @@ module.exports = async (req, res) => {
     const prj = store.projects.find(p => p.id === body.project_id);
     const slot = prj?.to_slots.find(s => s.slot_id === body.slot_id);
     if (prj && slot) {
-      slot.status = '미충원(구인중)';
+      slot.status = '구인중';
       store.postings.unshift({
         id: 'post_' + Date.now(),
         project_id: prj.id,
@@ -1005,7 +1005,7 @@ module.exports = async (req, res) => {
         if (slot) {
           slot.assigned_profile_id = inv.candidate_profile_id;
           slot.assigned_name = `${inv.candidate_name} (${inv.candidate_type})`;
-          slot.status = '배정완료';
+          slot.status = '확정';
         }
         const post = store.postings.find(p => p.id === inv.posting_id);
         if (post) post.status = 'CLOSED';

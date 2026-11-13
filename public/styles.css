@@ -1127,7 +1127,7 @@ button, input, select, textarea {
 }
 
 .wbs-status-pill {
-  width: 108px;
+  width: 72px;
   height: 32px;
   padding: 0 10px;
   border-radius: 8px;
@@ -1148,7 +1148,7 @@ button, input, select, textarea {
 }
 
 .wbs-action-btn-main {
-  width: 136px;
+  width: 76px;
   height: 32px;
   padding: 0 10px;
   border-radius: 8px;
@@ -1163,7 +1163,7 @@ button, input, select, textarea {
 }
 
 .wbs-action-btn-sub {
-  width: 112px;
+  width: 88px;
   height: 32px;
   padding: 0 10px;
   border-radius: 8px;
