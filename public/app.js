@@ -1999,7 +1999,7 @@ function renderProjectDetailView(el, prj, postings, interviews, templates, permi
 
     <!-- 해당 프로젝트 오픈 구인 포지션 섹션 -->
     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:14px;">
-      <h3 style="font-size:16.5px; font-weight:600; display:inline-flex; align-items:center; gap:7px;">${svgIcon('megaphone', 18)} 오픈 구인 포지션 (${projectPostings.length}건)</h3>
+      <h3 style="font-size:16.5px; font-weight:600; display:inline-flex; align-items:center; gap:7px;">오픈 구인 포지션 (${projectPostings.length}건)</h3>
     </div>
 
     <div class="dashboard-feed-masonry" style="margin-bottom:28px;">
@@ -2007,7 +2007,6 @@ function renderProjectDetailView(el, prj, postings, interviews, templates, permi
         <article class="zal-feed-card" style="cursor:pointer;" onclick="openPostingDetailModal('${post.id}')">
           <div class="zal-card-header">
             <div class="zal-author-box">
-              <div class="zal-avatar-circle"><img src="/pic1_thumb.png" alt="구인" /></div>
               <div>
                 <span class="zal-author-name">${post.role_name}</span>
                 <span class="zal-author-role">${post.required_grade} · ${post.required_domain}</span>
@@ -2039,12 +2038,14 @@ function renderProjectDetailView(el, prj, postings, interviews, templates, permi
                 <button type="button" class="btn btn-outline btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="event.stopPropagation(); openTargetSourcingModal('${post.id}')">${svgIcon('target', 13)} 타겟 소싱 발송</button>
               ` : ''}
             </div>
-            ${permissions.can_manage_postings ? `
-              <button type="button" class="btn btn-primary btn-sm" style="margin-left:auto;" onclick="event.stopPropagation(); togglePostingStatus('${post.id}')">${post.status === 'OPEN' ? '채용마감' : '재오픈'}</button>
-            ` : ''}
           </div>
 
-          ${renderPostingApplicantBox(post)}
+          <div class="posting-bottom-row">
+            ${renderPostingApplicantBox(post)}
+            ${permissions.can_manage_postings ? `
+              <button type="button" class="btn btn-primary btn-sm" style="margin-left:auto; align-self:flex-end;" onclick="event.stopPropagation(); togglePostingStatus('${post.id}')">${post.status === 'OPEN' ? '채용마감' : '재오픈'}</button>
+            ` : ''}
+          </div>
         </article>
       `).join('') : `
         <div class="zal-feed-card" style="grid-column: 1 / -1; text-align:center; color:#64748b; padding:28px;">
@@ -2055,7 +2056,7 @@ function renderProjectDetailView(el, prj, postings, interviews, templates, permi
 
     <!-- 해당 프로젝트 지원자 인터뷰 섹션 -->
     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:14px;">
-      <h3 style="font-size:16.5px; font-weight:600; display:inline-flex; align-items:center; gap:7px;">${svgIcon('calendar', 18)} 지원자 인터뷰</h3>
+      <h3 style="font-size:16.5px; font-weight:600; display:inline-flex; align-items:center; gap:7px;">지원자 인터뷰</h3>
       ${permissions.can_evaluate_interviews || permissions.can_schedule_interviews ? `
         <button class="btn btn-outline btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="openQuestionTemplatesModal()">${svgIcon('file', 14)} 직무별 필수 질문 리스트(${templates.length}종)</button>
       ` : ''}
@@ -2398,7 +2399,7 @@ function renderSourcingTab() {
 
   el.innerHTML = `
     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:18px;">
-      <h3 style="font-size:17px; font-weight:600; display:inline-flex; align-items:center; gap:7px;">${svgIcon('megaphone', 18)} 오픈 구인 포지션 (${postings.length}건)</h3>
+      <h3 style="font-size:17px; font-weight:600; display:inline-flex; align-items:center; gap:7px;">오픈 구인 포지션 (${postings.length}건)</h3>
     </div>
 
     <div class="dashboard-feed-masonry">
@@ -2406,7 +2407,6 @@ function renderSourcingTab() {
         <article class="zal-feed-card" style="cursor:pointer;" onclick="openPostingDetailModal('${post.id}')">
           <div class="zal-card-header">
             <div class="zal-author-box">
-              <div class="zal-avatar-circle"><img src="/pic1_thumb.png" alt="구인" /></div>
               <div>
                 <span class="zal-author-name">${post.role_name}</span>
                 <span class="zal-author-role">${post.required_grade} · ${post.required_domain}</span>
@@ -2438,12 +2438,14 @@ function renderSourcingTab() {
                 <button type="button" class="btn btn-outline btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="event.stopPropagation(); openTargetSourcingModal('${post.id}')">${svgIcon('target', 13)} 타겟 소싱 발송</button>
               ` : ''}
             </div>
-            ${permissions.can_manage_postings ? `
-              <button type="button" class="btn btn-primary btn-sm" style="margin-left:auto;" onclick="event.stopPropagation(); togglePostingStatus('${post.id}')">${post.status === 'OPEN' ? '채용마감' : '재오픈'}</button>
-            ` : ''}
           </div>
 
-          ${renderPostingApplicantBox(post)}
+          <div class="posting-bottom-row">
+            ${renderPostingApplicantBox(post)}
+            ${permissions.can_manage_postings ? `
+              <button type="button" class="btn btn-primary btn-sm" style="margin-left:auto; align-self:flex-end;" onclick="event.stopPropagation(); togglePostingStatus('${post.id}')">${post.status === 'OPEN' ? '채용마감' : '재오픈'}</button>
+            ` : ''}
+          </div>
         </article>
       `).join('')}
     </div>
@@ -2689,7 +2691,7 @@ function renderInterviewsTab() {
 
   el.innerHTML = `
     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:18px;">
-      <h3 style="font-size:17px; font-weight:600; display:inline-flex; align-items:center; gap:7px;">${svgIcon('calendar', 18)} 지원자 인터뷰</h3>
+      <h3 style="font-size:17px; font-weight:600; display:inline-flex; align-items:center; gap:7px;">지원자 인터뷰</h3>
       ${permissions.can_evaluate_interviews || permissions.can_schedule_interviews ? `
         <button class="btn btn-outline btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="openQuestionTemplatesModal()">${svgIcon('file', 14)} 직무별 필수 질문 리스트(${templates.length}종) 관리</button>
       ` : ''}

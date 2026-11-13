@@ -1480,13 +1480,21 @@ button, input, select, textarea {
 }
 
 /* Open Job Posting Applicant Badge & Overlapping Circles */
+.posting-bottom-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #f1f5f9;
+  flex-wrap: wrap;
+}
+
 .posting-applicant-box {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 8px;
-  padding-top: 10px;
-  border-top: 1px solid #f1f5f9;
 }
 
 .posting-applicant-title {
@@ -1509,18 +1517,18 @@ button, input, select, textarea {
 }
 
 .posting-applicant-circle {
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 500;
   color: #ffffff;
-  margin-left: -8px;
-  border: 3px solid #ffffff;
-  letter-spacing: -0.4px;
+  margin-left: -6px;
+  border: 2.5px solid #ffffff;
+  letter-spacing: -0.5px;
   flex-shrink: 0;
   user-select: none;
 }
