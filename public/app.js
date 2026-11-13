@@ -1217,26 +1217,133 @@ function renderProjectSummaryCard(prj) {
 
 function renderPostingApplicantBox(post) {
   const defaultMap = {
-    post_1: ['신**', '김**', '이**'],
-    post_2: ['한**', '박**'],
-    post_3: ['오**', '김**', '최**']
+    post_1: ['신은숙', '김도현', '이준호'],
+    post_2: ['한지민', '박성진'],
+    post_3: ['오세훈', '김도윤', '최민수']
   };
-  const applicants = Array.isArray(post.applicants)
+  const rawApplicants = Array.isArray(post.applicants)
     ? post.applicants
     : (defaultMap[post.id] || []);
-  const count = typeof post.applicant_count === 'number' ? post.applicant_count : applicants.length;
+  const isMaster = state.data?.currentUser?.role_group === 'MASTER';
+  const displayApplicants = rawApplicants.map(name => {
+    const clean = String(name || '').trim();
+    if (isMaster) return clean.replace(/\*\*$/, '');
+    if (clean.endsWith('**')) return clean;
+    return `${clean.charAt(0)}**`;
+  });
+  const count = typeof post.applicant_count === 'number' ? post.applicant_count : displayApplicants.length;
   return `
     <div class="posting-applicant-box">
       <div class="posting-applicant-title">
         프로젝트 참여신청 <span class="posting-applicant-count">${count}명</span>
       </div>
       <div class="posting-applicant-avatars">
-        ${applicants.length > 0 ? applicants.map((masked, idx) => `
-          <span class="posting-applicant-circle color-${idx % 4}">${masked}</span>
+        ${displayApplicants.length > 0 ? displayApplicants.map((label, idx) => `
+          <span class="posting-applicant-circle color-${idx % 4}">${label}</span>
         `).join('') : `<span style="font-size:12.5px; color:#94a3b8;">신청 대기중</span>`}
       </div>
     </div>
   `;
+}
+
+function openCandidateResumeModal(interviewId) {
+  const interviews = state.data?.interviews || [];
+  const profiles = state.data?.profiles || [];
+  const inv = interviews.find(i => i.id === interviewId);
+  if (!inv) return;
+  const prof = profiles.find(p => p.id === inv.candidate_profile_id || p.name === inv.candidate_name);
+
+  const education = prof?.education || '컴퓨터공학 학사 졸업';
+  const experienceYears = prof?.experience_years || 11;
+  const certifications = (prof?.certifications && prof.certifications.length > 0)
+    ? prof.certifications.join(', ')
+    : '정보처리기사, SQLD';
+  const careerHistory = (prof?.career_history && prof.career_history.length > 0)
+    ? prof.career_history
+    : [
+        { project: `${(inv.domains && inv.domains[0]) || '금융'} 차세대 코어/배치 시스템 구축`, client: '메이저 금융사', period: '2024.03 ~ 2026.10', role: '선임/리드 개발', tech: (inv.skills || []).join(', ') }
+      ];
+
+  openModal(`지원자 상세 이력서 — ${inv.candidate_name} (${inv.tech_grade})`, `
+    <div style="display:flex; flex-direction:column; gap:16px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; padding:16px 18px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px;">
+        <div style="display:flex; align-items:center; gap:14px;">
+          <div style="width:48px; height:48px; border-radius:50%; background:#1e293b; color:#ffffff; font-size:16px; font-weight:600; display:inline-flex; align-items:center; justify-content:center;">
+            ${inv.candidate_name.slice(0, 1)}
+          </div>
+          <div>
+            <div style="font-size:18px; font-weight:600; color:#0f172a;">
+              ${inv.candidate_name}
+              <span style="font-size:13.5px; font-weight:500; color:#475569; margin-left:6px;">${inv.candidate_type} · ${inv.tech_grade} (${experienceYears}년차)</span>
+            </div>
+            <div style="font-size:13px; color:#64748b; margin-top:3px;">
+              연락처: ${inv.candidate_phone || prof?.phone || '010-****-****'} · 이메일: ${inv.candidate_email || prof?.email || '-'}
+            </div>
+          </div>
+        </div>
+        <span class="zal-status-pill ${inv.status === '면접진행완료' || inv.status === '최종선정' ? 'green' : 'amber'}">${inv.status}</span>
+      </div>
+
+      <div class="form-grid" style="margin-bottom:0;">
+        <div style="padding:12px 14px; border:1px solid #e2e8f0; border-radius:12px;">
+          <div style="font-size:12px; color:#64748b; margin-bottom:4px;">최종 학력 · 보유 자격증</div>
+          <div style="font-size:14px; font-weight:600; color:#0f172a;">${education}</div>
+          <div style="font-size:12.5px; color:#475569; margin-top:2px;">자격증: ${certifications}</div>
+        </div>
+        <div style="padding:12px 14px; border:1px solid #e2e8f0; border-radius:12px;">
+          <div style="font-size:12px; color:#64748b; margin-bottom:4px;">투입 가용일 · 희망 단가</div>
+          <div style="font-size:14px; font-weight:600; color:#059669;">가용일: ${inv.available_from}</div>
+          <div style="font-size:12.5px; color:#0f172a; margin-top:2px;">
+            희망 단가: ${inv.desired_rate !== null ? `월 ${Number(inv.desired_rate).toLocaleString()}만원` : '단가 비공개'} · 경로: ${inv.recommender || '직접지원'}
+          </div>
+        </div>
+      </div>
+
+      <div style="padding:14px 16px; border:1px solid #e2e8f0; border-radius:12px;">
+        <div style="font-size:13px; font-weight:600; color:#0f172a; margin-bottom:6px;">전문 도메인 및 핵심 기술 스택</div>
+        <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px;">
+          ${(inv.domains || []).map(d => `<span class="badge badge-domain">${d}</span>`).join('')}
+          ${(inv.skills || []).map(s => `<span class="badge badge-skill">${s}</span>`).join('')}
+        </div>
+        <div style="font-size:13.5px; color:#334155; line-height:1.55;">
+          ${inv.resume_summary}
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size:13.5px; font-weight:600; color:#0f172a; margin-bottom:8px;">주요 프로젝트 수행 이력 (${careerHistory.length}건)</div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>프로젝트명</th>
+              <th>고객사</th>
+              <th>수행기간</th>
+              <th>담당역할</th>
+              <th>적용기술</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${careerHistory.map(ch => `
+              <tr>
+                <td style="font-weight:600;">${ch.project}</td>
+                <td>${ch.client}</td>
+                <td>${ch.period}</td>
+                <td>${ch.role}</td>
+                <td>${ch.tech}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; padding-top:8px; border-top:1px solid #f1f5f9;">
+        <span style="font-size:13px; color:#64748b;">
+          면접 일정: <strong>${inv.interview_date || '미지정'} (${inv.interview_method || '화상'})</strong> · 면접관: <strong>${inv.interviewer_name || '조성현 상무'}</strong>
+        </span>
+        <button type="button" class="btn btn-primary btn-sm" onclick="closeModal()">닫기</button>
+      </div>
+    </div>
+  `);
 }
 
 function renderInterviewVerticalCard(inv, idx, permissions, currentUser) {
@@ -1260,14 +1367,14 @@ function renderInterviewVerticalCard(inv, idx, permissions, currentUser) {
         <span class="inv-vcard-heart">${svgIcon('heart', 17)}</span>
       </div>
 
-      <div class="inv-vcard-banner theme-${idx % 3}">
+      <div class="inv-vcard-banner" onclick="openCandidateResumeModal('${inv.id}')" title="클릭하여 지원자 상세 이력서 열람">
         <div class="inv-banner-mark">
-          <span style="color:#f26544;">●</span>
+          ${svgIcon('user', 17)}
           <span>${inv.candidate_name}</span>
-          <span style="font-size:13.5px; font-weight:500; opacity:0.85;">(${inv.tech_grade})</span>
+          <span style="font-size:13.5px; font-weight:500; color:#475569;">(${inv.tech_grade})</span>
         </div>
         <div class="inv-banner-sub" style="display:inline-flex; align-items:center; gap:5px;">${svgIcon('calendar', 13)} ${inv.interview_date || '일정 미지정'} · ${inv.interview_method || '화상'}</div>
-        <div class="inv-banner-sub">면접관: ${inv.interviewer_name || '미배정'}</div>
+        <div class="inv-banner-sub">면접관: ${inv.interviewer_name || '조성현 상무'}</div>
       </div>
 
       <div class="inv-vcard-title">

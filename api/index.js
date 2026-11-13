@@ -2,7 +2,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
 
-const TMP_STORE_PATH = path.join(os.tmpdir(), 'zalwill-vercel-store-v7.json');
+const TMP_STORE_PATH = path.join(os.tmpdir(), 'zalwill-vercel-store-v9.json');
 
 function getInitialStore() {
   return {
@@ -119,6 +119,22 @@ function getInitialStore() {
           { project: '한국자산평가 채권/장외파생 평가엔진 고도화', client: '한국자산평가', period: '2024.08 ~ 2026.11', role: '응용개발', tech: 'Java, Oracle, C#' }
         ],
         updated_at: '2026-11-08'
+      },
+      {
+        id: 'p_8', name: '김도현', employment_type: '외주 프리랜서', is_internal: 0, tech_grade: '특급', experience_years: 11, birth_year: 1990,
+        phone: '010-5512-7789', email: 'dh.kim.batch@gmail.com', education: '성균관대학교 소프트웨어학과 학사',
+        certifications: ['정보처리기사', 'SQLP'],
+        skills: ['Java', 'Spring Batch', 'Oracle', 'SQL튜닝', 'ProFrame'],
+        domains: ['퇴직연금', '계정계 코어'],
+        availability_status: '즉시투입가능', available_date: '2026-11-22', current_end_date: '2026-11-15',
+        desired_rate: 1080, contract_rate: 1050, rating: 4.8,
+        review_summary: '[기검증 우수 인력] 농협은행·우리은행 퇴직연금 디폴트옵션 및 대용량 일마감 정산 배치 최적화 전문가.',
+        verified: 1, resourced_count: 2, parse_seconds: 58,
+        career_history: [
+          { project: 'NH농협은행 퇴직연금 디폴트옵션 및 수수료 정산 구축', client: 'NH농협은행', period: '2024.05 ~ 2026.10', role: '배치 선임개발', tech: 'Java, Spring Batch, Oracle' },
+          { project: '우리은행 차세대 퇴직연금 원장/배치 고도화', client: '우리은행', period: '2022.03 ~ 2024.02', role: '코어/배치 개발', tech: 'ProFrame, Oracle, SQL튜닝' }
+        ],
+        updated_at: '2026-11-11'
       }
     ],
     projects: [
@@ -453,9 +469,9 @@ function getInitialStore() {
       }
     ],
     postings: [
-      { id: 'post_1', project_id: 'prj_1', slot_id: 'slot_103', title: '[미래에셋증권 퇴직연금 차세대] 연금 로보일임·수수료 대용량 배치 개발자 (특급/고급)', role_name: '연금 로보일임·수수료 배치 선임개발', required_grade: '특급', required_skills: ['Java', 'Spring Batch', 'Oracle', 'ProFrame'], required_domain: '퇴직연금', work_location: '서울 을지로', period: '2026.12 ~ 2027.10 (11개월)', rate_guide: '월 1,100 ~ 1,180만원 (경력협의)', status: 'OPEN', sourcing_sent_count: 3, applicant_count: 3, applicants: ['신**', '김**', '이**'], created_at: '2026-11-09' },
-      { id: 'post_2', project_id: 'prj_1', slot_id: 'slot_104', title: '[미래에셋증권 퇴직연금 차세대] 개인형IRP 비대면 채널 UI/API 개발자 (고급)', role_name: '개인형IRP 비대면 채널 프론트/백엔드', required_grade: '고급', required_skills: ['React', 'TypeScript', 'WebSquare', 'Spring Boot'], required_domain: '퇴직연금', work_location: '서울 을지로', period: '2026.12 ~ 2027.10 (11개월)', rate_guide: '월 920 ~ 980만원', status: 'OPEN', sourcing_sent_count: 2, applicant_count: 2, applicants: ['한**', '박**'], created_at: '2026-11-10' },
-      { id: 'post_3', project_id: 'prj_2', slot_id: 'slot_202', title: '[KB증권 글로벌 채권·외화펀드] 외화채권 시가평가 및 펀드결제 백엔드 개발자 (고급)', role_name: '외화채권 시가평가 및 펀드결제 응용개발', required_grade: '고급', required_skills: ['Java', 'Spring Boot', 'Oracle', '펀드회계'], required_domain: '채권', work_location: '서울 여의도', period: '2027.01 ~ 2027.09 (9개월)', rate_guide: '월 1,000 ~ 1,050만원', status: 'OPEN', sourcing_sent_count: 2, applicant_count: 3, applicants: ['오**', '김**', '최**'], created_at: '2026-11-11' }
+      { id: 'post_1', project_id: 'prj_1', slot_id: 'slot_103', title: '[미래에셋증권 퇴직연금 차세대] 연금 로보일임·수수료 대용량 배치 개발자 (특급/고급)', role_name: '연금 로보일임·수수료 배치 선임개발', required_grade: '특급', required_skills: ['Java', 'Spring Batch', 'Oracle', 'ProFrame'], required_domain: '퇴직연금', work_location: '서울 을지로', period: '2026.12 ~ 2027.10 (11개월)', rate_guide: '월 1,100 ~ 1,180만원 (경력협의)', status: 'OPEN', sourcing_sent_count: 3, applicant_count: 3, applicants: ['신은숙', '김도현', '이준호'], created_at: '2026-11-09' },
+      { id: 'post_2', project_id: 'prj_1', slot_id: 'slot_104', title: '[미래에셋증권 퇴직연금 차세대] 개인형IRP 비대면 채널 UI/API 개발자 (고급)', role_name: '개인형IRP 비대면 채널 프론트/백엔드', required_grade: '고급', required_skills: ['React', 'TypeScript', 'WebSquare', 'Spring Boot'], required_domain: '퇴직연금', work_location: '서울 을지로', period: '2026.12 ~ 2027.10 (11개월)', rate_guide: '월 920 ~ 980만원', status: 'OPEN', sourcing_sent_count: 2, applicant_count: 2, applicants: ['한지민', '박성진'], created_at: '2026-11-10' },
+      { id: 'post_3', project_id: 'prj_2', slot_id: 'slot_202', title: '[KB증권 글로벌 채권·외화펀드] 외화채권 시가평가 및 펀드결제 백엔드 개발자 (고급)', role_name: '외화채권 시가평가 및 펀드결제 응용개발', required_grade: '고급', required_skills: ['Java', 'Spring Boot', 'Oracle', '펀드회계'], required_domain: '채권', work_location: '서울 여의도', period: '2027.01 ~ 2027.09 (9개월)', rate_guide: '월 1,000 ~ 1,050만원', status: 'OPEN', sourcing_sent_count: 2, applicant_count: 3, applicants: ['오세훈', '김도윤', '최민수'], created_at: '2026-11-11' }
     ],
     templates: [
       {
@@ -489,7 +505,7 @@ function getInitialStore() {
         resume_summary: '퇴직연금 코어/배치 14년차 특급. 신한은행/교보생명 퇴직연금 정산 배치 리더 수행.',
         tech_grade: '특급', skills: ['Java', 'Spring Batch', 'Oracle', 'ProFrame'], domains: ['퇴직연금', '계정계 코어'],
         status: '인터뷰통보완료', interview_date: '2026-11-16 14:00', interview_method: '화상(Zoom/Teams)',
-        interviewer_user_id: 'u_internal_pl', interviewer_name: '정윤희 부장', template_id: 'tpl_pension_batch',
+        interviewer_user_id: 'u_master', interviewer_name: '조성현 상무', template_id: 'tpl_pension_batch',
         checklist_results: [], total_score: 0, interviewer_opinion: '', final_decision_note: '', created_at: '2026-11-12'
       },
       {
@@ -499,7 +515,7 @@ function getInitialStore() {
         resume_summary: '카카오뱅크 IRP 채널 및 KB증권 마이데이터 프론트/백엔드 9년차 고급 개발자.',
         tech_grade: '고급', skills: ['React', 'TypeScript', 'WebSquare', 'Spring Boot'], domains: ['마이데이터', '채널계', '퇴직연금'],
         status: '면접진행완료', interview_date: '2026-11-13 10:00', interview_method: '화상(Zoom/Teams)',
-        interviewer_user_id: 'u_internal_pl', interviewer_name: '정윤희 부장', template_id: 'tpl_channel_front',
+        interviewer_user_id: 'u_master', interviewer_name: '조성현 상무', template_id: 'tpl_channel_front',
         checklist_results: [
           { question: '개인형IRP 비대면 계좌개설 UI 플로우 구현 경험', score: 5, checked: true, note: '카카오뱅크 IRP 비대면 개설 리딩' },
           { question: 'React/TypeScript 및 WebSquare5 연동 역량', score: 4.5, checked: true, note: '즉시 투입 가능' }
@@ -508,13 +524,13 @@ function getInitialStore() {
         final_decision_note: '', created_at: '2026-11-11'
       },
       {
-        id: 'int_3', posting_id: 'post_1', project_id: 'prj_1', slot_id: 'slot_103', candidate_profile_id: 'p_7',
+        id: 'int_3', posting_id: 'post_1', project_id: 'prj_1', slot_id: 'slot_103', candidate_profile_id: 'p_8',
         candidate_name: '김도현', candidate_type: '외주 프리랜서', candidate_phone: '010-5512-7789', candidate_email: 'dh.kim.batch@gmail.com',
         available_from: '2026-11-22', recommender: '타겟소싱 지원', desired_rate: 1080,
         resume_summary: '농협은행·우리은행 퇴직연금 디폴트옵션 및 일마감 정산 배치 개발 11년차 고급/특급 개발자.',
         tech_grade: '특급', skills: ['Java', 'Spring Batch', 'Oracle', 'SQL튜닝', 'ProFrame'], domains: ['퇴직연금', '계정계 코어'],
         status: '인터뷰통보완료', interview_date: '2026-11-17 15:00', interview_method: '화상(Zoom/Teams)',
-        interviewer_user_id: 'u_internal_pl', interviewer_name: '정윤희 부장', template_id: 'tpl_pension_batch',
+        interviewer_user_id: 'u_master', interviewer_name: '조성현 상무', template_id: 'tpl_pension_batch',
         checklist_results: [], total_score: 0, interviewer_opinion: '', final_decision_note: '', created_at: '2026-11-12'
       },
       {
@@ -910,8 +926,8 @@ module.exports = async (req, res) => {
         final_decision_note: '',
         created_at: new Date().toISOString().slice(0, 10)
       });
-      const maskedSurname = `${(body.candidate_name || '지').trim().charAt(0)}**`;
-      post.applicants = Array.isArray(post.applicants) ? [...post.applicants, maskedSurname] : [maskedSurname];
+      const fullName = (body.candidate_name || '지원자').trim();
+      post.applicants = Array.isArray(post.applicants) ? [...post.applicants, fullName] : [fullName];
       post.applicant_count = (post.applicant_count || 0) + 1;
       const prj = store.projects.find(p => p.id === post.project_id);
       if (prj) {
