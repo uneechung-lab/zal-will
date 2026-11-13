@@ -221,11 +221,45 @@ async function handleQuickAiInput() {
   }
 }
 
-function switchTab(tabName) {
-  if (tabName === 'projects') {
-    state.selectedProjectId = null;
+function buildNavigationUrl(tabName, projectId) {
+  const params = new URLSearchParams(window.location.search);
+  if (tabName && tabName !== 'projects') {
+    params.set('tab', tabName);
+  } else {
+    params.delete('tab');
   }
-  state.activeTab = tabName;
+  if (projectId) {
+    params.set('project', projectId);
+  } else {
+    params.delete('project');
+  }
+  const qs = params.toString();
+  return `${window.location.pathname}${qs ? `?${qs}` : ''}`;
+}
+
+function pushNavigationState(replace = false) {
+  const navState = {
+    tab: state.activeTab,
+    projectId: state.selectedProjectId || null
+  };
+  const nextUrl = buildNavigationUrl(navState.tab, navState.projectId);
+  const curState = window.history.state;
+  if (
+    !replace &&
+    curState &&
+    curState.tab === navState.tab &&
+    (curState.projectId || null) === navState.projectId
+  ) {
+    return;
+  }
+  if (replace) {
+    window.history.replaceState(navState, '', nextUrl);
+  } else {
+    window.history.pushState(navState, '', nextUrl);
+  }
+}
+
+function applyTabDomState(tabName) {
   document.querySelectorAll('.nav-tab').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.tab === tabName);
   });
@@ -235,6 +269,17 @@ function switchTab(tabName) {
   document.querySelectorAll('.tab-panel').forEach(panel => {
     panel.classList.toggle('active', panel.id === `tab-${tabName}`);
   });
+}
+
+function switchTab(tabName, options = {}) {
+  if (tabName === 'projects' && !options.keepProject) {
+    state.selectedProjectId = null;
+  }
+  state.activeTab = tabName;
+  applyTabDomState(tabName);
+  if (!options.fromPopState) {
+    pushNavigationState(Boolean(options.replaceHistory));
+  }
   renderActiveTab();
 }
 
@@ -1008,16 +1053,28 @@ async function submitEditProfile(e, id) {
 /* =========================================================================
    TAB 3: PROJECT & RFP PROPOSAL MANAGEMENT (List View -> Detail View)
    ========================================================================= */
-function selectProjectDetail(projectId) {
-  if (state.activeTab !== 'projects') {
-    switchTab('projects');
-  }
+function selectProjectDetail(projectId, options = {}) {
   state.selectedProjectId = projectId;
+  if (state.activeTab !== 'projects') {
+    state.activeTab = 'projects';
+    applyTabDomState('projects');
+  }
+  if (!options.fromPopState) {
+    pushNavigationState(Boolean(options.replaceHistory));
+  }
   renderProjectsTab();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function closeProjectDetail() {
+function closeProjectDetail(options = {}) {
+  if (!options.fromPopState && window.history.state && window.history.state.projectId) {
+    window.history.back();
+    return;
+  }
   state.selectedProjectId = null;
+  if (!options.fromPopState) {
+    pushNavigationState(Boolean(options.replaceHistory));
+  }
   renderProjectsTab();
 }
 
@@ -2580,6 +2637,48 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('modalCloseBtn').addEventListener('click', closeModal);
   document.getElementById('modalBackdrop').addEventListener('click', e => {
     if (e.target.id === 'modalBackdrop') closeModal();
+  });
+
+  // Initialize browser History API state so Back button returns to previous view inside SPA
+  const urlParams = new URLSearchParams(window.location.search);
+  const initialTab = urlParams.get('tab') || 'projects';
+  const initialProjectId = urlParams.get('project') || null;
+  state.activeTab = initialTab;
+  state.selectedProjectId = initialProjectId;
+  applyTabDomState(state.activeTab);
+
+  if (initialProjectId) {
+    // Ensure a base list entry exists below the detail entry even on direct reload
+    window.history.replaceState(
+      { tab: 'projects', projectId: null },
+      '',
+      buildNavigationUrl('projects', null)
+    );
+    window.history.pushState(
+      { tab: 'projects', projectId: initialProjectId },
+      '',
+      buildNavigationUrl('projects', initialProjectId)
+    );
+  } else {
+    pushNavigationState(true);
+  }
+
+  window.addEventListener('popstate', e => {
+    const backdrop = document.getElementById('modalBackdrop');
+    if (backdrop && !backdrop.classList.contains('hidden')) {
+      closeModal();
+    }
+    const histState = e.state;
+    if (histState && histState.tab) {
+      state.activeTab = histState.tab;
+      state.selectedProjectId = histState.projectId || null;
+    } else {
+      const params = new URLSearchParams(window.location.search);
+      state.activeTab = params.get('tab') || 'projects';
+      state.selectedProjectId = params.get('project') || null;
+    }
+    applyTabDomState(state.activeTab);
+    renderActiveTab();
   });
 
   loadState();
