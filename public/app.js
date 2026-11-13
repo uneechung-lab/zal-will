@@ -120,10 +120,9 @@ function renderHeaderAndPermissions() {
     `<option value="guest_external" ${state.userId === 'guest_external' ? 'selected' : ''}>오픈 구인 방문자 (비회원)</option>`
   ].join('');
 
-  // Update Greeting & Avatar (ZAL Universe style)
-  const displayName = currentUser ? currentUser.name : '외부 지원자';
-  document.getElementById('greetingTitle').textContent = `${displayName}님, 잘될이와 뭐든 잘되는 하루 :-)`;
-  document.getElementById('currentUserAvatar').src = getAvatarForId(state.userId);
+  // Update Avatar
+  const avatarEl = document.getElementById('currentUserAvatar');
+  if (avatarEl) avatarEl.src = getAvatarForId(state.userId);
 
   // Render Right Member/Role Quick Chips (Exact match to 전체 | 나 | 조상무 | 정다음 in 잘됨)
   const chipsContainer = document.getElementById('quickRoleChips');

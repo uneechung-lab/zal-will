@@ -9,7 +9,7 @@
 </head>
 <body>
   <div class="app-layout">
-    <!-- Left Navigation Rail (Identical to 잘됨 LeftNavRail) -->
+    <!-- Left Navigation Rail -->
     <aside class="left-nav-rail" id="leftNavRail">
       <div class="rail-top-group">
         <button type="button" class="rail-btn active" data-tab="dashboard" onclick="switchTab('dashboard')">
@@ -101,73 +101,7 @@
 
     <!-- Main Scrollable Area -->
     <div class="main-scroll-area" id="mainScrollArea">
-      <!-- Top Morning Greeting + Mascot + AI Prompt Bar -->
-      <div class="zal-top-header-wrap">
-        <div class="zal-greeting-row">
-          <div class="zal-greeting-left">
-            <span class="zal-date-label" id="todayDateLabel">2026년 11월 13일 금요일</span>
-            <div class="zal-title-tags-row">
-              <h2 class="zal-greeting-title" id="greetingTitle">김태호 상무님, 잘될이와 뭐든 잘되는 하루 :-)</h2>
-              <div class="zal-hashtag-group">
-                <button type="button" class="zal-hashtag-btn" onclick="triggerSampleParse('sample1')">#AI이력서파싱</button>
-                <button type="button" class="zal-hashtag-btn" onclick="switchTab('projects')">#RFP적임자매칭</button>
-                <button type="button" class="zal-hashtag-btn" onclick="openProposalSheetModal('prj_1')">#제안장표추출</button>
-                <button type="button" class="zal-hashtag-btn" onclick="switchTab('sourcing')">#외주타겟소싱</button>
-                <button type="button" class="zal-hashtag-btn" onclick="switchTab('interviews')">#필수질문면접</button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Right: User Switcher Pill & Project Selector Pill (Identical to 잘됨) -->
-          <div class="zal-top-controls-right">
-            <!-- User Avatar & Role Switcher -->
-            <div class="zal-user-pill-wrap">
-              <img id="currentUserAvatar" src="/pic1_thumb.png" alt="avatar" class="zal-mini-avatar" />
-              <select id="userRoleSelect" class="zal-clean-select" title="계정 / 역할 권한 전환"></select>
-            </div>
-
-            <!-- Active Project Quick Selector -->
-            <div class="zal-project-pill-wrap">
-              <select id="headerProjectSelect" class="zal-clean-select" onchange="handleHeaderProjectChange(this.value)">
-                <option value="ALL">미래금융 퇴직연금 차세대 외 전체</option>
-                <option value="prj_1">미래금융 퇴직연금 차세대 구축</option>
-                <option value="prj_2">대한자산운용 채권·펀드 수탁 고도화</option>
-              </select>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Peeking Mascot (bi2.png) & Rounded Pill AI Input Bar -->
-      <div class="zal-composer-outer">
-        <div class="zal-composer-inner">
-          <img src="/bi2.png" alt="잘될이 캐릭터" class="zal-peeking-mascot" />
-
-          <div class="zal-composer-box" id="zalComposerBox">
-            <input
-              type="text"
-              id="aiQuickInput"
-              class="zal-composer-input"
-              placeholder="이력서 텍스트를 붙여넣거나 우측 클립으로 파일 업로드, 또는 '퇴직연금 특급 개발자 추천해줘'를 입력해 보세요"
-              onkeydown="if(event.key==='Enter'){handleQuickAiInput();}"
-            />
-            <label class="zal-clip-btn" title="이력서 파일 업로드 (.pdf, .docx, .xlsx, .txt)">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
-              </svg>
-              <input type="file" id="headerResumeFileInput" accept=".pdf,.doc,.docx,.xls,.xlsx,.txt" style="display:none;" onchange="handleResumeFileUpload(event)" />
-            </label>
-            <button type="button" class="zal-send-btn" onclick="handleQuickAiInput()" title="AI 잘될이 실행 (Enter)">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="22" y1="2" x2="11" y2="13"></line>
-                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-              </svg>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Sticky Filter Tabs Bar (Identical to 잘됨: 전체 피드 | 인재 DB | 제안·매칭 | 구인·소싱 | 면접·검증 | 권한 설정) -->
+      <!-- Sticky Top Bar: Navigation Tabs on Left + Account Info on Right -->
       <div class="zal-sticky-tabs-bar">
         <div class="zal-sticky-tabs-inner">
           <div class="zal-tabs-list" id="mainNav">
@@ -182,12 +116,18 @@
             <button type="button" class="nav-tab toggle-item" data-tab="permissions">권한·민감정보</button>
           </div>
 
-          <!-- Permission Status Summary Pill on the Right of Tabs -->
-          <div id="permissionStrip" class="zal-perm-summary"></div>
+          <!-- Top Right: Account Info Only -->
+          <div class="zal-top-account-right">
+            <div id="permissionStrip" class="zal-perm-summary"></div>
+            <div class="zal-user-pill-wrap">
+              <img id="currentUserAvatar" src="/pic1_thumb.png" alt="avatar" class="zal-mini-avatar" />
+              <select id="userRoleSelect" class="zal-clean-select" title="계정 / 역할 권한 전환"></select>
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- Sub-header Bar: Date / Quick Filter Checkboxes on Left + Rounded Black/White Member/Role Chips on Right -->
+      <!-- Sub-header Bar: Date / Quick Action Pills on Left + Rounded Black/White Member/Role Chips on Right -->
       <div class="zal-subheader-bar">
         <div class="zal-subheader-left">
           <div class="zal-date-nav">
