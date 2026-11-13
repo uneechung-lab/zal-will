@@ -1439,9 +1439,6 @@ function renderProjectDetailView(el, prj, postings, interviews, templates, permi
             ${svgIcon('file', 14)} 수행인력 총괄표 · 표준 프로필 장표 추출
           </button>
         ` : ''}
-        <button type="button" class="btn btn-outline btn-sm" style="display:inline-flex; align-items:center; gap:6px;" onclick="copyExternalShareLink()">
-          ${svgIcon('link', 14)} 비회원 오픈 구인 웹 링크 모드
-        </button>
       </div>
     </div>
 
@@ -1577,7 +1574,7 @@ function renderProjectDetailView(el, prj, postings, interviews, templates, permi
 
     <div class="dashboard-feed-masonry" style="margin-bottom:28px;">
       ${projectPostings.length > 0 ? projectPostings.map(post => `
-        <article class="zal-feed-card">
+        <article class="zal-feed-card" style="cursor:pointer;" onclick="openPostingDetailModal('${post.id}')">
           <div class="zal-card-header">
             <div class="zal-author-box">
               <div class="zal-avatar-circle"><img src="/pic1_thumb.png" alt="구인" /></div>
@@ -1602,15 +1599,18 @@ function renderProjectDetailView(el, prj, postings, interviews, templates, permi
           </div>
 
           <div class="zal-card-footer">
-            <div class="zal-reaction-group">
+            <div class="zal-reaction-group" style="flex-wrap:wrap;">
+              <button type="button" class="btn btn-outline btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="event.stopPropagation(); copyPostingWebLink('${post.id}')">
+                ${svgIcon('link', 13)} 오픈 구인 웹 링크 복사하기
+              </button>
               ${post.status === 'OPEN' && currentUser?.role_group !== 'MASTER' ? `
-                <button class="btn btn-primary btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="openEasyApplyModal('${post.id}')">
+                <button type="button" class="btn btn-primary btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="event.stopPropagation(); openEasyApplyModal('${post.id}')">
                   ${svgIcon('edit', 13)} ${currentUser?.role_group === 'INTERNAL' ? '사내 지인 추천' : '간편 지원하기'}
                 </button>
               ` : ''}
               ${permissions.can_manage_postings ? `
-                <button class="btn btn-outline btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="openTargetSourcingModal('${post.id}')">${svgIcon('target', 13)} 타겟 소싱 발송</button>
-                <button class="btn btn-outline btn-sm" onclick="togglePostingStatus('${post.id}')">${post.status === 'OPEN' ? '마감' : '재오픈'}</button>
+                <button type="button" class="btn btn-outline btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="event.stopPropagation(); openTargetSourcingModal('${post.id}')">${svgIcon('target', 13)} 타겟 소싱 발송</button>
+                <button type="button" class="btn btn-outline btn-sm" onclick="event.stopPropagation(); togglePostingStatus('${post.id}')">${post.status === 'OPEN' ? '마감' : '재오픈'}</button>
               ` : ''}
             </div>
           </div>
@@ -1968,12 +1968,11 @@ function renderSourcingTab() {
   el.innerHTML = `
     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:18px;">
       <h3 style="font-size:17px; font-weight:600; display:inline-flex; align-items:center; gap:7px;">${svgIcon('megaphone', 18)} 오픈 구인 포지션 (${postings.length}건)</h3>
-      <button class="btn btn-outline btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="copyExternalShareLink()">${svgIcon('link', 14)} 비회원 오픈 구인 웹 링크 모드 전환</button>
     </div>
 
     <div class="dashboard-feed-masonry">
       ${postings.map(post => `
-        <article class="zal-feed-card">
+        <article class="zal-feed-card" style="cursor:pointer;" onclick="openPostingDetailModal('${post.id}')">
           <div class="zal-card-header">
             <div class="zal-author-box">
               <div class="zal-avatar-circle"><img src="/pic1_thumb.png" alt="구인" /></div>
@@ -1998,15 +1997,18 @@ function renderSourcingTab() {
           </div>
 
           <div class="zal-card-footer">
-            <div class="zal-reaction-group">
+            <div class="zal-reaction-group" style="flex-wrap:wrap;">
+              <button type="button" class="btn btn-outline btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="event.stopPropagation(); copyPostingWebLink('${post.id}')">
+                ${svgIcon('link', 13)} 오픈 구인 웹 링크 복사하기
+              </button>
               ${post.status === 'OPEN' && currentUser?.role_group !== 'MASTER' ? `
-                <button class="btn btn-primary btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="openEasyApplyModal('${post.id}')">
+                <button type="button" class="btn btn-primary btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="event.stopPropagation(); openEasyApplyModal('${post.id}')">
                   ${svgIcon('edit', 13)} ${currentUser?.role_group === 'INTERNAL' ? '사내 지인 추천' : '간편 지원하기'}
                 </button>
               ` : ''}
               ${permissions.can_manage_postings ? `
-                <button class="btn btn-outline btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="openTargetSourcingModal('${post.id}')">${svgIcon('target', 13)} 타겟 소싱 발송</button>
-                <button class="btn btn-outline btn-sm" onclick="togglePostingStatus('${post.id}')">${post.status === 'OPEN' ? '마감' : '재오픈'}</button>
+                <button type="button" class="btn btn-outline btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="event.stopPropagation(); openTargetSourcingModal('${post.id}')">${svgIcon('target', 13)} 타겟 소싱 발송</button>
+                <button type="button" class="btn btn-outline btn-sm" onclick="event.stopPropagation(); togglePostingStatus('${post.id}')">${post.status === 'OPEN' ? '마감' : '재오픈'}</button>
               ` : ''}
             </div>
           </div>
@@ -2016,10 +2018,83 @@ function renderSourcingTab() {
   `;
 }
 
-function copyExternalShareLink() {
-  state.userId = 'guest_external';
-  loadState();
-  showToast('비회원 오픈 구인 웹 링크 모드로 전환되었습니다!');
+function copyPostingWebLink(postingId) {
+  const post = (state.data?.postings || []).find(p => p.id === postingId);
+  const shareUrl = `${window.location.origin}/?posting=${encodeURIComponent(postingId)}`;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(shareUrl).catch(() => {});
+  }
+  showToast(`오픈 구인 웹 링크가 클립보드에 복사되었습니다! (${post ? post.role_name : postingId})`);
+}
+
+function openPostingDetailModal(postingId) {
+  const { postings, projects, permissions, currentUser } = state.data;
+  const post = (postings || []).find(p => p.id === postingId);
+  if (!post) return;
+  const prj = (projects || []).find(p => p.id === post.project_id);
+
+  openModal(`오픈 구인 포지션 상세 공고 — ${post.role_name}`, `
+    <div style="display:flex; flex-direction:column; gap:16px;">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:14px; flex-wrap:wrap; padding:16px 18px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px;">
+        <div style="flex:1; min-width:240px;">
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+            <span class="zal-status-pill ${post.status === 'OPEN' ? 'green' : 'gray'}">${post.status === 'OPEN' ? '모집중' : '마감됨'}</span>
+            <span class="zal-status-pill blue">${post.required_domain}</span>
+            <span class="badge badge-grade">${post.required_grade}</span>
+          </div>
+          <div style="font-size:18px; font-weight:600; color:#0f172a; line-height:1.4;">${post.title}</div>
+          <div style="font-size:13px; color:#64748b; margin-top:6px;">
+            등록일: ${post.created_at} · 타겟 소싱 발송: ${post.sourcing_sent_count}건
+          </div>
+        </div>
+        ${renderPostingApplicantBox(post)}
+      </div>
+
+      <div class="form-grid" style="margin-bottom:0;">
+        <div style="padding:12px 14px; border:1px solid #e2e8f0; border-radius:12px;">
+          <div style="font-size:12px; color:#64748b; margin-bottom:4px;">수행 기간 · 근무지</div>
+          <div style="font-size:14px; font-weight:600; color:#0f172a;">${post.period}</div>
+          <div style="font-size:13px; color:#475569; margin-top:2px;">근무지: ${post.work_location}</div>
+        </div>
+        <div style="padding:12px 14px; border:1px solid #e2e8f0; border-radius:12px;">
+          <div style="font-size:12px; color:#64748b; margin-bottom:4px;">단가 가이드 · 계약 형태</div>
+          <div style="font-size:14px; font-weight:600; color:#2563eb;">${post.rate_guide}</div>
+          <div style="font-size:13px; color:#475569; margin-top:2px;">발주 고객사: ${prj ? prj.client : '금융권 고객사'} (${prj?.contract_type || '일괄도급'})</div>
+        </div>
+      </div>
+
+      <div style="padding:14px 16px; border:1px solid #e2e8f0; border-radius:12px;">
+        <div style="font-size:13.5px; font-weight:600; color:#0f172a; margin-bottom:8px;">요구 기술 스택 및 자격 요건</div>
+        <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px;">
+          ${(post.required_skills || []).map(sk => `<span class="badge badge-skill">${sk}</span>`).join('')}
+        </div>
+        <ul style="margin:0; padding-left:18px; font-size:13.5px; color:#334155; line-height:1.65;">
+          <li><strong>담당 역할:</strong> ${post.role_name} (${post.required_grade} 기술자)</li>
+          <li><strong>필수 도메인 경험:</strong> ${post.required_domain} 시스템 설계·개발 및 운영/고도화 실무 유경험자</li>
+          <li><strong>핵심 수행 과업:</strong> ${prj?.description || `${post.required_domain} 핵심 코어 모듈 설계, 대용량 데이터 처리 및 대외 인터페이스 개발`}</li>
+        </ul>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; padding-top:8px; border-top:1px solid #f1f5f9;">
+        <button type="button" class="btn btn-outline btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="copyPostingWebLink('${post.id}')">
+          ${svgIcon('link', 13)} 오픈 구인 웹 링크 복사하기
+        </button>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          ${post.status === 'OPEN' && currentUser?.role_group !== 'MASTER' ? `
+            <button type="button" class="btn btn-primary btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="openEasyApplyModal('${post.id}')">
+              ${svgIcon('edit', 13)} ${currentUser?.role_group === 'INTERNAL' ? '사내 지인 추천' : '간편 지원하기'}
+            </button>
+          ` : ''}
+          ${permissions.can_manage_postings ? `
+            <button type="button" class="btn btn-outline btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="openTargetSourcingModal('${post.id}')">
+              ${svgIcon('target', 13)} 타겟 소싱 발송
+            </button>
+          ` : ''}
+          <button type="button" class="btn btn-outline btn-sm" onclick="closeModal()">닫기</button>
+        </div>
+      </div>
+    </div>
+  `);
 }
 
 async function togglePostingStatus(postingId) {
