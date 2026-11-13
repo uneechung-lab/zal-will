@@ -115,8 +115,15 @@ function renderHeaderAndPermissions() {
   const { users, currentUser, permissions } = state.data;
   const select = document.getElementById('userRoleSelect');
 
+  const rolePrefixMap = {
+    MASTER: '임원/부서장 (Master)',
+    MANAGER: '인력/제안 관리자',
+    INTERNAL: '내부 구성원',
+    EXTERNAL: '외주 인력 (외부)'
+  };
+
   select.innerHTML = [
-    ...users.map(u => `<option value="${u.id}" ${u.id === state.userId ? 'selected' : ''}>${u.name} (${u.role_group === 'MASTER' ? '임원·Master' : u.role_group === 'MANAGER' ? '제안·소싱PM' : u.role_group === 'INTERNAL' ? '사내구성원' : '외주인력'})</option>`),
+    ...users.map(u => `<option value="${u.id}" ${u.id === state.userId ? 'selected' : ''}>${rolePrefixMap[u.role_group] || '구성원'} — ${u.name}</option>`),
     `<option value="guest_external" ${state.userId === 'guest_external' ? 'selected' : ''}>오픈 구인 방문자 (비회원)</option>`
   ].join('');
 
@@ -130,8 +137,7 @@ function renderHeaderAndPermissions() {
     chipsContainer.innerHTML = [
       ...users.map(u => {
         const isActive = u.id === state.userId;
-        const shortLabel = u.role_group === 'MASTER' ? '김태호 상무' : u.role_group === 'MANAGER' ? '박지훈 팀장' : u.name;
-        return `<button type="button" class="zal-chip-btn ${isActive ? 'active' : ''}" onclick="switchUserRole('${u.id}')">${shortLabel}</button>`;
+        return `<button type="button" class="zal-chip-btn ${isActive ? 'active' : ''}" onclick="switchUserRole('${u.id}')">${u.name}</button>`;
       }),
       `<button type="button" class="zal-chip-btn ${state.userId === 'guest_external' ? 'active' : ''}" onclick="switchUserRole('guest_external')">오픈지원링크</button>`
     ].join('');
@@ -234,7 +240,7 @@ function renderDashboardTab() {
             </div>
             <div>
               <div>
-                <span class="zal-author-name">박지훈</span>
+                <span class="zal-author-name">김지영</span>
                 <span class="zal-author-role">제안PM · ${prj.domain}</span>
               </div>
               <div class="zal-card-time">
@@ -295,7 +301,7 @@ function renderDashboardTab() {
             </div>
             <div>
               <div>
-                <span class="zal-author-name">${inv.interviewer_name || '이수현 수석'}</span>
+                <span class="zal-author-name">${inv.interviewer_name || '정윤희 부장'}</span>
                 <span class="zal-author-role">기술면접관</span>
               </div>
               <div class="zal-card-time">
@@ -446,19 +452,19 @@ function renderDashboardTab() {
               <th>
                 <div style="display:flex; flex-direction:column; align-items:center; gap:3px;">
                   <img src="/pic1_thumb.png" style="width:28px; height:28px; border-radius:50%; border:1px solid #e2e8f0;" />
-                  <span style="font-size:11.5px; font-weight:800; color:#0f172a;">박지훈 <span style="font-weight:500; color:#64748b;">PM</span></span>
+                  <span style="font-size:11.5px; font-weight:800; color:#0f172a;">김지영 <span style="font-weight:500; color:#64748b;">이사</span></span>
                 </div>
               </th>
               <th>
                 <div style="display:flex; flex-direction:column; align-items:center; gap:3px;">
                   <img src="/pic2_thumb.png" style="width:28px; height:28px; border-radius:50%; border:1px solid #e2e8f0;" />
-                  <span style="font-size:11.5px; font-weight:800; color:#0f172a;">이수현 <span style="font-weight:500; color:#64748b;">PL</span></span>
+                  <span style="font-size:11.5px; font-weight:800; color:#0f172a;">정윤희 <span style="font-weight:500; color:#64748b;">부장</span></span>
                 </div>
               </th>
               <th>
                 <div style="display:flex; flex-direction:column; align-items:center; gap:3px;">
                   <img src="/pic1_thumb.png" style="width:28px; height:28px; border-radius:50%; border:1px solid #e2e8f0;" />
-                  <span style="font-size:11.5px; font-weight:800; color:#0f172a;">최현우 <span style="font-weight:500; color:#64748b;">외주</span></span>
+                  <span style="font-size:11.5px; font-weight:800; color:#0f172a;">신은숙 <span style="font-weight:500; color:#64748b;">외주</span></span>
                 </div>
               </th>
             </tr>
@@ -503,12 +509,12 @@ function renderDashboardTab() {
               </td>
               <td>
                 <div class="zal-timeline-event purple" onclick="switchTab('interviews')" style="cursor:pointer;">
-                  최현우 화상면접<br/><span style="font-weight:500; opacity:0.85;">14:00~15:00</span>
+                  신은숙 화상면접<br/><span style="font-weight:500; opacity:0.85;">14:00~15:00</span>
                 </div>
               </td>
               <td>
                 <div class="zal-timeline-event purple" onclick="switchTab('interviews')" style="cursor:pointer;">
-                  최현우 화상면접<br/><span style="font-weight:500; opacity:0.85;">14:00~15:00</span>
+                  신은숙 화상면접<br/><span style="font-weight:500; opacity:0.85;">14:00~15:00</span>
                 </div>
               </td>
             </tr>

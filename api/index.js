@@ -2,21 +2,21 @@ const fs = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
 
-const TMP_STORE_PATH = path.join(os.tmpdir(), 'zalwill-vercel-store.json');
+const TMP_STORE_PATH = path.join(os.tmpdir(), 'zalwill-vercel-store-v3.json');
 
 function getInitialStore() {
   return {
     users: [
-      { id: 'u_master', name: '김태호 상무', title: '금융사업본부장 (임원/부서장)', department: '금융IT사업본부', role_group: 'MASTER', linked_profile_id: null, perm_all_profiles: 1, perm_pm_pl: 1, perm_interviewer: 1, perm_sensitive_info: 1 },
-      { id: 'u_manager', name: '박지훈 팀장', title: '제안PM / 인력소싱 관리자', department: '전략제안·소싱팀', role_group: 'MANAGER', linked_profile_id: null, perm_all_profiles: 1, perm_pm_pl: 1, perm_interviewer: 1, perm_sensitive_info: 1 },
-      { id: 'u_internal_pl', name: '이수현 수석', title: '사내 정규직 (퇴직연금 PL)', department: '연금신탁개발팀', role_group: 'INTERNAL', linked_profile_id: 'p_1', perm_all_profiles: 1, perm_pm_pl: 1, perm_interviewer: 1, perm_sensitive_info: 0 },
-      { id: 'u_internal_dev', name: '정민규 선임', title: '사내 전문계약직 (백엔드 개발)', department: '코어뱅킹팀', role_group: 'INTERNAL', linked_profile_id: 'p_3', perm_all_profiles: 0, perm_pm_pl: 0, perm_interviewer: 0, perm_sensitive_info: 0 },
-      { id: 'u_external', name: '최현우 프리랜서', title: '외주 프리랜서 (풀스택/계정계)', department: '외부 인재풀', role_group: 'EXTERNAL', linked_profile_id: 'p_5', perm_all_profiles: 0, perm_pm_pl: 0, perm_interviewer: 0, perm_sensitive_info: 0 }
+      { id: 'u_master', name: '조성현 상무', title: '금융사업본부장 (임원/부서장)', department: '금융IT사업본부', role_group: 'MASTER', linked_profile_id: null, perm_all_profiles: 1, perm_pm_pl: 1, perm_interviewer: 1, perm_sensitive_info: 1 },
+      { id: 'u_manager', name: '김지영 이사', title: '제안PM / 인력소싱 관리자', department: '전략제안·소싱팀', role_group: 'MANAGER', linked_profile_id: null, perm_all_profiles: 1, perm_pm_pl: 1, perm_interviewer: 1, perm_sensitive_info: 1 },
+      { id: 'u_internal_pl', name: '정윤희 부장', title: '사내 정규직 (퇴직연금 PL)', department: '연금신탁개발팀', role_group: 'INTERNAL', linked_profile_id: 'p_1', perm_all_profiles: 1, perm_pm_pl: 1, perm_interviewer: 1, perm_sensitive_info: 0 },
+      { id: 'u_internal_dev', name: '조진희 차장', title: '사내 전문계약직 (백엔드 개발)', department: '코어뱅킹팀', role_group: 'INTERNAL', linked_profile_id: 'p_3', perm_all_profiles: 0, perm_pm_pl: 0, perm_interviewer: 0, perm_sensitive_info: 0 },
+      { id: 'u_external', name: '신은숙 부장', title: '외주 인력 (프리랜서/계정계)', department: '외부 인재풀', role_group: 'EXTERNAL', linked_profile_id: 'p_5', perm_all_profiles: 0, perm_pm_pl: 0, perm_interviewer: 0, perm_sensitive_info: 0 }
     ],
     profiles: [
       {
-        id: 'p_1', name: '이수현', employment_type: '사내 정규직', is_internal: 1, tech_grade: '특급', experience_years: 15, birth_year: 1986,
-        phone: '010-3421-8890', email: 'sh.lee@zalwill.co.kr', education: '한양대학교 컴퓨터전공 학사',
+        id: 'p_1', name: '정윤희', employment_type: '사내 정규직', is_internal: 1, tech_grade: '특급', experience_years: 15, birth_year: 1986,
+        phone: '010-3421-8890', email: 'yh.jung@zalwill.co.kr', education: '한양대학교 컴퓨터전공 학사',
         certifications: ['정보처리기사', 'PMP', 'SQLP'],
         skills: ['Java', 'Spring Boot', 'Oracle', 'ProFrame', 'MSA', '대용량배치'],
         domains: ['퇴직연금', '신탁/수탁', '계정계 코어'],
@@ -46,8 +46,8 @@ function getInitialStore() {
         updated_at: '2026-11-11'
       },
       {
-        id: 'p_3', name: '정민규', employment_type: '사내 전문계약직', is_internal: 1, tech_grade: '중급', experience_years: 7, birth_year: 1994,
-        phone: '010-5518-2910', email: 'mk.jung@zalwill.co.kr', education: '숭실대학교 정보통신공학 학사',
+        id: 'p_3', name: '조진희', employment_type: '사내 전문계약직', is_internal: 1, tech_grade: '중급', experience_years: 7, birth_year: 1994,
+        phone: '010-5518-2910', email: 'jh.cho@zalwill.co.kr', education: '숭실대학교 정보통신공학 학사',
         certifications: ['정보처리기사', 'SQLD'],
         skills: ['Java', 'Spring Boot', 'Oracle', 'MyBatis', 'WebSquare', 'Nexacro'],
         domains: ['퇴직연금', '마이데이터', '채널계'],
@@ -76,8 +76,8 @@ function getInitialStore() {
         updated_at: '2026-11-13'
       },
       {
-        id: 'p_5', name: '최현우', employment_type: '외주 프리랜서', is_internal: 0, tech_grade: '특급', experience_years: 14, birth_year: 1987,
-        phone: '010-8282-4911', email: 'hw.choi.dev@gmail.com', education: '인하대학교 컴퓨터공학 학사',
+        id: 'p_5', name: '신은숙', employment_type: '외주 프리랜서', is_internal: 0, tech_grade: '특급', experience_years: 14, birth_year: 1987,
+        phone: '010-8282-4911', email: 'es.shin.dev@gmail.com', education: '인하대학교 컴퓨터공학 학사',
         certifications: ['정보처리기사', 'OCJP', 'SQLP'],
         skills: ['Java', 'Spring Batch', 'Oracle', 'ProFrame', 'BXM', '대용량정산'],
         domains: ['퇴직연금', '계정계 코어', '수신/신탁'],
@@ -129,7 +129,7 @@ function getInitialStore() {
         contract_type: '일괄도급 (턴키 제안)', budget_rate_info: '특급 1,150~1,250만 / 고급 950~1,080만 / 중급 800~900만',
         pm_user_id: 'u_internal_pl',
         to_slots: [
-          { slot_id: 'slot_101', role_name: '퇴직연금 정산/코어 PL', required_grade: '특급', required_domain: '퇴직연금', required_skills: ['Java', 'Spring Batch', 'Oracle', 'ProFrame'], assigned_profile_id: 'p_1', assigned_name: '이수현 (사내 정규직)', status: '배정완료' },
+          { slot_id: 'slot_101', role_name: '퇴직연금 정산/코어 PL', required_grade: '특급', required_domain: '퇴직연금', required_skills: ['Java', 'Spring Batch', 'Oracle', 'ProFrame'], assigned_profile_id: 'p_1', assigned_name: '정윤희 (사내 정규직)', status: '배정완료' },
           { slot_id: 'slot_102', role_name: '데이터 아키텍트 (DA/배치튜닝)', required_grade: '고급', required_domain: '퇴직연금', required_skills: ['Oracle', 'SQL튜닝', 'DW/DM'], assigned_profile_id: 'p_4', assigned_name: '윤서연 (사내 정규직)', status: '배정완료' },
           { slot_id: 'slot_103', role_name: '연금 상품운용/수수료 배치 선임개발', required_grade: '특급', required_domain: '퇴직연금', required_skills: ['Java', 'Spring Batch', 'Oracle'], assigned_profile_id: null, assigned_name: null, status: '미충원(구인중)' },
           { slot_id: 'slot_104', role_name: '개인형IRP 비대면 채널 프론트/백엔드', required_grade: '고급', required_domain: '퇴직연금', required_skills: ['React', 'WebSquare', 'Spring Boot'], assigned_profile_id: null, assigned_name: null, status: '미충원(구인중)' }
@@ -181,12 +181,12 @@ function getInitialStore() {
     interviews: [
       {
         id: 'int_1', posting_id: 'post_1', project_id: 'prj_1', slot_id: 'slot_103', candidate_profile_id: 'p_5',
-        candidate_name: '최현우', candidate_type: '외주 프리랜서', candidate_phone: '010-8282-4911', candidate_email: 'hw.choi.dev@gmail.com',
-        available_from: '2026-11-25', recommender: '이수현 수석 (사내추천)', desired_rate: 1150,
+        candidate_name: '신은숙', candidate_type: '외주 프리랜서', candidate_phone: '010-8282-4911', candidate_email: 'es.shin.dev@gmail.com',
+        available_from: '2026-11-25', recommender: '정윤희 부장 (사내추천)', desired_rate: 1150,
         resume_summary: '퇴직연금 코어/배치 14년차 특급. 신한은행/교보생명 퇴직연금 정산 배치 리더 수행.',
         tech_grade: '특급', skills: ['Java', 'Spring Batch', 'Oracle', 'ProFrame'], domains: ['퇴직연금', '계정계 코어'],
         status: '인터뷰통보완료', interview_date: '2026-11-16 14:00', interview_method: '화상(Zoom/Teams)',
-        interviewer_user_id: 'u_internal_pl', interviewer_name: '이수현 수석', template_id: 'tpl_pension_batch',
+        interviewer_user_id: 'u_internal_pl', interviewer_name: '정윤희 부장', template_id: 'tpl_pension_batch',
         checklist_results: [], total_score: 0, interviewer_opinion: '', final_decision_note: '', created_at: '2026-11-12'
       },
       {
@@ -196,7 +196,7 @@ function getInitialStore() {
         resume_summary: '카카오뱅크 IRP 채널 및 KB증권 마이데이터 프론트/백엔드 9년차 고급 개발자.',
         tech_grade: '고급', skills: ['React', 'TypeScript', 'WebSquare', 'Spring Boot'], domains: ['마이데이터', '채널계', '퇴직연금'],
         status: '면접진행완료', interview_date: '2026-11-13 10:00', interview_method: '화상(Zoom/Teams)',
-        interviewer_user_id: 'u_internal_pl', interviewer_name: '이수현 수석', template_id: 'tpl_channel_front',
+        interviewer_user_id: 'u_internal_pl', interviewer_name: '정윤희 부장', template_id: 'tpl_channel_front',
         checklist_results: [
           { question: '개인형IRP 비대면 계좌개설 UI 플로우 구현 경험', score: 5, checked: true, note: '카카오뱅크 IRP 비대면 개설 리딩' },
           { question: 'React/TypeScript 및 WebSquare5 연동 역량', score: 4.5, checked: true, note: '즉시 투입 가능' }
@@ -206,8 +206,8 @@ function getInitialStore() {
       }
     ],
     notifications: [
-      { id: 'noti_1', target_role: 'EXTERNAL', type: 'INTERVIEW_INVITE', title: '[면접 일정 통보] 미래금융 퇴직연금 차세대', message: '최현우 님, 2026-11-16 14:00 화상(Zoom/Teams) 인터뷰 일정이 지정되었습니다.', created_at: '2026-11-12 16:30' },
-      { id: 'noti_2', target_role: 'INTERNAL', type: 'INTERVIEWER_ASSIGN', title: '[내부 면접관 배정] 지원자 최현우·한지민 기술검증', message: '이수현 수석님이 미래금융 퇴직연금 차세대 프로젝트 내부 기술 면접관으로 지정되어 지원자 열람 및 평가 권한이 자동 부여되었습니다.', created_at: '2026-11-12 16:31' },
+      { id: 'noti_1', target_role: 'EXTERNAL', type: 'INTERVIEW_INVITE', title: '[면접 일정 통보] 미래금융 퇴직연금 차세대', message: '신은숙 님, 2026-11-16 14:00 화상(Zoom/Teams) 인터뷰 일정이 지정되었습니다.', created_at: '2026-11-12 16:30' },
+      { id: 'noti_2', target_role: 'INTERNAL', type: 'INTERVIEWER_ASSIGN', title: '[내부 면접관 배정] 지원자 신은숙·한지민 기술검증', message: '정윤희 부장님이 미래금융 퇴직연금 차세대 프로젝트 내부 기술 면접관으로 지정되어 지원자 열람 및 평가 권한이 자동 부여되었습니다.', created_at: '2026-11-12 16:31' },
       { id: 'noti_3', target_role: 'MANAGER', type: 'SOURCING', title: '[타겟 소싱 발송 완료] 기검증 퇴직연금·채권 인재 풀', message: '미충원 3개 포지션에 대해 인재 DB 조건 매칭 후보자 7명에게 타겟 소싱 메일/알림을 발송했습니다.', created_at: '2026-11-12 11:15' }
     ]
   };
@@ -589,7 +589,7 @@ module.exports = async (req, res) => {
       inv.interview_date = body.interview_date;
       inv.interview_method = body.interview_method;
       inv.interviewer_user_id = body.interviewer_user_id;
-      inv.interviewer_name = interviewer ? interviewer.name : '이수현 수석';
+      inv.interviewer_name = interviewer ? interviewer.name : '정윤희 부장';
       inv.template_id = body.template_id;
       if (interviewer && interviewer.role_group === 'INTERNAL') interviewer.perm_interviewer = 1;
       saveStore(store);
