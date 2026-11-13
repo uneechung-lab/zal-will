@@ -1516,22 +1516,22 @@ function renderProjectDetailView(el, prj, postings, interviews, templates, permi
       </div>
 
       ${canManagePrj ? `
-        <table class="data-table">
+        <table class="data-table wbs-slot-table">
           <thead>
             <tr>
               <th>역할 / 포지션명</th>
               <th>요구 등급</th>
               <th>도메인 · 핵심 스킬</th>
               <th>배정 인력</th>
-              <th>상태</th>
-              <th style="text-align:right;">액션 (RFP 매칭 / 외주 구인)</th>
+              <th style="width:124px; text-align:center;">상태</th>
+              <th style="width:270px; text-align:right;">액션 (RFP 매칭 / 외주 구인)</th>
             </tr>
           </thead>
           <tbody>
             ${prj.to_slots.map(slot => `
               <tr>
                 <td style="font-weight:600;">${slot.role_name}</td>
-                <td><span class="badge badge-grade">${slot.required_grade}</span></td>
+                <td><span class="badge badge-grade" style="min-width:48px; justify-content:center;">${slot.required_grade}</span></td>
                 <td>
                   <span class="badge badge-domain">${slot.required_domain}</span>
                   ${(slot.required_skills || []).map(sk => `<span class="badge badge-skill">${sk}</span>`).join(' ')}
@@ -1541,21 +1541,21 @@ function renderProjectDetailView(el, prj, postings, interviews, templates, permi
                     ? `<strong style="color:#2563eb; display:inline-flex; align-items:center; gap:4px;">${svgIcon('user', 14)} ${slot.assigned_name}</strong>`
                     : `<span style="color:#94a3b8;">미배정</span>`}
                 </td>
-                <td>
-                  <span class="zal-status-pill ${slot.assigned_profile_id ? 'green' : 'amber'}">${slot.status}</span>
+                <td style="text-align:center;">
+                  <span class="zal-status-pill wbs-status-pill ${slot.assigned_profile_id ? 'green' : 'amber'}">${slot.status}</span>
                 </td>
                 <td style="text-align:right;">
-                  <div style="display:inline-flex; gap:6px; flex-wrap:wrap; justify-content:flex-end;">
-                    <button class="btn btn-primary btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="openRfpMatchModal('${prj.id}', '${slot.slot_id}')">
+                  <div class="wbs-action-group">
+                    <button class="btn btn-primary btn-sm wbs-action-btn-main" onclick="openRfpMatchModal('${prj.id}', '${slot.slot_id}')">
                       ${svgIcon('search', 13)} 적임자 탐색·배정
                     </button>
                     ${!slot.assigned_profile_id ? `
-                      <button class="btn btn-outline btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="openSlotToJobBoard('${prj.id}', '${slot.slot_id}')">
+                      <button class="btn btn-outline btn-sm wbs-action-btn-sub" onclick="openSlotToJobBoard('${prj.id}', '${slot.slot_id}')">
                         ${svgIcon('megaphone', 13)} 구인공고 오픈
                       </button>
                     ` : `
-                      <button class="btn btn-outline btn-sm" onclick="assignProfileToSlot('${prj.id}', '${slot.slot_id}', null)">
-                        해제
+                      <button class="btn btn-outline btn-sm wbs-action-btn-sub" onclick="assignProfileToSlot('${prj.id}', '${slot.slot_id}', null)">
+                        배정 해제
                       </button>
                     `}
                   </div>
