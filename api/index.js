@@ -2,7 +2,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
 
-const TMP_STORE_PATH = path.join(os.tmpdir(), 'zalwill-vercel-store-v3.json');
+const TMP_STORE_PATH = path.join(os.tmpdir(), 'zalwill-vercel-store-v4.json');
 
 function getInitialStore() {
   return {
@@ -122,37 +122,301 @@ function getInitialStore() {
       }
     ],
     projects: [
+      // 1. 예정(입찰) 프로젝트 (3건)
       {
-        id: 'prj_1', name: '미래금융그룹 퇴직연금 차세대 시스템 구축 (RFP 입찰/착수)', client: '미래금융지주 / 미래은행',
-        business_type: '금융 SI (입찰제안)', domain: '퇴직연금', status: '제안준비중',
-        start_date: '2026-12-01', end_date: '2027-11-30', location: '서울 여의도 (상주)',
-        contract_type: '일괄도급 (턴키 제안)', budget_rate_info: '특급 1,150~1,250만 / 고급 950~1,080만 / 중급 800~900만',
+        id: 'prj_1',
+        project_group: 'PLANNED',
+        category: 'PENSION',
+        name: '미래에셋증권 퇴직연금 로보어드바이저 및 디폴트옵션 차세대 구축',
+        client: '미래에셋증권',
+        period_label: '2026.12 ~ 2027.10',
+        business_type: '금융 SI (입찰제안)',
+        domain: '퇴직연금',
+        status: 'PLANNED',
+        start_date: '2026-12-01',
+        end_date: '2027-10-31',
+        location: '서울 을지로 (상주)',
+        contract_type: '일괄도급 (턴키 제안)',
+        budget_rate_info: '특급 1,150~1,250만 / 고급 950~1,080만 / 중급 800~900만',
         pm_user_id: 'u_internal_pl',
         to_slots: [
           { slot_id: 'slot_101', role_name: '퇴직연금 정산/코어 PL', required_grade: '특급', required_domain: '퇴직연금', required_skills: ['Java', 'Spring Batch', 'Oracle', 'ProFrame'], assigned_profile_id: 'p_1', assigned_name: '정윤희 (사내 정규직)', status: '배정완료' },
           { slot_id: 'slot_102', role_name: '데이터 아키텍트 (DA/배치튜닝)', required_grade: '고급', required_domain: '퇴직연금', required_skills: ['Oracle', 'SQL튜닝', 'DW/DM'], assigned_profile_id: 'p_4', assigned_name: '윤서연 (사내 정규직)', status: '배정완료' },
-          { slot_id: 'slot_103', role_name: '연금 상품운용/수수료 배치 선임개발', required_grade: '특급', required_domain: '퇴직연금', required_skills: ['Java', 'Spring Batch', 'Oracle'], assigned_profile_id: null, assigned_name: null, status: '미충원(구인중)' },
+          { slot_id: 'slot_103', role_name: '연금 로보일임·수수료 배치 선임개발', required_grade: '특급', required_domain: '퇴직연금', required_skills: ['Java', 'Spring Batch', 'Oracle'], assigned_profile_id: null, assigned_name: null, status: '미충원(구인중)' },
           { slot_id: 'slot_104', role_name: '개인형IRP 비대면 채널 프론트/백엔드', required_grade: '고급', required_domain: '퇴직연금', required_skills: ['React', 'WebSquare', 'Spring Boot'], assigned_profile_id: null, assigned_name: null, status: '미충원(구인중)' }
         ],
-        created_at: '2026-11-05'
+        created_at: '2026-11-10'
       },
       {
-        id: 'prj_2', name: '대한자산운용 채권·펀드 수탁결제 플랫폼 고도화', client: '대한자산운용',
-        business_type: '금융 SI (수행예정)', domain: '채권', status: '인력충원중',
-        start_date: '2026-12-10', end_date: '2027-08-31', location: '서울 광화문 (상주)',
-        contract_type: '타임앤머티리얼 (M/M 계약)', budget_rate_info: '고급 1,000~1,100만 / 중급 820~900만',
+        id: 'prj_2',
+        project_group: 'PLANNED',
+        category: 'INVESTMENT',
+        name: 'KB증권 글로벌 채권·외화펀드 통합 중개 플랫폼 구축',
+        client: 'KB증권',
+        period_label: '2027.01 ~ 2027.09',
+        business_type: '금융 SI (입찰제안)',
+        domain: '채권',
+        status: 'PLANNED',
+        start_date: '2027-01-05',
+        end_date: '2027-09-30',
+        location: '서울 여의도 (상주)',
+        contract_type: '타임앤머티리얼 (M/M 제안)',
+        budget_rate_info: '고급 1,000~1,100만 / 중급 820~900만',
         pm_user_id: 'u_manager',
         to_slots: [
-          { slot_id: 'slot_201', role_name: '채권/펀드 수탁 아키텍트 (AA)', required_grade: '고급', required_domain: '채권', required_skills: ['Java', 'Spring Cloud', 'Kafka', 'PostgreSQL'], assigned_profile_id: 'p_2', assigned_name: '강동원 (사내 정규직)', status: '배정완료' },
-          { slot_id: 'slot_202', role_name: '채권 시가평가 및 펀드회계 응용개발', required_grade: '고급', required_domain: '채권', required_skills: ['Java', 'Spring Boot', 'Oracle', '펀드회계'], assigned_profile_id: null, assigned_name: null, status: '미충원(구인중)' }
+          { slot_id: 'slot_201', role_name: '채권/외화펀드 수탁 아키텍트 (AA)', required_grade: '고급', required_domain: '채권', required_skills: ['Java', 'Spring Cloud', 'Kafka', 'PostgreSQL'], assigned_profile_id: 'p_2', assigned_name: '강동원 (사내 정규직)', status: '배정완료' },
+          { slot_id: 'slot_202', role_name: '외화채권 시가평가 및 펀드결제 응용개발', required_grade: '고급', required_domain: '채권', required_skills: ['Java', 'Spring Boot', 'Oracle', '펀드회계'], assigned_profile_id: null, assigned_name: null, status: '미충원(구인중)' }
         ],
-        created_at: '2026-11-08'
+        created_at: '2026-11-11'
+      },
+      {
+        id: 'prj_3',
+        project_group: 'PLANNED',
+        category: 'CONSULTING',
+        name: 'NH투자증권 차세대 연금자산관리 플랫폼 ISP/PI 컨설팅',
+        client: 'NH투자증권',
+        period_label: '2026.12 ~ 2027.04',
+        business_type: '금융 컨설팅 (입찰제안)',
+        domain: '퇴직연금',
+        status: 'PLANNED',
+        start_date: '2026-12-15',
+        end_date: '2027-04-30',
+        location: '서울 여의도 (상주)',
+        contract_type: '전략 컨설팅 (ISP/PI)',
+        budget_rate_info: '특급 컨설턴트 1,250만 / 고급 1,050만',
+        pm_user_id: 'u_master',
+        to_slots: [
+          { slot_id: 'slot_301', role_name: '퇴직연금 업무/상품 PI 수석 컨설턴트', required_grade: '특급', required_domain: '퇴직연금', required_skills: ['Java', 'Oracle', 'ProFrame'], assigned_profile_id: 'p_1', assigned_name: '정윤희 (사내 정규직)', status: '배정완료' },
+          { slot_id: 'slot_302', role_name: '연금 채널/마이데이터 목표모델 설계', required_grade: '고급', required_domain: '마이데이터', required_skills: ['React', 'Spring Boot', 'MSA'], assigned_profile_id: null, assigned_name: null, status: '미충원' }
+        ],
+        created_at: '2026-11-12'
+      },
+
+      // 2. 진행중인 프로젝트 (3건 - 첨부 이미지 기준)
+      {
+        id: 'prj_ong_1',
+        project_group: 'ONGOING',
+        category: 'PENSION',
+        name: '하나증권 퇴직연금 일임형로보구축',
+        client: '하나증권',
+        period_label: '2026.08 ~ 2027.03',
+        business_type: '금융 SI (수행중)',
+        domain: '퇴직연금',
+        status: 'ONGOING',
+        start_date: '2026-08-01',
+        end_date: '2027-03-31',
+        location: '서울 여의도 (상주)',
+        contract_type: '일괄도급',
+        budget_rate_info: '특급 1,180만 / 고급 1,000만 / 중급 850만',
+        pm_user_id: 'u_internal_pl',
+        to_slots: [
+          { slot_id: 'slot_401', role_name: '퇴직연금 일임형 로보 정산 PL', required_grade: '특급', required_domain: '퇴직연금', required_skills: ['Java', 'Spring Batch', 'Oracle'], assigned_profile_id: 'p_1', assigned_name: '정윤희 (사내 정규직)', status: '배정완료' },
+          { slot_id: 'slot_402', role_name: '로보 포트폴리오 리밸런싱 배치 개발', required_grade: '중급', required_domain: '퇴직연금', required_skills: ['Java', 'Spring Boot', 'Oracle'], assigned_profile_id: 'p_3', assigned_name: '조진희 (사내 전문계약직)', status: '배정완료' },
+          { slot_id: 'slot_403', role_name: '퇴직연금 로보 채널 UI/API 연동 개발', required_grade: '고급', required_domain: '퇴직연금', required_skills: ['React', 'WebSquare', 'Spring Boot'], assigned_profile_id: 'p_5', assigned_name: '신은숙 (외주 프리랜서)', status: '배정완료' }
+        ],
+        created_at: '2026-08-01'
+      },
+      {
+        id: 'prj_ong_2',
+        project_group: 'ONGOING',
+        category: 'INVESTMENT',
+        name: '외화표시펀드 매매 시스템 구축',
+        client: '신영증권',
+        period_label: '2026.07 ~ 현재',
+        business_type: '금융 SI (수행중)',
+        domain: '펀드',
+        status: 'ONGOING',
+        start_date: '2026-07-01',
+        end_date: '2027-02-28',
+        location: '서울 여의도 (상주)',
+        contract_type: '일괄도급',
+        budget_rate_info: '고급 1,020만 / 중급 850만',
+        pm_user_id: 'u_manager',
+        to_slots: [
+          { slot_id: 'slot_501', role_name: '외화펀드 매매/환전 결제 아키텍트', required_grade: '고급', required_domain: '펀드', required_skills: ['Java', 'Spring Cloud', 'PostgreSQL'], assigned_profile_id: 'p_2', assigned_name: '강동원 (사내 정규직)', status: '배정완료' },
+          { slot_id: 'slot_502', role_name: '외화펀드 기준가/예탁 결제 개발', required_grade: '고급', required_domain: '채권', required_skills: ['Java', 'Spring Boot', 'Oracle', '펀드회계'], assigned_profile_id: 'p_7', assigned_name: '오세훈 (외주 반프리)', status: '배정완료' }
+        ],
+        created_at: '2026-07-01'
+      },
+      {
+        id: 'prj_ong_3',
+        project_group: 'ONGOING',
+        category: 'PENSION',
+        name: '연금 고객중심 서비스 개선',
+        client: '삼성증권',
+        period_label: '2026.03 ~ 2026.10',
+        business_type: '금융 SI (수행중)',
+        domain: '퇴직연금',
+        status: 'ONGOING',
+        start_date: '2026-03-01',
+        end_date: '2026-10-31',
+        location: '서울 서초 (상주)',
+        contract_type: '일괄도급',
+        budget_rate_info: '고급 980만 / 중급 830만',
+        pm_user_id: 'u_internal_pl',
+        to_slots: [
+          { slot_id: 'slot_601', role_name: '연금 고객 데이터마트 및 수익률 분석 DA', required_grade: '고급', required_domain: '퇴직연금', required_skills: ['Oracle', 'SQL튜닝', 'DW/DM'], assigned_profile_id: 'p_4', assigned_name: '윤서연 (사내 정규직)', status: '배정완료' },
+          { slot_id: 'slot_602', role_name: '모바일 연금 자산관리 대시보드 프론트엔드', required_grade: '고급', required_domain: '채널계', required_skills: ['React', 'TypeScript', 'Next.js'], assigned_profile_id: 'p_6', assigned_name: '한지민 (외주 개인사업자)', status: '배정완료' }
+        ],
+        created_at: '2026-03-01'
+      },
+
+      // 3. 완료된 프로젝트 (7건 - 첨부 이미지 기준)
+      {
+        id: 'prj_cmp_1',
+        project_group: 'COMPLETED',
+        category: 'PENSION',
+        name: '퇴직연금시스템 고도화',
+        client: '하나증권',
+        period_label: '2025.07 ~ 2025.07',
+        business_type: '금융 SI (완료)',
+        domain: '퇴직연금',
+        status: 'COMPLETED',
+        start_date: '2025-07-01',
+        end_date: '2025-07-31',
+        location: '서울 여의도',
+        contract_type: '일괄도급',
+        budget_rate_info: '특급 1,150만 / 고급 950만',
+        pm_user_id: 'u_internal_pl',
+        to_slots: [
+          { slot_id: 'slot_701', role_name: '퇴직연금 원장/배치 고도화 PL', required_grade: '특급', required_domain: '퇴직연금', required_skills: ['Java', 'Spring Batch', 'Oracle'], assigned_profile_id: 'p_1', assigned_name: '정윤희 (사내 정규직)', status: '배정완료' },
+          { slot_id: 'slot_702', role_name: '퇴직연금 정산 배치 개발', required_grade: '특급', required_domain: '퇴직연금', required_skills: ['Java', 'Oracle'], assigned_profile_id: 'p_5', assigned_name: '신은숙 (외주 프리랜서)', status: '배정완료' }
+        ],
+        created_at: '2025-07-01'
+      },
+      {
+        id: 'prj_cmp_2',
+        project_group: 'COMPLETED',
+        category: 'PENSION',
+        name: 'IRP시스템 ETF 개발',
+        client: '우리투자증권',
+        period_label: '2025.06 ~ 2025.06',
+        business_type: '금융 SI (완료)',
+        domain: '퇴직연금',
+        status: 'COMPLETED',
+        start_date: '2025-06-01',
+        end_date: '2025-06-30',
+        location: '서울 여의도',
+        contract_type: '일괄도급',
+        budget_rate_info: '고급 980만 / 중급 830만',
+        pm_user_id: 'u_manager',
+        to_slots: [
+          { slot_id: 'slot_703', role_name: 'IRP ETF 실시간 매매 연동 개발', required_grade: '고급', required_domain: '퇴직연금', required_skills: ['Java', 'Spring Boot', 'Oracle'], assigned_profile_id: 'p_2', assigned_name: '강동원 (사내 정규직)', status: '배정완료' },
+          { slot_id: 'slot_704', role_name: 'IRP ETF 주문 채널 화면 개발', required_grade: '중급', required_domain: '퇴직연금', required_skills: ['WebSquare', 'Java'], assigned_profile_id: 'p_3', assigned_name: '조진희 (사내 전문계약직)', status: '배정완료' }
+        ],
+        created_at: '2025-06-01'
+      },
+      {
+        id: 'prj_cmp_3',
+        project_group: 'COMPLETED',
+        category: 'PENSION',
+        name: '퇴직연금 신시스템 구축',
+        client: '키움증권',
+        period_label: '2025.04 ~ 2026.06',
+        business_type: '금융 SI (완료)',
+        domain: '퇴직연금',
+        status: 'COMPLETED',
+        start_date: '2025-04-01',
+        end_date: '2026-06-30',
+        location: '서울 여의도',
+        contract_type: '일괄도급',
+        budget_rate_info: '특급 1,150만 / 고급 950만',
+        pm_user_id: 'u_internal_pl',
+        to_slots: [
+          { slot_id: 'slot_705', role_name: '퇴직연금 신시스템 코어 PL', required_grade: '특급', required_domain: '퇴직연금', required_skills: ['Java', 'Spring Batch', 'Oracle'], assigned_profile_id: 'p_1', assigned_name: '정윤희 (사내 정규직)', status: '배정완료' },
+          { slot_id: 'slot_706', role_name: '퇴직연금 데이터 모델링 DA', required_grade: '고급', required_domain: '퇴직연금', required_skills: ['Oracle', 'DW/DM', 'SQL튜닝'], assigned_profile_id: 'p_4', assigned_name: '윤서연 (사내 정규직)', status: '배정완료' }
+        ],
+        created_at: '2025-04-01'
+      },
+      {
+        id: 'prj_cmp_4',
+        project_group: 'COMPLETED',
+        category: 'CONSULTING',
+        name: '연금사업 추진 PI(퇴직연금시스템 구축 컨설팅지원)',
+        client: '키움증권',
+        period_label: '2025.02 ~ 2025.02',
+        business_type: '금융 컨설팅 (완료)',
+        domain: '퇴직연금',
+        status: 'COMPLETED',
+        start_date: '2025-02-01',
+        end_date: '2025-02-28',
+        location: '서울 여의도',
+        contract_type: '컨설팅 계약',
+        budget_rate_info: '특급 컨설턴트 1,200만',
+        pm_user_id: 'u_master',
+        to_slots: [
+          { slot_id: 'slot_707', role_name: '퇴직연금 사업 추진 PI 리드 컨설턴트', required_grade: '특급', required_domain: '퇴직연금', required_skills: ['Java', 'Oracle', 'ProFrame'], assigned_profile_id: 'p_1', assigned_name: '정윤희 (사내 정규직)', status: '배정완료' }
+        ],
+        created_at: '2025-02-01'
+      },
+      {
+        id: 'prj_cmp_5',
+        project_group: 'COMPLETED',
+        category: 'PENSION',
+        name: '퇴직연금 실물이전 추가개발',
+        client: '대신증권',
+        period_label: '2024.12 ~ 2024.12',
+        business_type: '금융 SI (완료)',
+        domain: '퇴직연금',
+        status: 'COMPLETED',
+        start_date: '2024-12-01',
+        end_date: '2024-12-31',
+        location: '서울 을지로',
+        contract_type: '일괄도급',
+        budget_rate_info: '특급 1,120만 / 고급 950만',
+        pm_user_id: 'u_internal_pl',
+        to_slots: [
+          { slot_id: 'slot_708', role_name: '퇴직연금 실물이전 대외전문/결제 개발', required_grade: '특급', required_domain: '퇴직연금', required_skills: ['Java', 'Spring Batch', 'Oracle'], assigned_profile_id: 'p_5', assigned_name: '신은숙 (외주 프리랜서)', status: '배정완료' }
+        ],
+        created_at: '2024-12-01'
+      },
+      {
+        id: 'prj_cmp_6',
+        project_group: 'COMPLETED',
+        category: 'CONSULTING',
+        name: '집합투자증권 인가컨설팅(판매솔루션 포함)',
+        client: '토스뱅크',
+        period_label: '2024.09 ~ 2026.06',
+        business_type: '금융 컨설팅 (완료)',
+        domain: '펀드',
+        status: 'COMPLETED',
+        start_date: '2024-09-01',
+        end_date: '2026-06-30',
+        location: '서울 역삼',
+        contract_type: '컨설팅 및 구축',
+        budget_rate_info: '고급 1,050만',
+        pm_user_id: 'u_manager',
+        to_slots: [
+          { slot_id: 'slot_709', role_name: '펀드 판매솔루션 아키텍처 컨설팅', required_grade: '고급', required_domain: '펀드', required_skills: ['Java', 'Spring Cloud', 'Kafka'], assigned_profile_id: 'p_2', assigned_name: '강동원 (사내 정규직)', status: '배정완료' }
+        ],
+        created_at: '2024-09-01'
+      },
+      {
+        id: 'prj_cmp_7',
+        project_group: 'COMPLETED',
+        category: 'CONSULTING',
+        name: '차세대 사전준비 프로젝트(퇴직연금 업무컨설팅)',
+        client: '현대차증권',
+        period_label: '2024.06 ~ 2024.06',
+        business_type: '금융 컨설팅 (완료)',
+        domain: '퇴직연금',
+        status: 'COMPLETED',
+        start_date: '2024-06-01',
+        end_date: '2024-06-30',
+        location: '서울 여의도',
+        contract_type: '컨설팅 계약',
+        budget_rate_info: '특급 컨설턴트 1,200만',
+        pm_user_id: 'u_master',
+        to_slots: [
+          { slot_id: 'slot_710', role_name: '퇴직연금 차세대 요건정의 수석 컨설턴트', required_grade: '특급', required_domain: '퇴직연금', required_skills: ['Java', 'Oracle'], assigned_profile_id: 'p_1', assigned_name: '정윤희 (사내 정규직)', status: '배정완료' }
+        ],
+        created_at: '2024-06-01'
       }
     ],
     postings: [
-      { id: 'post_1', project_id: 'prj_1', slot_id: 'slot_103', title: '[미래금융 퇴직연금 차세대] 연금 상품운용·수수료 대용량 배치 개발자 (특급/고급)', role_name: '연금 상품운용/수수료 배치 선임개발', required_grade: '특급', required_skills: ['Java', 'Spring Batch', 'Oracle', 'ProFrame'], required_domain: '퇴직연금', work_location: '서울 여의도', period: '2026.12 ~ 2027.11 (12개월)', rate_guide: '월 1,100 ~ 1,180만원 (경력협의)', status: 'OPEN', sourcing_sent_count: 3, created_at: '2026-11-09' },
-      { id: 'post_2', project_id: 'prj_1', slot_id: 'slot_104', title: '[미래금융 퇴직연금 차세대] 개인형IRP 비대면 채널 UI/API 개발자 (고급)', role_name: '개인형IRP 비대면 채널 프론트/백엔드', required_grade: '고급', required_skills: ['React', 'TypeScript', 'WebSquare', 'Spring Boot'], required_domain: '퇴직연금', work_location: '서울 여의도', period: '2026.12 ~ 2027.11 (12개월)', rate_guide: '월 920 ~ 980만원', status: 'OPEN', sourcing_sent_count: 2, created_at: '2026-11-10' },
-      { id: 'post_3', project_id: 'prj_2', slot_id: 'slot_202', title: '[대한자산운용] 채권 시가평가 및 펀드 수탁결제 백엔드 개발자 (고급)', role_name: '채권 시가평가 및 펀드회계 응용개발', required_grade: '고급', required_skills: ['Java', 'Spring Boot', 'Oracle', '펀드회계'], required_domain: '채권', work_location: '서울 광화문', period: '2026.12 ~ 2027.08 (9개월)', rate_guide: '월 1,000 ~ 1,050만원', status: 'OPEN', sourcing_sent_count: 2, created_at: '2026-11-11' }
+      { id: 'post_1', project_id: 'prj_1', slot_id: 'slot_103', title: '[미래에셋증권 퇴직연금 차세대] 연금 로보일임·수수료 대용량 배치 개발자 (특급/고급)', role_name: '연금 로보일임·수수료 배치 선임개발', required_grade: '특급', required_skills: ['Java', 'Spring Batch', 'Oracle', 'ProFrame'], required_domain: '퇴직연금', work_location: '서울 을지로', period: '2026.12 ~ 2027.10 (11개월)', rate_guide: '월 1,100 ~ 1,180만원 (경력협의)', status: 'OPEN', sourcing_sent_count: 3, created_at: '2026-11-09' },
+      { id: 'post_2', project_id: 'prj_1', slot_id: 'slot_104', title: '[미래에셋증권 퇴직연금 차세대] 개인형IRP 비대면 채널 UI/API 개발자 (고급)', role_name: '개인형IRP 비대면 채널 프론트/백엔드', required_grade: '고급', required_skills: ['React', 'TypeScript', 'WebSquare', 'Spring Boot'], required_domain: '퇴직연금', work_location: '서울 을지로', period: '2026.12 ~ 2027.10 (11개월)', rate_guide: '월 920 ~ 980만원', status: 'OPEN', sourcing_sent_count: 2, created_at: '2026-11-10' },
+      { id: 'post_3', project_id: 'prj_2', slot_id: 'slot_202', title: '[KB증권 글로벌 채권·외화펀드] 외화채권 시가평가 및 펀드결제 백엔드 개발자 (고급)', role_name: '외화채권 시가평가 및 펀드결제 응용개발', required_grade: '고급', required_skills: ['Java', 'Spring Boot', 'Oracle', '펀드회계'], required_domain: '채권', work_location: '서울 여의도', period: '2027.01 ~ 2027.09 (9개월)', rate_guide: '월 1,000 ~ 1,050만원', status: 'OPEN', sourcing_sent_count: 2, created_at: '2026-11-11' }
     ],
     templates: [
       {
@@ -412,13 +676,19 @@ module.exports = async (req, res) => {
 
   if (pathname === '/api/projects' && req.method === 'POST') {
     const newId = 'prj_' + Date.now();
+    const grp = body.project_group || 'PLANNED';
+    const cat = body.category || (body.domain === '채권' || body.domain === '펀드' ? 'INVESTMENT' : 'PENSION');
+    const periodLabel = body.period_label || `${(body.start_date || '').slice(0, 7).replace('-', '.')} ~ ${(body.end_date || '').slice(0, 7).replace('-', '.')}`;
     store.projects.unshift({
       id: newId,
+      project_group: grp,
+      category: cat,
       name: body.name,
       client: body.client,
+      period_label: periodLabel,
       business_type: body.business_type,
       domain: body.domain,
-      status: '제안준비중',
+      status: grp,
       start_date: body.start_date,
       end_date: body.end_date,
       location: body.location,

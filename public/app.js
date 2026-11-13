@@ -986,6 +986,11 @@ function closeProjectDetail() {
   renderProjectsTab();
 }
 
+function setProjectGroupFilter(groupKey) {
+  state.selectedProjectFilter = groupKey;
+  renderProjectsTab();
+}
+
 function renderProjectsTab() {
   const { projects, postings, interviews, templates, permissions, currentUser } = state.data;
   const el = document.getElementById('tab-projects');
@@ -1001,20 +1006,52 @@ function renderProjectsTab() {
     return;
   }
 
-  // Otherwise, render the Project List View with basic info cards only
+  const plannedProjects = projects.filter(p => (p.project_group || 'PLANNED') === 'PLANNED');
+  const ongoingProjects = projects.filter(p => p.project_group === 'ONGOING');
+  const completedProjects = projects.filter(p => p.project_group === 'COMPLETED');
+
+  const activeGroup = state.selectedProjectFilter || 'ALL';
+
+  const sections = [
+    { key: 'PLANNED', title: '예정(입찰) 프로젝트', badgeClass: 'purple', items: plannedProjects },
+    { key: 'ONGOING', title: '진행중인 프로젝트', badgeClass: 'amber', items: ongoingProjects },
+    { key: 'COMPLETED', title: '완료된 프로젝트', badgeClass: 'green', items: completedProjects }
+  ].filter(sec => activeGroup === 'ALL' || activeGroup === sec.key);
+
+  // Otherwise, render the Project List View with 3 grouped sections and basic info cards
   el.innerHTML = `
-    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:18px;">
-      <div>
-        <h3 style="font-size:17px; font-weight:800;">수행·예정(입찰) 프로젝트 목록</h3>
-        <p style="font-size:12.5px; color:#64748b; margin-top:2px;">카드를 선택하면 TO 배정·제안서 장표 추출·오픈 구인·면접 검증 등 상세 화면으로 이동합니다.</p>
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:20px;">
+      <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+        <button type="button" class="zal-chip-btn ${activeGroup === 'ALL' ? 'active' : ''}" onclick="setProjectGroupFilter('ALL')">
+          전체 (${projects.length})
+        </button>
+        <button type="button" class="zal-chip-btn ${activeGroup === 'PLANNED' ? 'active' : ''}" onclick="setProjectGroupFilter('PLANNED')">
+          예정(입찰) 프로젝트 (${plannedProjects.length})
+        </button>
+        <button type="button" class="zal-chip-btn ${activeGroup === 'ONGOING' ? 'active' : ''}" onclick="setProjectGroupFilter('ONGOING')">
+          진행중인 프로젝트 (${ongoingProjects.length})
+        </button>
+        <button type="button" class="zal-chip-btn ${activeGroup === 'COMPLETED' ? 'active' : ''}" onclick="setProjectGroupFilter('COMPLETED')">
+          완료된 프로젝트 (${completedProjects.length})
+        </button>
       </div>
       ${canManagePrj ? `
-        <button class="btn btn-primary" onclick="openNewProjectModal()">+ 신규 프로젝트 및 TO 등록</button>
+        <button class="btn btn-primary btn-sm" onclick="openNewProjectModal()">+ 신규 프로젝트 및 TO 등록</button>
       ` : ''}
     </div>
 
-    <div style="display:flex; flex-direction:column; gap:14px;">
-      ${projects.map(prj => renderProjectSummaryCard(prj)).join('')}
+    <div style="display:flex; flex-direction:column; gap:28px;">
+      ${sections.map(sec => `
+        <section>
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+            <h3 style="font-size:16.5px; font-weight:800; color:#0f172a; margin:0;">${sec.title}</h3>
+            <span class="zal-status-pill ${sec.badgeClass}">${sec.items.length}건</span>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:12px;">
+            ${sec.items.map(prj => renderProjectSummaryCard(prj)).join('')}
+          </div>
+        </section>
+      `).join('')}
     </div>
   `;
 }
@@ -1022,23 +1059,30 @@ function renderProjectsTab() {
 function renderProjectSummaryCard(prj) {
   const totalSlots = prj.to_slots.length;
   const filledSlots = prj.to_slots.filter(s => s.assigned_profile_id).length;
+  const categoryLabel = prj.category || 'PENSION';
+  const periodText = prj.period_label || `${prj.start_date} ~ ${prj.end_date}`;
+  const statusPill = prj.project_group === 'ONGOING'
+    ? `<span class="zal-status-pill amber">ONGOING</span>`
+    : prj.project_group === 'COMPLETED'
+      ? `<span class="zal-status-pill green">COMPLETED</span>`
+      : `<span class="zal-status-pill purple">예정(입찰)</span>`;
 
   return `
     <article
       class="zal-feed-card"
-      style="cursor:pointer; padding:20px 24px;"
+      style="cursor:pointer; padding:18px 24px;"
       onclick="selectProjectDetail('${prj.id}')"
     >
       <div style="display:flex; justify-content:space-between; align-items:center; gap:16px;">
         <div>
           <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px; flex-wrap:wrap;">
-            <span class="zal-status-pill blue">${prj.domain}</span>
-            <span class="zal-status-pill gray">${prj.business_type}</span>
+            <span class="zal-status-pill blue">${categoryLabel}</span>
+            ${statusPill}
             <span class="zal-status-pill ${filledSlots === totalSlots ? 'green' : 'amber'}">충원 ${filledSlots} / ${totalSlots}명</span>
           </div>
-          <h3 class="zal-card-title" style="font-size:17px; margin:0;">${prj.name}</h3>
+          <h3 class="zal-card-title" style="font-size:16.5px; margin:0;">${prj.name}</h3>
           <div style="font-size:12.5px; color:#64748b; margin-top:6px;">
-            🏢 발주처: <strong>${prj.client}</strong> · 📅 기간: ${prj.start_date} ~ ${prj.end_date} · 📍 ${prj.location} · 💰 ${prj.budget_rate_info}
+            🏢 고객사: <strong>${prj.client}</strong> · 📅 수행년도: ${periodText} · 📍 ${prj.location} · 💰 ${prj.budget_rate_info}
           </div>
         </div>
         <div style="color:#94a3b8; font-size:13px; font-weight:700; white-space:nowrap; flex-shrink:0;">
@@ -1077,13 +1121,17 @@ function renderProjectDetailView(el, prj, postings, interviews, templates, permi
       <div class="zal-card-header" style="border-bottom:1px solid #f1f5f9; padding-bottom:14px;">
         <div>
           <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px; flex-wrap:wrap;">
-            <span class="zal-status-pill blue">${prj.domain}</span>
-            <span class="zal-status-pill gray">${prj.business_type}</span>
+            <span class="zal-status-pill blue">${prj.category || 'PENSION'}</span>
+            ${prj.project_group === 'ONGOING'
+              ? `<span class="zal-status-pill amber">ONGOING</span>`
+              : prj.project_group === 'COMPLETED'
+                ? `<span class="zal-status-pill green">COMPLETED</span>`
+                : `<span class="zal-status-pill purple">예정(입찰)</span>`}
             <span class="zal-status-pill ${filledSlots === totalSlots ? 'green' : 'amber'}">충원 ${filledSlots} / ${totalSlots}명</span>
           </div>
           <h3 class="zal-card-title" style="font-size:18px;">${prj.name}</h3>
           <div style="font-size:12.5px; color:#64748b; margin-top:4px;">
-            🏢 발주처: <strong>${prj.client}</strong> · 📅 기간: ${prj.start_date} ~ ${prj.end_date} · 📍 ${prj.location} · 💰 ${prj.budget_rate_info}
+            🏢 고객사: <strong>${prj.client}</strong> · 📅 수행년도: ${prj.period_label || `${prj.start_date} ~ ${prj.end_date}`} · 📍 ${prj.location} · 💰 ${prj.budget_rate_info}
           </div>
         </div>
       </div>
@@ -1449,20 +1497,28 @@ function openNewProjectModal() {
     <form onsubmit="submitNewProject(event)">
       <div class="form-grid">
         <div class="form-field">
+          <label>프로젝트 구분</label>
+          <select class="select" name="project_group">
+            <option value="PLANNED">예정(입찰) 프로젝트</option>
+            <option value="ONGOING">진행중인 프로젝트</option>
+            <option value="COMPLETED">완료된 프로젝트</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label>카테고리</label>
+          <select class="select" name="category">
+            <option value="PENSION">PENSION</option>
+            <option value="INVESTMENT">INVESTMENT</option>
+            <option value="CONSULTING">CONSULTING</option>
+          </select>
+        </div>
+        <div class="form-field">
           <label>프로젝트명</label>
           <input class="input" name="name" placeholder="예: 대신증권 연금 경쟁력 강화 차세대" required />
         </div>
         <div class="form-field">
-          <label>발주처</label>
+          <label>고객사</label>
           <input class="input" name="client" placeholder="예: 대신증권" required />
-        </div>
-        <div class="form-field">
-          <label>사업 구분</label>
-          <select class="select" name="business_type">
-            <option value="금융 SI (입찰제안)">금융 SI (입찰제안)</option>
-            <option value="금융 SI (수행예정)">금융 SI (수행예정)</option>
-            <option value="금융 SM (운영)">금융 SM (운영)</option>
-          </select>
         </div>
         <div class="form-field">
           <label>핵심 금융 도메인</label>
@@ -1475,6 +1531,10 @@ function openNewProjectModal() {
           </select>
         </div>
         <div class="form-field">
+          <label>근무지</label>
+          <input class="input" name="location" value="서울 여의도 (상주)" />
+        </div>
+        <div class="form-field">
           <label>투입 시작일</label>
           <input type="date" class="input" name="start_date" value="2026-12-15" required />
         </div>
@@ -1482,11 +1542,7 @@ function openNewProjectModal() {
           <label>투입 종료일</label>
           <input type="date" class="input" name="end_date" value="2027-10-31" required />
         </div>
-        <div class="form-field">
-          <label>근무지</label>
-          <input class="input" name="location" value="서울 여의도 (상주)" />
-        </div>
-        <div class="form-field">
+        <div class="form-field" style="grid-column: span 2;">
           <label>단가 가이드 (민감정보)</label>
           <input class="input" name="budget_rate_info" value="특급 1,180만 / 고급 1,000만 / 중급 850만" />
         </div>
@@ -1523,10 +1579,14 @@ async function submitNewProject(e) {
   e.preventDefault();
   const fd = new FormData(e.target);
   const domain = fd.get('domain');
+  const project_group = fd.get('project_group') || 'PLANNED';
+  const category = fd.get('category') || 'PENSION';
   await apiCall('/api/projects', 'POST', {
+    project_group,
+    category,
     name: fd.get('name'),
     client: fd.get('client'),
-    business_type: fd.get('business_type'),
+    business_type: project_group === 'PLANNED' ? '금융 SI (입찰제안)' : project_group === 'ONGOING' ? '금융 SI (수행중)' : '금융 SI (완료)',
     domain,
     start_date: fd.get('start_date'),
     end_date: fd.get('end_date'),
