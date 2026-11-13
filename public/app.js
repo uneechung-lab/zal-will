@@ -1159,7 +1159,6 @@ function renderProjectSummaryCard(prj) {
           <div style="display:flex; align-items:center; gap:12px; font-size:13px; color:#64748b; margin-top:2px;">
             <span>👁️ 충원 <strong>${filledSlots}/${totalSlots}명</strong></span>
             <span>💬 TO ${totalSlots}</span>
-            <span style="margin-left:auto; color:#2563eb; font-weight:600;">상세보기 ›</span>
           </div>
         </div>
 
@@ -1194,8 +1193,11 @@ function renderProjectDetailView(el, prj, postings, interviews, templates, permi
 
   el.innerHTML = `
     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:16px;">
-      <button type="button" class="btn btn-outline btn-sm" onclick="closeProjectDetail()">
-        ← 프로젝트 목록으로 돌아가기
+      <button type="button" class="btn btn-outline" style="padding:8px 11px; border-radius:10px;" onclick="closeProjectDetail()" title="목록으로 돌아가기">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
       </button>
       <div style="display:flex; gap:8px; flex-wrap:wrap;">
         ${canManagePrj ? `
@@ -1334,9 +1336,9 @@ function renderProjectDetailView(el, prj, postings, interviews, templates, permi
       ` : ''}
     </div>
 
-    <!-- 해당 프로젝트 오픈 구인 포지션 & 타겟 소싱 섹션 -->
+    <!-- 해당 프로젝트 오픈 구인 포지션 섹션 -->
     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:14px;">
-      <h3 style="font-size:16.5px; font-weight:600;">📢 오픈 구인 포지션 & 인재 풀 타겟 소싱 (${projectPostings.length}건)</h3>
+      <h3 style="font-size:16.5px; font-weight:600;">📢 오픈 구인 포지션 (${projectPostings.length}건)</h3>
     </div>
 
     <div class="dashboard-feed-masonry" style="margin-bottom:28px;">
@@ -1364,7 +1366,7 @@ function renderProjectDetailView(el, prj, postings, interviews, templates, permi
 
           <div class="zal-card-footer">
             <div class="zal-reaction-group">
-              ${post.status === 'OPEN' ? `
+              ${post.status === 'OPEN' && currentUser?.role_group !== 'MASTER' ? `
                 <button class="btn btn-primary btn-sm" onclick="openEasyApplyModal('${post.id}')">
                   ✍️ ${currentUser?.role_group === 'INTERNAL' ? '사내 지인 추천' : '간편 지원하기'}
                 </button>
@@ -1796,7 +1798,7 @@ function renderSourcingTab() {
 
           <div class="zal-card-footer">
             <div class="zal-reaction-group">
-              ${post.status === 'OPEN' ? `
+              ${post.status === 'OPEN' && currentUser?.role_group !== 'MASTER' ? `
                 <button class="btn btn-primary btn-sm" onclick="openEasyApplyModal('${post.id}')">
                   ✍️ ${currentUser?.role_group === 'INTERNAL' ? '사내 지인 추천' : '간편 지원하기'}
                 </button>
