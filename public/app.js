@@ -1056,11 +1056,32 @@ function renderProjectsTab() {
   `;
 }
 
+function getDdayText(deadlineStr) {
+  if (!deadlineStr) return 'D-14';
+  const baseDate = new Date('2026-11-13T00:00:00');
+  const targetDate = new Date(`${deadlineStr}T00:00:00`);
+  if (Number.isNaN(targetDate.getTime())) return 'D-14';
+  const diffDays = Math.ceil((targetDate - baseDate) / (1000 * 60 * 60 * 24));
+  if (diffDays === 0) return 'D-Day';
+  return diffDays > 0 ? `D-${diffDays}` : `D+${Math.abs(diffDays)}`;
+}
+
+function getProjectApplicantCount(prj) {
+  const interviews = state.data?.interviews || [];
+  const interviewCount = interviews.filter(i => i.project_id === prj.id).length;
+  return Math.max(Number(prj.applicant_count || 0), interviewCount);
+}
+
 function renderProjectSummaryCard(prj) {
   const totalSlots = prj.to_slots.length;
   const filledSlots = prj.to_slots.filter(s => s.assigned_profile_id).length;
   const categoryLabel = prj.category || 'PENSION';
   const periodText = prj.period_label || `${prj.start_date} ~ ${prj.end_date}`;
+  const isPlanned = (prj.project_group || 'PLANNED') === 'PLANNED';
+  const deadline = prj.staffing_deadline || '2026-11-25';
+  const dDayLabel = getDdayText(deadline);
+  const applicantCount = getProjectApplicantCount(prj);
+
   const statusPill = prj.project_group === 'ONGOING'
     ? `<span class="zal-status-pill amber">ONGOING</span>`
     : prj.project_group === 'COMPLETED'
@@ -1079,6 +1100,14 @@ function renderProjectSummaryCard(prj) {
             <span class="zal-status-pill blue">${categoryLabel}</span>
             ${statusPill}
             <span class="zal-status-pill ${filledSlots === totalSlots ? 'green' : 'amber'}">충원 ${filledSlots} / ${totalSlots}명</span>
+            ${isPlanned ? `
+              <span class="zal-status-pill" style="background:#fef2f2; color:#dc2626; border:1px solid #fecaca; font-weight:800;">
+                ⏰ 충원완료일 ${deadline} (${dDayLabel})
+              </span>
+              <span class="zal-status-pill" style="background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; font-weight:800;">
+                🙋 지원자 ${applicantCount}명
+              </span>
+            ` : ''}
           </div>
           <h3 class="zal-card-title" style="font-size:16.5px; margin:0;">${prj.name}</h3>
           <div style="font-size:12.5px; color:#64748b; margin-top:6px;">
@@ -1098,6 +1127,10 @@ function renderProjectDetailView(el, prj, postings, interviews, templates, permi
   const filledSlots = prj.to_slots.filter(s => s.assigned_profile_id).length;
   const projectPostings = postings.filter(p => p.project_id === prj.id);
   const projectInterviews = interviews.filter(i => i.project_id === prj.id);
+  const isPlanned = (prj.project_group || 'PLANNED') === 'PLANNED';
+  const deadline = prj.staffing_deadline || '2026-11-25';
+  const dDayLabel = getDdayText(deadline);
+  const applicantCount = getProjectApplicantCount(prj);
 
   el.innerHTML = `
     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:16px;">
@@ -1116,10 +1149,10 @@ function renderProjectDetailView(el, prj, postings, interviews, templates, permi
       </div>
     </div>
 
-    <!-- 프로젝트 기본 정보 및 TO 배정·매칭 카드 -->
+    <!-- 프로젝트 기본 정보, 상세 설명 및 TO 배정·매칭 카드 -->
     <div class="zal-feed-card" style="margin-bottom:28px;">
       <div class="zal-card-header" style="border-bottom:1px solid #f1f5f9; padding-bottom:14px;">
-        <div>
+        <div style="width:100%;">
           <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px; flex-wrap:wrap;">
             <span class="zal-status-pill blue">${prj.category || 'PENSION'}</span>
             ${prj.project_group === 'ONGOING'
@@ -1128,10 +1161,25 @@ function renderProjectDetailView(el, prj, postings, interviews, templates, permi
                 ? `<span class="zal-status-pill green">COMPLETED</span>`
                 : `<span class="zal-status-pill purple">예정(입찰)</span>`}
             <span class="zal-status-pill ${filledSlots === totalSlots ? 'green' : 'amber'}">충원 ${filledSlots} / ${totalSlots}명</span>
+            ${isPlanned ? `
+              <span class="zal-status-pill" style="background:#fef2f2; color:#dc2626; border:1px solid #fecaca; font-weight:800;">
+                ⏰ 충원완료일 ${deadline} (${dDayLabel})
+              </span>
+              <span class="zal-status-pill" style="background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; font-weight:800;">
+                🙋 지원자 ${applicantCount}명
+              </span>
+            ` : ''}
           </div>
           <h3 class="zal-card-title" style="font-size:18px;">${prj.name}</h3>
           <div style="font-size:12.5px; color:#64748b; margin-top:4px;">
             🏢 고객사: <strong>${prj.client}</strong> · 📅 수행년도: ${prj.period_label || `${prj.start_date} ~ ${prj.end_date}`} · 📍 ${prj.location} · 💰 ${prj.budget_rate_info}
+          </div>
+
+          <div style="margin-top:14px; padding:14px 16px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px;">
+            <div style="font-size:12.5px; font-weight:800; color:#0f172a; margin-bottom:4px;">📌 프로젝트 상세 설명 (과업 범위 및 수행 요건)</div>
+            <p style="font-size:13px; color:#334155; line-height:1.6; margin:0;">
+              ${prj.description || `${prj.client}의 ${prj.name} 사업으로, ${prj.domain} 도메인 전문 인력 중심의 설계·개발·이행을 수행합니다.`}
+            </p>
           </div>
         </div>
       </div>
@@ -1542,9 +1590,17 @@ function openNewProjectModal() {
           <label>투입 종료일</label>
           <input type="date" class="input" name="end_date" value="2027-10-31" required />
         </div>
-        <div class="form-field" style="grid-column: span 2;">
+        <div class="form-field">
+          <label>충원완료 목표일 (D-Day 기준)</label>
+          <input type="date" class="input" name="staffing_deadline" value="2026-11-30" required />
+        </div>
+        <div class="form-field">
           <label>단가 가이드 (민감정보)</label>
           <input class="input" name="budget_rate_info" value="특급 1,180만 / 고급 1,000만 / 중급 850만" />
+        </div>
+        <div class="form-field" style="grid-column: span 2;">
+          <label>프로젝트 상세 설명 (과업 범위 및 수행 요건)</label>
+          <textarea class="textarea" name="description" placeholder="프로젝트 추진 배경, 핵심 과업 범위 및 필요 기술 환경을 입력하세요.">대신증권 퇴직연금 및 개인형IRP 비대면 자산관리 경쟁력 강화를 위한 코어 정산·배치 및 모바일 채널 고도화 프로젝트입니다.</textarea>
         </div>
       </div>
 
@@ -1590,8 +1646,10 @@ async function submitNewProject(e) {
     domain,
     start_date: fd.get('start_date'),
     end_date: fd.get('end_date'),
+    staffing_deadline: fd.get('staffing_deadline'),
     location: fd.get('location'),
     budget_rate_info: fd.get('budget_rate_info'),
+    description: fd.get('description'),
     to_slots: [
       { role_name: fd.get('slot1_role'), required_grade: fd.get('slot1_grade'), required_domain: domain, required_skills: ['Java', 'Spring Boot', 'Oracle'] },
       { role_name: fd.get('slot2_role'), required_grade: fd.get('slot2_grade'), required_domain: domain, required_skills: ['Java', 'Spring Batch', 'SQL튜닝'] }
