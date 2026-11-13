@@ -418,7 +418,7 @@ button, input, select, textarea {
   display: flex;
   align-items: center;
   gap: 32px;
-  overflow-x: auto;
+  overflow: visible;
 }
 
 .toggle-item {
@@ -449,7 +449,7 @@ button, input, select, textarea {
 .toggle-item.active::after {
   content: "";
   position: absolute;
-  bottom: -1px;
+  bottom: 0;
   left: 0;
   right: 0;
   height: 4px;
