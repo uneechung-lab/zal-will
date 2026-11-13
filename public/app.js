@@ -1609,9 +1609,11 @@ function renderProjectDetailView(el, prj, postings, interviews, templates, permi
               ` : ''}
               ${permissions.can_manage_postings ? `
                 <button type="button" class="btn btn-outline btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="event.stopPropagation(); openTargetSourcingModal('${post.id}')">${svgIcon('target', 13)} 타겟 소싱 발송</button>
-                <button type="button" class="btn btn-outline btn-sm" onclick="event.stopPropagation(); togglePostingStatus('${post.id}')">${post.status === 'OPEN' ? '마감' : '재오픈'}</button>
               ` : ''}
             </div>
+            ${permissions.can_manage_postings ? `
+              <button type="button" class="btn btn-primary btn-sm" style="margin-left:auto;" onclick="event.stopPropagation(); togglePostingStatus('${post.id}')">${post.status === 'OPEN' ? '마감하기' : '재오픈'}</button>
+            ` : ''}
           </div>
         </article>
       `).join('') : `
@@ -2006,9 +2008,11 @@ function renderSourcingTab() {
               ` : ''}
               ${permissions.can_manage_postings ? `
                 <button type="button" class="btn btn-outline btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="event.stopPropagation(); openTargetSourcingModal('${post.id}')">${svgIcon('target', 13)} 타겟 소싱 발송</button>
-                <button type="button" class="btn btn-outline btn-sm" onclick="event.stopPropagation(); togglePostingStatus('${post.id}')">${post.status === 'OPEN' ? '마감' : '재오픈'}</button>
               ` : ''}
             </div>
+            ${permissions.can_manage_postings ? `
+              <button type="button" class="btn btn-primary btn-sm" style="margin-left:auto;" onclick="event.stopPropagation(); togglePostingStatus('${post.id}')">${post.status === 'OPEN' ? '마감하기' : '재오픈'}</button>
+            ` : ''}
           </div>
         </article>
       `).join('')}
