@@ -432,19 +432,19 @@ function renderDashboardTab() {
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
           <div style="padding:10px 12px; border:1px solid #e2e8f0; border-radius:12px;">
             <div style="font-size:11px; color:#64748b; font-weight:600;">사내 기술인력 DB화</div>
-            <div style="font-size:18px; font-weight:800; color:#0f172a;">${kpis.internal_db_rate}% <span style="font-size:11px; color:#059669;">달성</span></div>
+            <div style="font-size:18px; font-weight:600; color:#0f172a;">${kpis.internal_db_rate}% <span style="font-size:11px; color:#059669;">달성</span></div>
           </div>
           <div style="padding:10px 12px; border:1px solid #e2e8f0; border-radius:12px;">
             <div style="font-size:11px; color:#64748b; font-weight:600;">AI 파싱·검수 시간</div>
-            <div style="font-size:18px; font-weight:800; color:#0f172a;">${kpis.avg_parse_seconds}초 <span style="font-size:11px; color:#2563eb;">&lt;2분</span></div>
+            <div style="font-size:18px; font-weight:600; color:#0f172a;">${kpis.avg_parse_seconds}초 <span style="font-size:11px; color:#2563eb;">&lt;2분</span></div>
           </div>
           <div style="padding:10px 12px; border:1px solid #e2e8f0; border-radius:12px;">
             <div style="font-size:11px; color:#64748b; font-weight:600;">제안서 장표 추출</div>
-            <div style="font-size:18px; font-weight:800; color:#0f172a;">${kpis.proposal_extract_minutes}분 <span style="font-size:11px; color:#6366f1;">원클릭</span></div>
+            <div style="font-size:18px; font-weight:600; color:#0f172a;">${kpis.proposal_extract_minutes}분 <span style="font-size:11px; color:#6366f1;">원클릭</span></div>
           </div>
           <div style="padding:10px 12px; border:1px solid #e2e8f0; border-radius:12px;">
             <div style="font-size:11px; color:#64748b; font-weight:600;">기검증 재소싱률</div>
-            <div style="font-size:18px; font-weight:800; color:#0f172a;">${kpis.resourcing_rate}% <span style="font-size:11px; color:#d97706;">우수풀</span></div>
+            <div style="font-size:18px; font-weight:600; color:#0f172a;">${kpis.resourcing_rate}% <span style="font-size:11px; color:#d97706;">우수풀</span></div>
           </div>
         </div>
 
@@ -456,19 +456,19 @@ function renderDashboardTab() {
               <th>
                 <div style="display:flex; flex-direction:column; align-items:center; gap:3px;">
                   <img src="/pic1_thumb.png" style="width:28px; height:28px; border-radius:50%; border:1px solid #e2e8f0;" />
-                  <span style="font-size:11.5px; font-weight:800; color:#0f172a;">김지영 <span style="font-weight:500; color:#64748b;">이사</span></span>
+                  <span style="font-size:11.5px; font-weight:600; color:#0f172a;">김지영 <span style="font-weight:500; color:#64748b;">이사</span></span>
                 </div>
               </th>
               <th>
                 <div style="display:flex; flex-direction:column; align-items:center; gap:3px;">
                   <img src="/pic2_thumb.png" style="width:28px; height:28px; border-radius:50%; border:1px solid #e2e8f0;" />
-                  <span style="font-size:11.5px; font-weight:800; color:#0f172a;">정윤희 <span style="font-weight:500; color:#64748b;">부장</span></span>
+                  <span style="font-size:11.5px; font-weight:600; color:#0f172a;">정윤희 <span style="font-weight:500; color:#64748b;">부장</span></span>
                 </div>
               </th>
               <th>
                 <div style="display:flex; flex-direction:column; align-items:center; gap:3px;">
                   <img src="/pic1_thumb.png" style="width:28px; height:28px; border-radius:50%; border:1px solid #e2e8f0;" />
-                  <span style="font-size:11.5px; font-weight:800; color:#0f172a;">신은숙 <span style="font-weight:500; color:#64748b;">외주</span></span>
+                  <span style="font-size:11.5px; font-weight:600; color:#0f172a;">신은숙 <span style="font-weight:500; color:#64748b;">외주</span></span>
                 </div>
               </th>
             </tr>
@@ -568,7 +568,7 @@ function renderProfilesTab() {
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px;">
           <div>
             <span class="zal-status-pill green" style="margin-bottom:6px;">⚡ AI 무정차 이력서 파싱 엔진 (1건당 검수·등록 2분 이내)</span>
-            <h3 style="font-size:16px; font-weight:800; color:#0f172a;">워드(.docx) · 엑셀(.xlsx) · PDF 이력서 업로드 시 표준 DB 자동 적재</h3>
+            <h3 style="font-size:16px; font-weight:600; color:#0f172a;">워드(.docx) · 엑셀(.xlsx) · PDF 이력서 업로드 시 표준 DB 자동 적재</h3>
           </div>
           <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
             <label class="btn btn-primary" style="cursor:pointer;">
@@ -1044,7 +1044,7 @@ function renderProjectsTab() {
       ${sections.map(sec => `
         <section>
           <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
-            <h3 style="font-size:16.5px; font-weight:800; color:#0f172a; margin:0;">${sec.title}</h3>
+            <h3 style="font-size:16.5px; font-weight:600; color:#0f172a; margin:0;">${sec.title}</h3>
             <span class="zal-status-pill ${sec.badgeClass}">${sec.items.length}건</span>
           </div>
           <div style="display:flex; flex-direction:column; gap:12px;">
@@ -1156,22 +1156,22 @@ function renderProjectSummaryCard(prj) {
               <strong style="color:#0f172a;">총 ${totalSlots}명 투입</strong>
             </div>
           `}
-          <div style="display:flex; align-items:center; gap:12px; font-size:12px; color:#64748b; margin-top:2px;">
+          <div style="display:flex; align-items:center; gap:12px; font-size:13px; color:#64748b; margin-top:2px;">
             <span>👁️ 충원 <strong>${filledSlots}/${totalSlots}명</strong></span>
             <span>💬 TO ${totalSlots}</span>
-            <span style="margin-left:auto; color:#2563eb; font-weight:700;">상세보기 ›</span>
+            <span style="margin-left:auto; color:#2563eb; font-weight:600;">상세보기 ›</span>
           </div>
         </div>
 
         <div class="prj-client-box">
           <div style="display:flex; align-items:center; gap:8px;">
-            <div style="width:22px; height:22px; border-radius:50%; background:#0f172a; color:#fff; font-size:10px; font-weight:800; display:inline-flex; align-items:center; justify-content:center;">
+            <div style="width:24px; height:24px; border-radius:50%; background:#0f172a; color:#fff; font-size:11px; font-weight:600; display:inline-flex; align-items:center; justify-content:center;">
               ${prj.client.slice(0, 1)}
             </div>
-            <strong style="font-size:13px; color:#0f172a;">${prj.client}</strong>
-            <span style="font-size:11px; font-weight:700; color:#2563eb; background:#eff6ff; padding:2px 7px; border-radius:6px;">고객사</span>
+            <strong style="font-size:14px; color:#0f172a;">${prj.client}</strong>
+            <span style="font-size:11.5px; font-weight:600; color:#2563eb; background:#eff6ff; padding:2px 7px; border-radius:6px;">고객사</span>
           </div>
-          <div style="display:flex; align-items:center; gap:10px; font-size:11.5px; color:#475569; font-weight:600;">
+          <div style="display:flex; align-items:center; gap:10px; font-size:12.5px; color:#475569; font-weight:500;">
             <span>💙 ${prj.domain} 도메인</span>
             <span>🏅 ${filledSlots === totalSlots ? '배정 완료' : `미충원 ${totalSlots - filledSlots}석`}</span>
           </div>
@@ -1235,8 +1235,8 @@ function renderProjectDetailView(el, prj, postings, interviews, templates, permi
           </div>
 
           <div style="margin-top:10px; padding:14px 16px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px;">
-            <div style="font-size:12.5px; font-weight:800; color:#0f172a; margin-bottom:4px;">📌 프로젝트 상세 설명 (과업 범위 및 수행 요건)</div>
-            <p style="font-size:13px; color:#334155; line-height:1.6; margin:0;">
+            <div style="font-size:13.5px; font-weight:600; color:#0f172a; margin-bottom:4px;">📌 프로젝트 상세 설명 (과업 범위 및 수행 요건)</div>
+            <p style="font-size:14px; color:#334155; line-height:1.65; margin:0;">
               ${prj.description || `${prj.client}의 ${prj.name} 사업으로, ${prj.domain} 도메인 전문 인력 중심의 설계·개발·이행을 수행합니다.`}
             </p>
           </div>
@@ -1268,7 +1268,7 @@ function renderProjectDetailView(el, prj, postings, interviews, templates, permi
 
           <div class="prj-client-box">
             <div style="display:flex; align-items:center; gap:8px;">
-              <div style="width:22px; height:22px; border-radius:50%; background:#0f172a; color:#fff; font-size:10px; font-weight:800; display:inline-flex; align-items:center; justify-content:center;">
+              <div style="width:22px; height:22px; border-radius:50%; background:#0f172a; color:#fff; font-size:10px; font-weight:600; display:inline-flex; align-items:center; justify-content:center;">
                 ${prj.client.slice(0, 1)}
               </div>
               <strong style="font-size:13px; color:#0f172a;">${prj.client}</strong>
@@ -1297,7 +1297,7 @@ function renderProjectDetailView(el, prj, postings, interviews, templates, permi
           <tbody>
             ${prj.to_slots.map(slot => `
               <tr>
-                <td style="font-weight:800;">${slot.role_name}</td>
+                <td style="font-weight:600;">${slot.role_name}</td>
                 <td><span class="badge badge-grade">${slot.required_grade}</span></td>
                 <td>
                   <span class="badge badge-domain">${slot.required_domain}</span>
@@ -1336,7 +1336,7 @@ function renderProjectDetailView(el, prj, postings, interviews, templates, permi
 
     <!-- 해당 프로젝트 오픈 구인 포지션 & 타겟 소싱 섹션 -->
     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:14px;">
-      <h3 style="font-size:16.5px; font-weight:800;">📢 오픈 구인 포지션 & 인재 풀 타겟 소싱 (${projectPostings.length}건)</h3>
+      <h3 style="font-size:16.5px; font-weight:600;">📢 오픈 구인 포지션 & 인재 풀 타겟 소싱 (${projectPostings.length}건)</h3>
     </div>
 
     <div class="dashboard-feed-masonry" style="margin-bottom:28px;">
@@ -1385,7 +1385,7 @@ function renderProjectDetailView(el, prj, postings, interviews, templates, permi
 
     <!-- 해당 프로젝트 지원자 인터뷰(면접) & 필수질문 검증 섹션 -->
     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:14px;">
-      <h3 style="font-size:16.5px; font-weight:800;">🎤 지원자 인터뷰(면접) 및 직무별 필수질문 검증 (${projectInterviews.length}건)</h3>
+      <h3 style="font-size:16.5px; font-weight:600;">🎤 지원자 인터뷰(면접) 및 직무별 필수질문 검증 (${projectInterviews.length}건)</h3>
       ${permissions.can_evaluate_interviews || permissions.can_schedule_interviews ? `
         <button class="btn btn-outline btn-sm" onclick="openQuestionTemplatesModal()">📋 직무별 필수 질문 리스트(${templates.length}종)</button>
       ` : ''}
@@ -1602,7 +1602,7 @@ function openProposalSheetModal(projectId) {
       <div style="display:flex; flex-direction:column; gap:16px; margin-top:12px;">
         ${assignedRows.filter(r => r.prof).map(({ slot, prof }) => `
           <div style="border:1.5px solid #0f172a; padding:14px; border-radius:8px;">
-            <div style="font-weight:800; margin-bottom:8px;">
+            <div style="font-weight:600; margin-bottom:8px;">
               ■ ${slot.role_name} — ${prof.name} (${prof.tech_grade} / 경력 ${prof.experience_years}년 / ${prof.employment_type})
             </div>
             <div style="font-size:12px; color:#334155;">
@@ -1767,7 +1767,7 @@ function renderSourcingTab() {
 
   el.innerHTML = `
     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:18px;">
-      <h3 style="font-size:17px; font-weight:800;">오픈 구인 프로젝트 보드 & 기검증 인재 풀 타겟 소싱</h3>
+      <h3 style="font-size:17px; font-weight:600;">오픈 구인 프로젝트 보드 & 기검증 인재 풀 타겟 소싱</h3>
       <button class="btn btn-outline btn-sm" onclick="copyExternalShareLink()">🔗 비회원 오픈 구인 웹 링크 모드 전환</button>
     </div>
 
@@ -1974,7 +1974,7 @@ function renderInterviewsTab() {
 
   el.innerHTML = `
     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:18px;">
-      <h3 style="font-size:17px; font-weight:800;">표준 인터뷰(면접) 일정 조율 · 내부 면접관 배정 · 직무별 필수질문 검증</h3>
+      <h3 style="font-size:17px; font-weight:600;">표준 인터뷰(면접) 일정 조율 · 내부 면접관 배정 · 직무별 필수질문 검증</h3>
       ${permissions.can_evaluate_interviews || permissions.can_schedule_interviews ? `
         <button class="btn btn-outline btn-sm" onclick="openQuestionTemplatesModal()">📋 직무별 필수 질문 리스트(${templates.length}종) 관리</button>
       ` : ''}
@@ -2188,7 +2188,7 @@ function openQuestionTemplatesModal() {
     <div style="display:flex; flex-direction:column; gap:12px;">
       ${templates.map(t => `
         <div style="border:1px solid #e2e8f0; border-radius:12px; padding:14px;">
-          <div style="font-weight:800; margin-bottom:6px;">[${t.domain_focus}] ${t.role_type}</div>
+          <div style="font-weight:600; margin-bottom:6px;">[${t.domain_focus}] ${t.role_type}</div>
           <ol style="padding-left:18px; font-size:12.5px; color:#475569;">
             ${t.questions.map(q => `<li>${q.question}</li>`).join('')}
           </ol>

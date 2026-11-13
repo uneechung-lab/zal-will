@@ -42,10 +42,18 @@ body {
   height: 100vh;
   background: #ffffff;
   color: var(--text);
-  font-size: 14.5px;
-  line-height: 1.5;
+  font-size: 15.5px;
+  line-height: 1.55;
   overflow: hidden;
   -webkit-font-smoothing: antialiased;
+}
+
+strong, b {
+  font-weight: 600;
+}
+
+h1, h2, h3, h4 {
+  font-weight: 600;
 }
 
 button, input, select, textarea {
@@ -147,15 +155,15 @@ button, input, select, textarea {
 }
 
 .rail-label {
-  font-size: 12.5px;
-  font-weight: 600;
+  font-size: 13.5px;
+  font-weight: 500;
   color: inherit;
   white-space: nowrap;
   padding-right: 10px;
 }
 
 .rail-btn.active .rail-label {
-  font-weight: 700;
+  font-weight: 600;
   color: #0f172a;
 }
 
@@ -275,8 +283,8 @@ button, input, select, textarea {
 .zal-clean-select {
   border: none;
   background: transparent;
-  font-size: 13px;
-  font-weight: 800;
+  font-size: 14px;
+  font-weight: 600;
   color: #0f172a;
   letter-spacing: -0.2px;
   cursor: pointer;
@@ -424,8 +432,8 @@ button, input, select, textarea {
 .toggle-item {
   position: relative;
   padding: 10px 4px 14px 4px;
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 17px;
+  font-weight: 500;
   color: #64748b;
   border: none;
   background: transparent;
@@ -443,7 +451,7 @@ button, input, select, textarea {
 
 .toggle-item.active {
   color: #000000;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .toggle-item.active::after {
@@ -563,10 +571,10 @@ button, input, select, textarea {
 .zal-chip-btn {
   display: inline-flex;
   align-items: center;
-  padding: 5px 13px;
+  padding: 6px 14px;
   border-radius: 20px;
-  font-size: 12.5px;
-  font-weight: 600;
+  font-size: 13.5px;
+  font-weight: 500;
   background-color: #ffffff;
   color: #64748b;
   border: 1px solid #e2e8f0;
@@ -584,7 +592,7 @@ button, input, select, textarea {
   background-color: #0f172a;
   color: #ffffff;
   border-color: #0f172a;
-  font-weight: 800;
+  font-weight: 600;
 }
 
 /* Main Content Container */
@@ -680,22 +688,22 @@ button, input, select, textarea {
 }
 
 .zal-author-name {
-  font-size: 14.5px;
-  font-weight: 800;
+  font-size: 15.5px;
+  font-weight: 600;
   color: #0f172a;
 }
 
 .zal-author-role {
-  font-size: 12.5px;
-  font-weight: 600;
+  font-size: 13.5px;
+  font-weight: 500;
   color: #64748b;
   margin-left: 4px;
 }
 
 .zal-card-time {
-  font-size: 11.5px;
+  font-size: 12.5px;
   color: #94a3b8;
-  font-weight: 500;
+  font-weight: 400;
   display: flex;
   align-items: center;
   gap: 4px;
@@ -704,10 +712,10 @@ button, input, select, textarea {
 
 /* Pastel Status Badge on top right of card (like 🤝 회의, ✅ 승인완료 in 잘됨) */
 .zal-status-pill {
-  padding: 4px 10px;
+  padding: 4px 11px;
   border-radius: 12px;
-  font-size: 11.5px;
-  font-weight: 700;
+  font-size: 12.5px;
+  font-weight: 600;
   white-space: nowrap;
   display: inline-flex;
   align-items: center;
@@ -745,11 +753,11 @@ button, input, select, textarea {
 }
 
 .zal-card-title {
-  font-size: 15.5px;
-  font-weight: 800;
+  font-size: 17px;
+  font-weight: 600;
   color: #0f172a;
   letter-spacing: -0.2px;
-  line-height: 1.35;
+  line-height: 1.4;
 }
 
 /* Metadata Rows inside Card (담당 / 날짜 / 시간 style) */
@@ -757,7 +765,7 @@ button, input, select, textarea {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .zal-meta-row {
@@ -768,7 +776,7 @@ button, input, select, textarea {
 }
 
 .zal-meta-label {
-  min-width: 58px;
+  min-width: 62px;
   font-weight: 500;
   color: #94a3b8;
   display: inline-flex;
@@ -777,7 +785,7 @@ button, input, select, textarea {
 }
 
 .zal-meta-val {
-  font-weight: 700;
+  font-weight: 600;
   color: #0f172a;
 }
 
@@ -791,8 +799,8 @@ button, input, select, textarea {
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  font-size: 12.5px;
-  font-weight: 700;
+  font-size: 13.5px;
+  font-weight: 600;
   color: #b45309;
 }
 
@@ -935,10 +943,10 @@ button, input, select, textarea {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 7px 14px;
+  padding: 8px 15px;
   border-radius: 10px;
-  font-size: 12.5px;
-  font-weight: 700;
+  font-size: 13.5px;
+  font-weight: 600;
   border: 1px solid transparent;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -983,8 +991,8 @@ button, input, select, textarea {
 }
 
 .btn-sm {
-  padding: 5px 10px;
-  font-size: 12px;
+  padding: 6px 12px;
+  font-size: 13px;
   border-radius: 8px;
 }
 
@@ -995,8 +1003,8 @@ button, input, select, textarea {
   gap: 4px;
   padding: 3px 9px;
   border-radius: 8px;
-  font-size: 11.5px;
-  font-weight: 700;
+  font-size: 12.5px;
+  font-weight: 600;
 }
 
 .badge-internal { background: #eff6ff; color: #2563eb; border: 1px solid #dbeafe; }
@@ -1012,10 +1020,10 @@ button, input, select, textarea {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 3px 9px;
+  padding: 3px 10px;
   border-radius: 999px;
-  font-size: 11px;
-  font-weight: 700;
+  font-size: 12px;
+  font-weight: 600;
 }
 .perm-chip.allowed { background: #ecfdf5; color: #059669; }
 .perm-chip.selective { background: #eff6ff; color: #2563eb; }
@@ -1101,21 +1109,21 @@ button, input, select, textarea {
 .data-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .data-table th, .data-table td {
   border-bottom: 1px solid #f1f5f9;
-  padding: 11px 12px;
+  padding: 12px 12px;
   text-align: left;
   vertical-align: middle;
 }
 
 .data-table th {
   background: #f8fafc;
-  font-weight: 700;
+  font-weight: 600;
   color: #64748b;
-  font-size: 12px;
+  font-size: 13px;
 }
 
 /* Proposal Document Preview */
@@ -1303,12 +1311,12 @@ button, input, select, textarea {
 }
 
 .prj-split-title {
-  font-size: 18px;
-  font-weight: 800;
+  font-size: 19.5px;
+  font-weight: 600;
   color: #0f172a;
   letter-spacing: -0.3px;
   margin: 0 0 12px 0;
-  line-height: 1.35;
+  line-height: 1.38;
 }
 
 .prj-metrics-bar {
@@ -1316,14 +1324,14 @@ button, input, select, textarea {
   align-items: center;
   flex-wrap: wrap;
   gap: 12px;
-  font-size: 13.5px;
+  font-size: 14.5px;
   color: #475569;
   margin-bottom: 10px;
 }
 
 .prj-metrics-bar .metric-item strong {
   color: #0f172a;
-  font-weight: 800;
+  font-weight: 600;
   margin-left: 5px;
 }
 
@@ -1338,9 +1346,9 @@ button, input, select, textarea {
   align-items: center;
   flex-wrap: wrap;
   gap: 16px;
-  font-size: 13px;
+  font-size: 14px;
   color: #64748b;
-  font-weight: 600;
+  font-weight: 500;
   margin-bottom: 16px;
 }
 
@@ -1362,18 +1370,18 @@ button, input, select, textarea {
 .prj-gray-tag {
   display: inline-flex;
   align-items: center;
-  padding: 4px 10px;
+  padding: 4px 11px;
   border-radius: 999px;
   background: #f1f5f9;
   color: #475569;
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 500;
 }
 
 .prj-loc-date {
-  font-size: 12px;
+  font-size: 13px;
   color: #94a3b8;
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .prj-split-right {
@@ -1387,7 +1395,7 @@ button, input, select, textarea {
   display: flex;
   flex-direction: column;
   gap: 7px;
-  font-size: 13px;
+  font-size: 14px;
   color: #475569;
 }
 
@@ -1395,7 +1403,7 @@ button, input, select, textarea {
   display: flex;
   align-items: center;
   gap: 7px;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .prj-client-box {
