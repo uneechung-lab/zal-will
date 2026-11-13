@@ -2369,9 +2369,6 @@ function renderProjectDetailView(el, prj, postings, interviews, templates, permi
                 </td>
                 <td style="text-align:right;">
                   <div class="wbs-action-group">
-                    <button class="btn btn-primary btn-sm wbs-action-btn-main" onclick="openRfpMatchModal('${prj.id}', '${slot.slot_id}')">
-                      ${svgIcon('search', 13)} 검색
-                    </button>
                     ${!slot.assigned_profile_id ? `
                       <button class="btn btn-outline btn-sm wbs-action-btn-sub" onclick="openSlotToJobBoard('${prj.id}', '${slot.slot_id}')">
                         ${svgIcon('megaphone', 13)} 공고오픈
@@ -2381,6 +2378,9 @@ function renderProjectDetailView(el, prj, postings, interviews, templates, permi
                         취소
                       </button>
                     `}
+                    <button class="btn btn-primary btn-sm wbs-action-btn-main" onclick="openRfpMatchModal('${prj.id}', '${slot.slot_id}')">
+                      ${svgIcon('search', 13)} 검색
+                    </button>
                   </div>
                 </td>
               </tr>
