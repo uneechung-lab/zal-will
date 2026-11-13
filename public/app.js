@@ -69,6 +69,41 @@ function getAvatarForId(str = '') {
   return sum % 2 === 0 ? '/pic1_thumb.png' : '/pic2_thumb.png';
 }
 
+function svgIcon(name, size = 15) {
+  const paths = {
+    clock: '<circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15.5 14"/>',
+    user: '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+    users: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+    calendar: '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
+    pin: '<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>',
+    briefcase: '<rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>',
+    file: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>',
+    search: '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>',
+    megaphone: '<path d="M3 11l18-5v12L3 13v-2z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/>',
+    mic: '<path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>',
+    check: '<polyline points="20 6 9 17 4 12"/>',
+    edit: '<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>',
+    target: '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
+    link: '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
+    lock: '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+    star: '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
+    award: '<circle cx="12" cy="8" r="6"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/>',
+    code: '<polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>',
+    dollar: '<line x1="12" y1="2" x2="12" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>',
+    eye: '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',
+    chat: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+    send: '<line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>',
+    download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
+    printer: '<polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>',
+    settings: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>',
+    bolt: '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
+    folder: '<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>',
+    list: '<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>',
+    heart: '<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>'
+  };
+  return `<svg class="ui-svg-icon" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; flex-shrink:0;">${paths[name] || paths.file}</svg>`;
+}
+
 function showToast(msg) {
   const container = document.getElementById('toastContainer');
   const el = document.createElement('div');
@@ -248,44 +283,44 @@ function renderDashboardTab() {
                 <span class="zal-author-role">제안PM · ${prj.domain}</span>
               </div>
               <div class="zal-card-time">
-                <span>🕒 ${prj.created_at}</span>
+                <span>${svgIcon('clock', 12)} ${prj.created_at}</span>
                 <span>|</span>
                 <span>충원 ${filledSlots}/${totalSlots}명 ↗</span>
               </div>
             </div>
           </div>
-          <span class="zal-status-pill blue">💼 ${prj.status}</span>
+          <span class="zal-status-pill blue">${svgIcon('briefcase', 13)} ${prj.status}</span>
         </div>
 
-        <div class="zal-card-title">📋 ${prj.name}</div>
+        <div class="zal-card-title" style="display:inline-flex; align-items:center; gap:6px;">${svgIcon('file', 16)} ${prj.name}</div>
 
         <div class="zal-meta-list">
           <div class="zal-meta-row">
-            <span class="zal-meta-label">🏢 발주처</span>
+            <span class="zal-meta-label">${svgIcon('briefcase', 14)} 발주처</span>
             <span class="zal-meta-val">${prj.client} (${prj.location})</span>
           </div>
           <div class="zal-meta-row">
-            <span class="zal-meta-label">📅 기간</span>
+            <span class="zal-meta-label">${svgIcon('calendar', 14)} 기간</span>
             <span class="zal-meta-val">${prj.start_date} ~ ${prj.end_date}</span>
           </div>
           <div class="zal-meta-row">
-            <span class="zal-meta-label">👥 배정현황</span>
+            <span class="zal-meta-label">${svgIcon('users', 14)} 배정현황</span>
             <span class="zal-meta-val">${prj.to_slots.map(s => s.assigned_name ? s.assigned_name.split(' ')[0] : '미충원').join(', ')}</span>
           </div>
         </div>
 
         ${unfilledCount > 0 ? `
           <div class="zal-request-banner">
-            <span>⏳ 미충원 TO ${unfilledCount}건 (사내외 적임자 매칭 및 구인 진행중)</span>
+            <span style="display:inline-flex; align-items:center; gap:5px;">${svgIcon('clock', 14)} 미충원 TO ${unfilledCount}건 (사내외 적임자 매칭 및 구인 진행중)</span>
             <button type="button" class="btn btn-sm btn-outline" style="border-color:#fca5a5; color:#dc2626;" onclick="selectProjectDetail('${prj.id}')">적임자 매칭</button>
           </div>
         ` : ''}
 
         <div class="zal-card-footer">
           <div class="zal-reaction-group">
-            <button type="button" class="zal-reaction-pill" onclick="openProposalSheetModal('${prj.id}')">📑 장표추출</button>
-            <button type="button" class="zal-reaction-pill" onclick="selectProjectDetail('${prj.id}')">🔍 TO관리 (${totalSlots})</button>
-            <button type="button" class="zal-reaction-pill" onclick="showToast('🔗 프로젝트 공유 링크가 복사되었습니다!')">🔗 공유</button>
+            <button type="button" class="zal-reaction-pill" onclick="openProposalSheetModal('${prj.id}')">${svgIcon('file', 13)} 장표추출</button>
+            <button type="button" class="zal-reaction-pill" onclick="selectProjectDetail('${prj.id}')">${svgIcon('search', 13)} TO관리 (${totalSlots})</button>
+            <button type="button" class="zal-reaction-pill" onclick="showToast('프로젝트 공유 링크가 복사되었습니다!')">${svgIcon('link', 13)} 공유</button>
           </div>
           <span style="font-size:12px; color:#94a3b8; font-weight:600;">댓글 ${totalSlots}</span>
         </div>
@@ -309,50 +344,50 @@ function renderDashboardTab() {
                 <span class="zal-author-role">기술면접관</span>
               </div>
               <div class="zal-card-time">
-                <span>🕒 ${inv.created_at}</span>
+                <span>${svgIcon('clock', 12)} ${inv.created_at}</span>
                 <span>|</span>
                 <span>${inv.candidate_type} ↗</span>
               </div>
             </div>
           </div>
           <span class="zal-status-pill ${isCompleted ? 'green' : 'amber'}">
-            ${isCompleted ? '✅ 검증완료' : '🤝 면접예정'}
+            ${isCompleted ? '검증완료' : '면접예정'}
           </span>
         </div>
 
-        <div class="zal-card-title">🎤 [${inv.domains.join('/')}] ${inv.candidate_name} (${inv.tech_grade}) 기술검증 인터뷰</div>
+        <div class="zal-card-title" style="display:inline-flex; align-items:center; gap:6px;">${svgIcon('calendar', 16)} [${inv.domains.join('/')}] ${inv.candidate_name} (${inv.tech_grade}) 기술검증 인터뷰</div>
 
         <div class="zal-meta-list">
           <div class="zal-meta-row">
-            <span class="zal-meta-label">👤 지원자</span>
+            <span class="zal-meta-label">${svgIcon('user', 14)} 지원자</span>
             <span class="zal-meta-val">${inv.candidate_name} (${inv.tech_grade} · 가용일 ${inv.available_from})</span>
           </div>
           <div class="zal-meta-row">
-            <span class="zal-meta-label">📅 면접일시</span>
+            <span class="zal-meta-label">${svgIcon('calendar', 14)} 면접일시</span>
             <span class="zal-meta-val">${inv.interview_date || '일정 조율중'} (${inv.interview_method || '화상'})</span>
           </div>
           <div class="zal-meta-row">
-            <span class="zal-meta-label">🛠️ 핵심스킬</span>
+            <span class="zal-meta-label">${svgIcon('code', 14)} 핵심스킬</span>
             <span class="zal-meta-val">${inv.skills.join(', ')}</span>
           </div>
         </div>
 
         ${inv.status === '면접진행완료' ? `
           <div class="zal-request-banner">
-            <span>⏳ 필수질문 평점 ${inv.total_score}점 완료 (임원/PM 최종선발 확정 대기)</span>
+            <span style="display:inline-flex; align-items:center; gap:5px;">${svgIcon('clock', 14)} 필수질문 평점 ${inv.total_score}점 완료 (임원/PM 최종선발 확정 대기)</span>
             <button type="button" class="btn btn-sm btn-outline" style="border-color:#fca5a5; color:#dc2626;" onclick="openEvaluateChecklistModal('${inv.id}')">최종확정</button>
           </div>
         ` : inv.status === '인터뷰통보완료' ? `
           <div class="zal-request-banner">
-            <span>⏳ 필수 질문 리스트 기반 기술 면접 대기중</span>
+            <span style="display:inline-flex; align-items:center; gap:5px;">${svgIcon('clock', 14)} 필수 질문 리스트 기반 기술 면접 대기중</span>
             <button type="button" class="btn btn-sm btn-outline" onclick="openEvaluateChecklistModal('${inv.id}')">면접평가 입력</button>
           </div>
         ` : ''}
 
         <div class="zal-card-footer">
           <div class="zal-reaction-group">
-            <button type="button" class="zal-reaction-pill" onclick="openEvaluateChecklistModal('${inv.id}')">👍 평가점수 ${inv.total_score || '-'}</button>
-            <button type="button" class="zal-reaction-pill" onclick="openScheduleInterviewModal('${inv.id}')">🗓️ 일정조율</button>
+            <button type="button" class="zal-reaction-pill" onclick="openEvaluateChecklistModal('${inv.id}')">${svgIcon('star', 13)} 평가점수 ${inv.total_score || '-'}</button>
+            <button type="button" class="zal-reaction-pill" onclick="openScheduleInterviewModal('${inv.id}')">${svgIcon('calendar', 13)} 일정조율</button>
           </div>
           <span style="font-size:12px; color:#94a3b8; font-weight:600;">필수질문 체크리스트</span>
         </div>
@@ -375,14 +410,14 @@ function renderDashboardTab() {
                 <span class="zal-author-role">외주 구인·타겟소싱</span>
               </div>
               <div class="zal-card-time">
-                <span>🕒 ${post.created_at}</span>
+                <span>${svgIcon('clock', 12)} ${post.created_at}</span>
                 <span>|</span>
                 <span>타겟알림 ${post.sourcing_sent_count}건 ↗</span>
               </div>
             </div>
           </div>
           <span class="zal-status-pill ${post.status === 'OPEN' ? 'purple' : 'gray'}">
-            ${post.status === 'OPEN' ? '📢 구인오픈' : '마감됨'}
+            ${post.status === 'OPEN' ? '구인오픈' : '마감됨'}
           </span>
         </div>
 
@@ -390,23 +425,23 @@ function renderDashboardTab() {
 
         <div class="zal-meta-list">
           <div class="zal-meta-row">
-            <span class="zal-meta-label">👤 요구등급</span>
+            <span class="zal-meta-label">${svgIcon('user', 14)} 요구등급</span>
             <span class="zal-meta-val">${post.required_grade} (${post.required_domain} 도메인)</span>
           </div>
           <div class="zal-meta-row">
-            <span class="zal-meta-label">📅 수행기간</span>
+            <span class="zal-meta-label">${svgIcon('calendar', 14)} 수행기간</span>
             <span class="zal-meta-val">${post.period} (${post.work_location})</span>
           </div>
           <div class="zal-meta-row">
-            <span class="zal-meta-label">💰 단가가이드</span>
+            <span class="zal-meta-label">${svgIcon('dollar', 14)} 단가가이드</span>
             <span class="zal-meta-val">${post.rate_guide}</span>
           </div>
         </div>
 
         <div class="zal-card-footer">
           <div class="zal-reaction-group">
-            <button type="button" class="zal-reaction-pill" onclick="openEasyApplyModal('${post.id}')">✍️ 간편지원·추천</button>
-            <button type="button" class="zal-reaction-pill" onclick="openTargetSourcingModal('${post.id}')">🎯 타겟소싱 (${post.sourcing_sent_count})</button>
+            <button type="button" class="zal-reaction-pill" onclick="openEasyApplyModal('${post.id}')">${svgIcon('edit', 13)} 간편지원·추천</button>
+            <button type="button" class="zal-reaction-pill" onclick="openTargetSourcingModal('${post.id}')">${svgIcon('target', 13)} 타겟소싱 (${post.sourcing_sent_count})</button>
           </div>
           <span style="font-size:12px; color:#94a3b8; font-weight:600;">통합 DB 연동</span>
         </div>
@@ -567,12 +602,12 @@ function renderProfilesTab() {
       <div class="ai-parse-banner">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px;">
           <div>
-            <span class="zal-status-pill green" style="margin-bottom:6px;">⚡ AI 무정차 이력서 파싱 엔진 (1건당 검수·등록 2분 이내)</span>
+            <span class="zal-status-pill green" style="margin-bottom:6px; display:inline-flex; align-items:center; gap:5px;">${svgIcon('bolt', 13)} AI 무정차 이력서 파싱 엔진 (1건당 검수·등록 2분 이내)</span>
             <h3 style="font-size:16px; font-weight:600; color:#0f172a;">워드(.docx) · 엑셀(.xlsx) · PDF 이력서 업로드 시 표준 DB 자동 적재</h3>
           </div>
           <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
-            <label class="btn btn-primary" style="cursor:pointer;">
-              📄 내 PC 이력서 업로드
+            <label class="btn btn-primary" style="cursor:pointer; display:inline-flex; align-items:center; gap:6px;">
+              ${svgIcon('file', 14)} 내 PC 이력서 업로드
               <input type="file" id="resumeFileInput" accept=".pdf,.doc,.docx,.xls,.xlsx,.txt" style="display:none;" onchange="handleResumeFileUpload(event)" />
             </label>
             <button class="btn btn-outline" onclick="triggerSampleParse('sample1')">샘플1: 퇴직연금 특급</button>
@@ -583,8 +618,8 @@ function renderProfilesTab() {
       </div>
     ` : `
       <div class="zal-request-banner" style="margin-bottom:18px;">
-        <span>🔒 현재 역할(${currentUser ? currentUser.title : '외부 방문자'})은 본인 프로필 또는 면접관으로 지정된 지원자 이력만 열람 가능합니다.</span>
-        ${currentUser?.linked_profile_id ? `<button class="btn btn-primary btn-sm" onclick="openEditProfileModal('${currentUser.linked_profile_id}')">✏️ 내 프로필 · 가용일 수정</button>` : ''}
+        <span style="display:inline-flex; align-items:center; gap:5px;">${svgIcon('lock', 14)} 현재 역할(${currentUser ? currentUser.title : '외부 방문자'})은 본인 프로필 또는 면접관으로 지정된 지원자 이력만 열람 가능합니다.</span>
+        ${currentUser?.linked_profile_id ? `<button class="btn btn-primary btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="openEditProfileModal('${currentUser.linked_profile_id}')">${svgIcon('edit', 13)} 내 프로필 · 가용일 수정</button>` : ''}
       </div>
     `}
 
@@ -660,34 +695,34 @@ function renderProfileCard(p, permissions, currentUser) {
               <span class="zal-author-role">${p.employment_type} · ${p.tech_grade} (${p.experience_years}년)</span>
             </div>
             <div class="zal-card-time">
-              <span>🕒 최신화 ${p.updated_at}</span>
+              <span>${svgIcon('clock', 12)} 최신화 ${p.updated_at}</span>
               <span>|</span>
               <span>${p.education}</span>
             </div>
           </div>
         </div>
         <span class="zal-status-pill ${p.verified ? 'green' : 'amber'}">
-          ${p.verified ? `🏅 기검증 ${p.resourced_count > 0 ? `(재소싱 ${p.resourced_count})` : ''}` : '신규파싱'}
+          ${p.verified ? `${svgIcon('award', 13)} 기검증 ${p.resourced_count > 0 ? `(재소싱 ${p.resourced_count})` : ''}` : '신규파싱'}
         </span>
       </div>
 
       <div class="zal-meta-list">
         <div class="zal-meta-row">
-          <span class="zal-meta-label">🏦 도메인</span>
+          <span class="zal-meta-label">${svgIcon('briefcase', 14)} 도메인</span>
           <span class="zal-meta-val">${p.domains.join(' · ')}</span>
         </div>
         <div class="zal-meta-row">
-          <span class="zal-meta-label">📅 가용일</span>
+          <span class="zal-meta-label">${svgIcon('calendar', 14)} 가용일</span>
           <span class="zal-meta-val" style="color:${p.availability_status === '즉시투입가능' ? '#059669' : '#d97706'};">
             ${p.availability_status} (투입가능: ${p.available_date})
           </span>
         </div>
         <div class="zal-meta-row">
-          <span class="zal-meta-label">🛠️ 스킬셋</span>
+          <span class="zal-meta-label">${svgIcon('code', 14)} 스킬셋</span>
           <span class="zal-meta-val">${p.skills.join(', ')}</span>
         </div>
         <div class="zal-meta-row">
-          <span class="zal-meta-label">📜 자격증</span>
+          <span class="zal-meta-label">${svgIcon('file', 14)} 자격증</span>
           <span class="zal-meta-val">${p.certifications.join(', ')}</span>
         </div>
       </div>
@@ -695,7 +730,7 @@ function renderProfileCard(p, permissions, currentUser) {
       ${p.rating !== null ? `
         <div class="zal-request-banner" style="background:#f8fafc; border-color:#e2e8f0; color:#0f172a;">
           <div>
-            <div>⭐ 내부 평점 <strong>${p.rating > 0 ? `${p.rating} / 5.0` : '평가전'}</strong> · 💰 ${p.is_internal ? `기준단가 ${p.contract_rate}만` : `희망 ${p.desired_rate || '-'}만`}</div>
+            <div style="display:inline-flex; align-items:center; gap:6px;">${svgIcon('star', 14)} 내부 평점 <strong>${p.rating > 0 ? `${p.rating} / 5.0` : '평가전'}</strong> · ${svgIcon('dollar', 14)} ${p.is_internal ? `기준단가 ${p.contract_rate}만` : `희망 ${p.desired_rate || '-'}만`}</div>
             <div style="font-size:11.5px; color:#64748b; font-weight:500; margin-top:2px;">${p.review_summary || '-'}</div>
           </div>
         </div>
@@ -707,8 +742,8 @@ function renderProfileCard(p, permissions, currentUser) {
 
       <div class="zal-card-footer">
         <div class="zal-reaction-group">
-          <span class="zal-reaction-pill">📂 수행이력 ${p.career_history.length}건</span>
-          ${canEdit ? `<button type="button" class="zal-reaction-pill" onclick="openEditProfileModal('${p.id}')">✏️ 프로필·가용일 수정</button>` : ''}
+          <span class="zal-reaction-pill">${svgIcon('folder', 13)} 수행이력 ${p.career_history.length}건</span>
+          ${canEdit ? `<button type="button" class="zal-reaction-pill" onclick="openEditProfileModal('${p.id}')">${svgIcon('edit', 13)} 프로필·가용일 수정</button>` : ''}
         </div>
         <span style="font-size:11.5px; color:#94a3b8; font-weight:600;">AI 파싱 ${p.parse_seconds}초</span>
       </div>
@@ -743,7 +778,7 @@ async function openAiParseReviewModal(fileName, rawText) {
   const res = await apiCall('/api/ai/parse-resume', 'POST', { fileName, rawText });
   const p = res.parsed;
 
-  openModal(`🤖 AI 잘될이 무정차 이력서 파싱 검수 (${fileName})`, `
+  openModal(`AI 잘될이 무정차 이력서 파싱 검수 (${fileName})`, `
     <div class="zal-request-banner" style="background:#ecfdf5; border-color:#a7f3d0; color:#059669; margin-bottom:16px;">
       <span>✓ AI 자동 파싱 완료 (정확도 ${p.ai_confidence}% · 검수 목표 2분 이내)</span>
       <span>예상 검수 시간: ${p.estimated_parse_seconds}초</span>
@@ -859,7 +894,7 @@ function openEditProfileModal(profileId) {
   }
   const isOwn = currentUser && currentUser.linked_profile_id === p.id;
 
-  openModal(`✏️ 프로필 · 수행이력 및 가용 시기(철수/투입일) 현행화 — ${p.name}`, `
+  openModal(`프로필 · 수행이력 및 가용 시기(철수/투입일) 현행화 — ${p.name}`, `
     <form onsubmit="submitEditProfile(event, '${p.id}')">
       <div class="form-grid">
         <div class="form-field">
@@ -1103,7 +1138,7 @@ function renderProjectSummaryCard(prj) {
               ${statusPill}
               <span class="zal-status-pill blue">${categoryLabel}</span>
             </div>
-            <span style="color:#cbd5e1; font-size:18px;">♡</span>
+            <span style="color:#cbd5e1;">${svgIcon('heart', 17)}</span>
           </div>
 
           <h3 class="prj-split-title">${prj.name}</h3>
@@ -1117,18 +1152,18 @@ function renderProjectSummaryCard(prj) {
           </div>
 
           <div class="prj-role-summary-row">
-            <span>☰ ${mainRole}${extraRoleCount > 0 ? ` 외 ${extraRoleCount}개 포지션` : ''}</span>
-            <span>🧰 ${grades} 레벨</span>
+            <span style="display:inline-flex; align-items:center; gap:5px;">${svgIcon('list', 14)} ${mainRole}${extraRoleCount > 0 ? ` 외 ${extraRoleCount}개 포지션` : ''}</span>
+            <span style="display:inline-flex; align-items:center; gap:5px;">${svgIcon('briefcase', 14)} ${grades} 레벨</span>
           </div>
         </div>
 
         <div class="prj-bottom-row">
           <div class="prj-skill-pills">
-            <span class="prj-gray-tag">🕒 ${prj.contract_type || '일괄도급'}</span>
+            <span class="prj-gray-tag" style="display:inline-flex; align-items:center; gap:4px;">${svgIcon('clock', 13)} ${prj.contract_type || '일괄도급'}</span>
             ${allSkills.map(sk => `<span class="prj-gray-tag">${sk}</span>`).join('')}
           </div>
-          <div class="prj-loc-date">
-            📍 ${prj.location} · 등록일자 ${(prj.created_at || '2026-11-10').replace(/-/g, '.')}.
+          <div class="prj-loc-date" style="display:inline-flex; align-items:center; gap:4px;">
+            ${svgIcon('pin', 13)} ${prj.location} · 등록일자 ${(prj.created_at || '2026-11-10').replace(/-/g, '.')}.
           </div>
         </div>
       </div>
@@ -1138,27 +1173,27 @@ function renderProjectSummaryCard(prj) {
         <div class="prj-right-meta-list">
           ${isPlanned ? `
             <div class="prj-right-meta-item">
-              <span style="color:#64748b;">🕒 충원완료일</span>
+              <span style="color:#64748b; display:inline-flex; align-items:center; gap:5px;">${svgIcon('clock', 14)} 충원완료일</span>
               <strong style="color:#dc2626;">${dDayLabel}</strong>
               <span style="font-size:12px; color:#94a3b8;">(${deadline.replace(/-/g, '.')})</span>
             </div>
             <div class="prj-right-meta-item">
-              <span style="color:#64748b;">👤 지원자</span>
+              <span style="color:#64748b; display:inline-flex; align-items:center; gap:5px;">${svgIcon('user', 14)} 지원자</span>
               <strong style="color:#0f172a;">${applicantCount}명</strong>
             </div>
           ` : `
             <div class="prj-right-meta-item">
-              <span style="color:#64748b;">🕒 진행상태</span>
+              <span style="color:#64748b; display:inline-flex; align-items:center; gap:5px;">${svgIcon('clock', 14)} 진행상태</span>
               <strong style="color:#0f172a;">${prj.project_group === 'ONGOING' ? '수행 진행중' : '수행 완료'}</strong>
             </div>
             <div class="prj-right-meta-item">
-              <span style="color:#64748b;">👤 참여인력</span>
+              <span style="color:#64748b; display:inline-flex; align-items:center; gap:5px;">${svgIcon('user', 14)} 참여인력</span>
               <strong style="color:#0f172a;">총 ${totalSlots}명 투입</strong>
             </div>
           `}
           <div style="display:flex; align-items:center; gap:12px; font-size:13px; color:#64748b; margin-top:2px;">
-            <span>👁️ 충원 <strong>${filledSlots}/${totalSlots}명</strong></span>
-            <span>💬 TO ${totalSlots}</span>
+            <span style="display:inline-flex; align-items:center; gap:4px;">${svgIcon('eye', 14)} 충원 <strong>${filledSlots}/${totalSlots}명</strong></span>
+            <span style="display:inline-flex; align-items:center; gap:4px;">${svgIcon('chat', 14)} TO ${totalSlots}</span>
           </div>
         </div>
 
@@ -1171,8 +1206,8 @@ function renderProjectSummaryCard(prj) {
             <span style="font-size:11.5px; font-weight:600; color:#2563eb; background:#eff6ff; padding:2px 7px; border-radius:6px;">고객사</span>
           </div>
           <div style="display:flex; align-items:center; gap:10px; font-size:12.5px; color:#475569; font-weight:500;">
-            <span>💙 ${prj.domain} 도메인</span>
-            <span>🏅 ${filledSlots === totalSlots ? '배정 완료' : `미충원 ${totalSlots - filledSlots}석`}</span>
+            <span style="display:inline-flex; align-items:center; gap:4px;">${svgIcon('briefcase', 13)} ${prj.domain} 도메인</span>
+            <span style="display:inline-flex; align-items:center; gap:4px;">${svgIcon('award', 13)} ${filledSlots === totalSlots ? '배정 완료' : `미충원 ${totalSlots - filledSlots}석`}</span>
           </div>
         </div>
       </div>
@@ -1220,9 +1255,9 @@ function renderInterviewVerticalCard(inv, idx, permissions, currentUser) {
       <div class="inv-vcard-top">
         <div class="inv-vcard-badges">
           <span class="inv-vbadge-gray">${inv.status}</span>
-          <span class="${isDone ? 'inv-vbadge-green' : 'inv-vbadge-red'}">${isDone && inv.total_score > 0 ? `검증 ★ ${inv.total_score}` : dateBadgeText}</span>
+          <span class="${isDone ? 'inv-vbadge-green' : 'inv-vbadge-red'}">${isDone && inv.total_score > 0 ? `검증 ${inv.total_score}점` : dateBadgeText}</span>
         </div>
-        <span class="inv-vcard-heart">♡</span>
+        <span class="inv-vcard-heart">${svgIcon('heart', 17)}</span>
       </div>
 
       <div class="inv-vcard-banner theme-${idx % 3}">
@@ -1231,7 +1266,7 @@ function renderInterviewVerticalCard(inv, idx, permissions, currentUser) {
           <span>${inv.candidate_name}</span>
           <span style="font-size:13.5px; font-weight:500; opacity:0.85;">(${inv.tech_grade})</span>
         </div>
-        <div class="inv-banner-sub">🗓️ ${inv.interview_date || '일정 미지정'} · ${inv.interview_method || '화상'}</div>
+        <div class="inv-banner-sub" style="display:inline-flex; align-items:center; gap:5px;">${svgIcon('calendar', 13)} ${inv.interview_date || '일정 미지정'} · ${inv.interview_method || '화상'}</div>
         <div class="inv-banner-sub">면접관: ${inv.interviewer_name || '미배정'}</div>
       </div>
 
@@ -1248,12 +1283,12 @@ function renderInterviewVerticalCard(inv, idx, permissions, currentUser) {
         <div class="inv-vcard-meta-row">
           <span>${inv.tech_grade}</span>
           <span style="color:#cbd5e1;">/</span>
-          <span>📍 가용일 ${inv.available_from}</span>
+          <span style="display:inline-flex; align-items:center; gap:4px;">${svgIcon('pin', 13)} 가용일 ${inv.available_from}</span>
         </div>
         <div class="inv-vcard-meta-row">
           <span style="color:#64748b;">희망 단가</span>
           <strong style="color:#0f172a; font-weight:600;">
-            ${inv.desired_rate !== null ? `월 ${Number(inv.desired_rate).toLocaleString()}만원` : '🔒 단가비공개'}
+            ${inv.desired_rate !== null ? `월 ${Number(inv.desired_rate).toLocaleString()}만원` : `${svgIcon('lock', 13)} 단가비공개`}
           </strong>
         </div>
       </div>
@@ -1261,10 +1296,10 @@ function renderInterviewVerticalCard(inv, idx, permissions, currentUser) {
       ${(permissions.can_schedule_interviews || permissions.can_evaluate_interviews || (currentUser && inv.interviewer_user_id === currentUser.id)) ? `
         <div class="inv-vcard-actions">
           ${permissions.can_schedule_interviews ? `
-            <button class="btn btn-outline btn-sm" style="flex:1;" onclick="openScheduleInterviewModal('${inv.id}')">🗓️ 일정·면접관</button>
+            <button class="btn btn-outline btn-sm" style="flex:1; display:inline-flex; align-items:center; justify-content:center; gap:5px;" onclick="openScheduleInterviewModal('${inv.id}')">${svgIcon('calendar', 14)} 일정·면접관</button>
           ` : ''}
           ${(permissions.can_evaluate_interviews || (currentUser && inv.interviewer_user_id === currentUser.id)) ? `
-            <button class="btn btn-primary btn-sm" style="flex:1;" onclick="openEvaluateChecklistModal('${inv.id}')">✅ 필수질문·평가</button>
+            <button class="btn btn-primary btn-sm" style="flex:1; display:inline-flex; align-items:center; justify-content:center; gap:5px;" onclick="openEvaluateChecklistModal('${inv.id}')">${svgIcon('check', 14)} 필수질문·평가</button>
           ` : ''}
         </div>
       ` : ''}
@@ -1293,12 +1328,12 @@ function renderProjectDetailView(el, prj, postings, interviews, templates, permi
       </button>
       <div style="display:flex; gap:8px; flex-wrap:wrap;">
         ${canManagePrj ? `
-          <button type="button" class="btn btn-primary btn-sm" onclick="openProposalSheetModal('${prj.id}')">
-            📑 수행인력 총괄표 · 표준 프로필 장표 추출
+          <button type="button" class="btn btn-primary btn-sm" style="display:inline-flex; align-items:center; gap:6px;" onclick="openProposalSheetModal('${prj.id}')">
+            ${svgIcon('file', 14)} 수행인력 총괄표 · 표준 프로필 장표 추출
           </button>
         ` : ''}
-        <button type="button" class="btn btn-outline btn-sm" onclick="copyExternalShareLink()">
-          🔗 비회원 오픈 구인 웹 링크 모드
+        <button type="button" class="btn btn-outline btn-sm" style="display:inline-flex; align-items:center; gap:6px;" onclick="copyExternalShareLink()">
+          ${svgIcon('link', 14)} 비회원 오픈 구인 웹 링크 모드
         </button>
       </div>
     </div>
@@ -1329,7 +1364,7 @@ function renderProjectDetailView(el, prj, postings, interviews, templates, permi
           </div>
 
           <div style="margin-top:10px; padding:14px 16px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px;">
-            <div style="font-size:13.5px; font-weight:600; color:#0f172a; margin-bottom:4px;">📌 프로젝트 상세 설명 (과업 범위 및 수행 요건)</div>
+            <div style="font-size:13.5px; font-weight:600; color:#0f172a; margin-bottom:4px; display:inline-flex; align-items:center; gap:6px;">${svgIcon('file', 14)} 프로젝트 상세 설명 (과업 범위 및 수행 요건)</div>
             <p style="font-size:14px; color:#334155; line-height:1.65; margin:0;">
               ${prj.description || `${prj.client}의 ${prj.name} 사업으로, ${prj.domain} 도메인 전문 인력 중심의 설계·개발·이행을 수행합니다.`}
             </p>
@@ -1340,22 +1375,22 @@ function renderProjectDetailView(el, prj, postings, interviews, templates, permi
           <div class="prj-right-meta-list">
             ${isPlanned ? `
               <div class="prj-right-meta-item">
-                <span style="color:#64748b;">🕒 충원완료일</span>
+                <span style="color:#64748b; display:inline-flex; align-items:center; gap:5px;">${svgIcon('clock', 14)} 충원완료일</span>
                 <strong style="color:#dc2626;">${dDayLabel}</strong>
                 <span style="font-size:12px; color:#94a3b8;">(${deadline.replace(/-/g, '.')})</span>
               </div>
               <div class="prj-right-meta-item">
-                <span style="color:#64748b;">👤 지원자</span>
+                <span style="color:#64748b; display:inline-flex; align-items:center; gap:5px;">${svgIcon('user', 14)} 지원자</span>
                 <strong style="color:#0f172a;">${applicantCount}명</strong>
               </div>
             ` : `
               <div class="prj-right-meta-item">
-                <span style="color:#64748b;">🕒 진행상태</span>
+                <span style="color:#64748b; display:inline-flex; align-items:center; gap:5px;">${svgIcon('clock', 14)} 진행상태</span>
                 <strong style="color:#0f172a;">${prj.project_group === 'ONGOING' ? '수행 진행중' : '수행 완료'}</strong>
               </div>
             `}
             <div class="prj-right-meta-item">
-              <span style="color:#64748b;">👥 TO 충원현황</span>
+              <span style="color:#64748b; display:inline-flex; align-items:center; gap:5px;">${svgIcon('users', 14)} TO 충원현황</span>
               <strong style="color:#2563eb;">${filledSlots} / ${totalSlots}명 배정</strong>
             </div>
           </div>
@@ -1369,8 +1404,8 @@ function renderProjectDetailView(el, prj, postings, interviews, templates, permi
               <span style="font-size:11px; font-weight:700; color:#2563eb; background:#eff6ff; padding:2px 7px; border-radius:6px;">고객사</span>
             </div>
             <div style="display:flex; align-items:center; gap:10px; font-size:11.5px; color:#475569; font-weight:600;">
-              <span>💙 ${prj.domain} 도메인</span>
-              <span>🏅 ${prj.contract_type || '일괄도급'}</span>
+              <span style="display:inline-flex; align-items:center; gap:4px;">${svgIcon('briefcase', 13)} ${prj.domain} 도메인</span>
+              <span style="display:inline-flex; align-items:center; gap:4px;">${svgIcon('award', 13)} ${prj.contract_type || '일괄도급'}</span>
             </div>
           </div>
         </div>
@@ -1399,7 +1434,7 @@ function renderProjectDetailView(el, prj, postings, interviews, templates, permi
                 </td>
                 <td>
                   ${slot.assigned_profile_id
-                    ? `<strong style="color:#2563eb;">👤 ${slot.assigned_name}</strong>`
+                    ? `<strong style="color:#2563eb; display:inline-flex; align-items:center; gap:4px;">${svgIcon('user', 14)} ${slot.assigned_name}</strong>`
                     : `<span style="color:#94a3b8;">미배정</span>`}
                 </td>
                 <td>
@@ -1407,12 +1442,12 @@ function renderProjectDetailView(el, prj, postings, interviews, templates, permi
                 </td>
                 <td style="text-align:right;">
                   <div style="display:inline-flex; gap:6px; flex-wrap:wrap; justify-content:flex-end;">
-                    <button class="btn btn-primary btn-sm" onclick="openRfpMatchModal('${prj.id}', '${slot.slot_id}')">
-                      🔍 적임자 탐색·배정
+                    <button class="btn btn-primary btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="openRfpMatchModal('${prj.id}', '${slot.slot_id}')">
+                      ${svgIcon('search', 13)} 적임자 탐색·배정
                     </button>
                     ${!slot.assigned_profile_id ? `
-                      <button class="btn btn-outline btn-sm" onclick="openSlotToJobBoard('${prj.id}', '${slot.slot_id}')">
-                        📢 구인공고 오픈
+                      <button class="btn btn-outline btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="openSlotToJobBoard('${prj.id}', '${slot.slot_id}')">
+                        ${svgIcon('megaphone', 13)} 구인공고 오픈
                       </button>
                     ` : `
                       <button class="btn btn-outline btn-sm" onclick="assignProfileToSlot('${prj.id}', '${slot.slot_id}', null)">
@@ -1430,7 +1465,7 @@ function renderProjectDetailView(el, prj, postings, interviews, templates, permi
 
     <!-- 해당 프로젝트 오픈 구인 포지션 섹션 -->
     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:14px;">
-      <h3 style="font-size:16.5px; font-weight:600;">📢 오픈 구인 포지션 (${projectPostings.length}건)</h3>
+      <h3 style="font-size:16.5px; font-weight:600; display:inline-flex; align-items:center; gap:7px;">${svgIcon('megaphone', 18)} 오픈 구인 포지션 (${projectPostings.length}건)</h3>
     </div>
 
     <div class="dashboard-feed-masonry" style="margin-bottom:28px;">
@@ -1442,19 +1477,19 @@ function renderProjectDetailView(el, prj, postings, interviews, templates, permi
               <div>
                 <span class="zal-author-name">${post.role_name}</span>
                 <span class="zal-author-role">${post.required_grade} · ${post.required_domain}</span>
-                <div class="zal-card-time">🕒 등록 ${post.created_at} | 타겟소싱 ${post.sourcing_sent_count}건</div>
+                <div class="zal-card-time">${svgIcon('clock', 12)} 등록 ${post.created_at} | 타겟소싱 ${post.sourcing_sent_count}건</div>
               </div>
             </div>
-            <span class="zal-status-pill ${post.status === 'OPEN' ? 'green' : 'gray'}">${post.status === 'OPEN' ? '🟢 모집중' : '마감됨'}</span>
+            <span class="zal-status-pill ${post.status === 'OPEN' ? 'green' : 'gray'}">${post.status === 'OPEN' ? '모집중' : '마감됨'}</span>
           </div>
 
           <div class="zal-card-title">${post.title}</div>
 
           <div class="posting-body-split">
             <div class="zal-meta-list" style="flex:1; min-width:220px;">
-              <div class="zal-meta-row"><span class="zal-meta-label">📅 기간</span><span class="zal-meta-val">${post.period} (${post.work_location})</span></div>
-              <div class="zal-meta-row"><span class="zal-meta-label">💰 단가</span><span class="zal-meta-val">${post.rate_guide}</span></div>
-              <div class="zal-meta-row"><span class="zal-meta-label">🛠️ 스킬</span><span class="zal-meta-val">${post.required_skills.join(', ')}</span></div>
+              <div class="zal-meta-row"><span class="zal-meta-label">${svgIcon('calendar', 14)} 기간</span><span class="zal-meta-val">${post.period} (${post.work_location})</span></div>
+              <div class="zal-meta-row"><span class="zal-meta-label">${svgIcon('dollar', 14)} 단가</span><span class="zal-meta-val">${post.rate_guide}</span></div>
+              <div class="zal-meta-row"><span class="zal-meta-label">${svgIcon('code', 14)} 스킬</span><span class="zal-meta-val">${post.required_skills.join(', ')}</span></div>
             </div>
             ${renderPostingApplicantBox(post)}
           </div>
@@ -1462,12 +1497,12 @@ function renderProjectDetailView(el, prj, postings, interviews, templates, permi
           <div class="zal-card-footer">
             <div class="zal-reaction-group">
               ${post.status === 'OPEN' && currentUser?.role_group !== 'MASTER' ? `
-                <button class="btn btn-primary btn-sm" onclick="openEasyApplyModal('${post.id}')">
-                  ✍️ ${currentUser?.role_group === 'INTERNAL' ? '사내 지인 추천' : '간편 지원하기'}
+                <button class="btn btn-primary btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="openEasyApplyModal('${post.id}')">
+                  ${svgIcon('edit', 13)} ${currentUser?.role_group === 'INTERNAL' ? '사내 지인 추천' : '간편 지원하기'}
                 </button>
               ` : ''}
               ${permissions.can_manage_postings ? `
-                <button class="btn btn-outline btn-sm" onclick="openTargetSourcingModal('${post.id}')">🎯 타겟 소싱 발송</button>
+                <button class="btn btn-outline btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="openTargetSourcingModal('${post.id}')">${svgIcon('target', 13)} 타겟 소싱 발송</button>
                 <button class="btn btn-outline btn-sm" onclick="togglePostingStatus('${post.id}')">${post.status === 'OPEN' ? '마감' : '재오픈'}</button>
               ` : ''}
             </div>
@@ -1482,9 +1517,9 @@ function renderProjectDetailView(el, prj, postings, interviews, templates, permi
 
     <!-- 해당 프로젝트 지원자 인터뷰 섹션 -->
     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:14px;">
-      <h3 style="font-size:16.5px; font-weight:600;">🎤 지원자 인터뷰</h3>
+      <h3 style="font-size:16.5px; font-weight:600; display:inline-flex; align-items:center; gap:7px;">${svgIcon('calendar', 18)} 지원자 인터뷰</h3>
       ${permissions.can_evaluate_interviews || permissions.can_schedule_interviews ? `
-        <button class="btn btn-outline btn-sm" onclick="openQuestionTemplatesModal()">📋 직무별 필수 질문 리스트(${templates.length}종)</button>
+        <button class="btn btn-outline btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="openQuestionTemplatesModal()">${svgIcon('file', 14)} 직무별 필수 질문 리스트(${templates.length}종)</button>
       ` : ''}
     </div>
 
@@ -1543,7 +1578,7 @@ function openRfpMatchModal(projectId, slotId) {
     return { profile: p, score, reasons };
   }).sort((a, b) => (b.score !== a.score ? b.score - a.score : (b.profile.is_internal ? 1 : 0) - (a.profile.is_internal ? 1 : 0)));
 
-  openModal(`🎯 RFP 맞춤형 적임자 AI 매칭 — [${slot.role_name}]`, `
+  openModal(`RFP 맞춤형 적임자 AI 매칭 — [${slot.role_name}]`, `
     <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:12px 16px; border-radius:12px; margin-bottom:16px;">
       <strong>요구 조건:</strong> 등급 <span class="badge badge-grade">${slot.required_grade}</span> ·
       도메인 <span class="badge badge-domain">${slot.required_domain}</span> ·
@@ -1608,14 +1643,14 @@ function openProposalSheetModal(projectId) {
     return { slot, prof, idx: idx + 1 };
   });
 
-  openModal(`📑 제안서 첨부용 수행인력 총괄표 및 표준 프로필 장표 — ${prj.name}`, `
+  openModal(`제안서 첨부용 수행인력 총괄표 및 표준 프로필 장표 — ${prj.name}`, `
     <div class="no-print" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:16px; background:#f8fafc; border:1px solid #e2e8f0; padding:12px 16px; border-radius:12px;">
       <div>
-        <strong>⚡ 원클릭 제안서 장표 자동 생성 완료 (소요 시간 3초 / 기존 수작업 2~3일 대체)</strong>
+        <strong>원클릭 제안서 장표 자동 생성 완료 (소요 시간 3초 / 기존 수작업 2~3일 대체)</strong>
       </div>
       <div style="display:flex; gap:8px;">
-        <button class="btn btn-outline btn-sm" onclick="downloadProposalCsv('${prj.id}')">📥 엑셀(CSV) 다운로드</button>
-        <button class="btn btn-primary btn-sm" onclick="window.print()">🖨️ 인쇄 / PDF 저장</button>
+        <button class="btn btn-outline btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="downloadProposalCsv('${prj.id}')">${svgIcon('download', 14)} 엑셀(CSV) 다운로드</button>
+        <button class="btn btn-primary btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="window.print()">${svgIcon('printer', 14)} 인쇄 / PDF 저장</button>
       </div>
     </div>
 
@@ -1697,7 +1732,7 @@ function downloadProposalCsv(projectId) {
 }
 
 function openNewProjectModal() {
-  openModal('➕ 신규 입찰/수행 프로젝트 및 필요 인력(TO) 등록', `
+  openModal('신규 입찰/수행 프로젝트 및 필요 인력(TO) 등록', `
     <form onsubmit="submitNewProject(event)">
       <div class="form-grid">
         <div class="form-field">
@@ -1825,8 +1860,8 @@ function renderSourcingTab() {
 
   el.innerHTML = `
     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:18px;">
-      <h3 style="font-size:17px; font-weight:600;">오픈 구인 프로젝트 보드 & 기검증 인재 풀 타겟 소싱</h3>
-      <button class="btn btn-outline btn-sm" onclick="copyExternalShareLink()">🔗 비회원 오픈 구인 웹 링크 모드 전환</button>
+      <h3 style="font-size:17px; font-weight:600; display:inline-flex; align-items:center; gap:7px;">${svgIcon('megaphone', 18)} 오픈 구인 포지션 (${postings.length}건)</h3>
+      <button class="btn btn-outline btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="copyExternalShareLink()">${svgIcon('link', 14)} 비회원 오픈 구인 웹 링크 모드 전환</button>
     </div>
 
     <div class="dashboard-feed-masonry">
@@ -1838,19 +1873,19 @@ function renderSourcingTab() {
               <div>
                 <span class="zal-author-name">${post.role_name}</span>
                 <span class="zal-author-role">${post.required_grade} · ${post.required_domain}</span>
-                <div class="zal-card-time">🕒 등록 ${post.created_at} | 타겟소싱 ${post.sourcing_sent_count}건</div>
+                <div class="zal-card-time">${svgIcon('clock', 12)} 등록 ${post.created_at} | 타겟소싱 ${post.sourcing_sent_count}건</div>
               </div>
             </div>
-            <span class="zal-status-pill ${post.status === 'OPEN' ? 'green' : 'gray'}">${post.status === 'OPEN' ? '🟢 모집중' : '마감됨'}</span>
+            <span class="zal-status-pill ${post.status === 'OPEN' ? 'green' : 'gray'}">${post.status === 'OPEN' ? '모집중' : '마감됨'}</span>
           </div>
 
           <div class="zal-card-title">${post.title}</div>
 
           <div class="posting-body-split">
             <div class="zal-meta-list" style="flex:1; min-width:220px;">
-              <div class="zal-meta-row"><span class="zal-meta-label">📅 기간</span><span class="zal-meta-val">${post.period} (${post.work_location})</span></div>
-              <div class="zal-meta-row"><span class="zal-meta-label">💰 단가</span><span class="zal-meta-val">${post.rate_guide}</span></div>
-              <div class="zal-meta-row"><span class="zal-meta-label">🛠️ 스킬</span><span class="zal-meta-val">${post.required_skills.join(', ')}</span></div>
+              <div class="zal-meta-row"><span class="zal-meta-label">${svgIcon('calendar', 14)} 기간</span><span class="zal-meta-val">${post.period} (${post.work_location})</span></div>
+              <div class="zal-meta-row"><span class="zal-meta-label">${svgIcon('dollar', 14)} 단가</span><span class="zal-meta-val">${post.rate_guide}</span></div>
+              <div class="zal-meta-row"><span class="zal-meta-label">${svgIcon('code', 14)} 스킬</span><span class="zal-meta-val">${post.required_skills.join(', ')}</span></div>
             </div>
             ${renderPostingApplicantBox(post)}
           </div>
@@ -1858,12 +1893,12 @@ function renderSourcingTab() {
           <div class="zal-card-footer">
             <div class="zal-reaction-group">
               ${post.status === 'OPEN' && currentUser?.role_group !== 'MASTER' ? `
-                <button class="btn btn-primary btn-sm" onclick="openEasyApplyModal('${post.id}')">
-                  ✍️ ${currentUser?.role_group === 'INTERNAL' ? '사내 지인 추천' : '간편 지원하기'}
+                <button class="btn btn-primary btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="openEasyApplyModal('${post.id}')">
+                  ${svgIcon('edit', 13)} ${currentUser?.role_group === 'INTERNAL' ? '사내 지인 추천' : '간편 지원하기'}
                 </button>
               ` : ''}
               ${permissions.can_manage_postings ? `
-                <button class="btn btn-outline btn-sm" onclick="openTargetSourcingModal('${post.id}')">🎯 타겟 소싱 발송</button>
+                <button class="btn btn-outline btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="openTargetSourcingModal('${post.id}')">${svgIcon('target', 13)} 타겟 소싱 발송</button>
                 <button class="btn btn-outline btn-sm" onclick="togglePostingStatus('${post.id}')">${post.status === 'OPEN' ? '마감' : '재오픈'}</button>
               ` : ''}
             </div>
@@ -1892,7 +1927,7 @@ function openTargetSourcingModal(postingId) {
   if (!post) return;
   const matchingPool = profiles.filter(p => !p.is_internal);
 
-  openModal(`🎯 인재 풀 타겟 소싱 메일·알림 발송 — ${post.role_name}`, `
+  openModal(`인재 풀 타겟 소싱 메일·알림 발송 — ${post.role_name}`, `
     <form onsubmit="submitTargetSourcing(event, '${post.id}')">
       <div style="margin-bottom:14px;">
         <label style="font-size:12px; font-weight:700; display:block; margin-bottom:6px;">타겟 소싱 발송 대상 선택 (${matchingPool.length}명)</label>
@@ -1916,7 +1951,7 @@ function openTargetSourcingModal(postingId) {
 
       <div style="display:flex; justify-content:flex-end; gap:10px;">
         <button type="button" class="btn btn-outline" onclick="closeModal()">취소</button>
-        <button type="submit" class="btn btn-primary">📨 일괄 발송</button>
+        <button type="submit" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:5px;">${svgIcon('send', 14)} 일괄 발송</button>
       </div>
     </form>
   `);
@@ -1942,7 +1977,7 @@ function openEasyApplyModal(postingId) {
   if (!post) return;
   const isInternalReferral = currentUser?.role_group === 'INTERNAL';
 
-  openModal(`✍️ ${isInternalReferral ? '사내 지인 추천 접수' : '오픈 프로젝트 간편 지원'} — ${post.title}`, `
+  openModal(`${isInternalReferral ? '사내 지인 추천 접수' : '오픈 프로젝트 간편 지원'} — ${post.title}`, `
     <form onsubmit="submitEasyApply(event, '${post.id}')">
       <div class="form-grid">
         <div class="form-field">
@@ -2035,9 +2070,9 @@ function renderInterviewsTab() {
 
   el.innerHTML = `
     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:18px;">
-      <h3 style="font-size:17px; font-weight:600;">🎤 지원자 인터뷰</h3>
+      <h3 style="font-size:17px; font-weight:600; display:inline-flex; align-items:center; gap:7px;">${svgIcon('calendar', 18)} 지원자 인터뷰</h3>
       ${permissions.can_evaluate_interviews || permissions.can_schedule_interviews ? `
-        <button class="btn btn-outline btn-sm" onclick="openQuestionTemplatesModal()">📋 직무별 필수 질문 리스트(${templates.length}종) 관리</button>
+        <button class="btn btn-outline btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="openQuestionTemplatesModal()">${svgIcon('file', 14)} 직무별 필수 질문 리스트(${templates.length}종) 관리</button>
       ` : ''}
     </div>
 
@@ -2053,7 +2088,7 @@ function openScheduleInterviewModal(interviewId) {
   if (!inv) return;
   const internalInterviewers = users.filter(u => u.role_group !== 'EXTERNAL');
 
-  openModal(`🗓️ 면접 일정 통보 및 사내 면접관 배정 — ${inv.candidate_name}`, `
+  openModal(`면접 일정 통보 및 사내 면접관 배정 — ${inv.candidate_name}`, `
     <form onsubmit="submitScheduleInterview(event, '${inv.id}')">
       <div class="form-grid">
         <div class="form-field">
@@ -2111,7 +2146,7 @@ function openEvaluateChecklistModal(interviewId) {
   const tpl = templates.find(t => t.id === inv.template_id) || templates[0];
   const existingResults = inv.checklist_results || [];
 
-  openModal(`✅ 직무별 필수 질문 체크리스트 평가 및 최종 선발 — ${inv.candidate_name}`, `
+  openModal(`직무별 필수 질문 체크리스트 평가 및 최종 선발 — ${inv.candidate_name}`, `
     <form onsubmit="submitInterviewEvaluation(event, '${inv.id}')">
       <table class="data-table" style="margin-bottom:16px;">
         <thead>
@@ -2159,10 +2194,10 @@ function openEvaluateChecklistModal(interviewId) {
         <div class="form-field">
           <label>최종 선발 확정 (최종선정 시 프로젝트 TO 자동배정)</label>
           <select class="select" name="final_status">
-            <option value="최종선정" ${inv.status === '최종선정' ? 'selected' : ''}>🏆 최종선정 (DB 평점 연동 + 프로젝트 TO 자동배정)</option>
-            <option value="면접진행완료" ${inv.status === '면접진행완료' ? 'selected' : ''}>📝 면접진행완료 (임원 승인 대기)</option>
-            <option value="보류" ${inv.status === '보류' ? 'selected' : ''}>⏸️ 보류</option>
-            <option value="탈락" ${inv.status === '탈락' ? 'selected' : ''}>❌ 탈락</option>
+            <option value="최종선정" ${inv.status === '최종선정' ? 'selected' : ''}>최종선정 (DB 평점 연동 + 프로젝트 TO 자동배정)</option>
+            <option value="면접진행완료" ${inv.status === '면접진행완료' ? 'selected' : ''}>면접진행완료 (임원 승인 대기)</option>
+            <option value="보류" ${inv.status === '보류' ? 'selected' : ''}>보류</option>
+            <option value="탈락" ${inv.status === '탈락' ? 'selected' : ''}>탈락</option>
           </select>
         </div>
       </div>
@@ -2206,7 +2241,7 @@ async function submitInterviewEvaluation(e, interviewId) {
 
 function openQuestionTemplatesModal() {
   const { templates } = state.data;
-  openModal('📋 직무·금융도메인별 표준 필수 질문 리스트 관리', `
+  openModal('직무·금융도메인별 표준 필수 질문 리스트 관리', `
     <div style="display:flex; flex-direction:column; gap:12px;">
       ${templates.map(t => `
         <div style="border:1px solid #e2e8f0; border-radius:12px; padding:14px;">
@@ -2232,7 +2267,7 @@ function renderPermissionsTab() {
       <div class="zal-feed-card">
         <div class="zal-card-header">
           <div>
-            <div class="zal-card-title">⚙️ 하위 사용자별 세부 활동 권한 선별 부여 (ON / OFF)</div>
+            <div class="zal-card-title" style="display:inline-flex; align-items:center; gap:6px;">${svgIcon('settings', 16)} 하위 사용자별 세부 활동 권한 선별 부여 (ON / OFF)</div>
             <div style="font-size:12.5px; color:#64748b; margin-top:2px;">임원/부서장(Master)은 하위 실무자의 선별 권한을 실시간 제어합니다.</div>
           </div>
           <span class="zal-status-pill ${permissions.can_manage_permissions ? 'green' : 'amber'}">
@@ -2283,7 +2318,7 @@ function renderPermissionsTab() {
       </div>
 
       <div class="zal-feed-card">
-        <div class="zal-card-title">📐 PRD 3.2 주요 활동별 선별 권한 부여 기준표</div>
+        <div class="zal-card-title" style="display:inline-flex; align-items:center; gap:6px;">${svgIcon('file', 16)} PRD 3.2 주요 활동별 선별 권한 부여 기준표</div>
         <table class="data-table" style="font-size:12px;">
           <thead>
             <tr>
