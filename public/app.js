@@ -1306,8 +1306,37 @@ function renderPostingApplicantBox(post) {
 const PROFILE_EVALUATIONS_MAP = {
   p_1: [
     {
-      clientCode: 'sh******',
-      clientName: '신한은행 연금사업본부',
+      evaluatorType: '임원',
+      evaluatorName: '조성현 상무',
+      evaluatorOrg: '사내 금융IT사업본부 (총괄임원)',
+      overallScore: 5.0,
+      metrics: { expertise: 5.0, satisfaction: 5.0, communication: 5.0, schedule: 5.0, proactivity: 5.0 },
+      projectTitle: '신한은행 퇴직연금 차세대 원장 및 정산 시스템 구축',
+      contractTags: ['상주 수행', '연금정산 PL', '퇴직연금 코어'],
+      contractAmount: '월 1,250만원 (사내기준)',
+      durationDays: '270일',
+      contractDate: '2024년 03월 04일',
+      reviewDate: '2026.10.28.',
+      comment: 'DB/DC/IRP 전 영역의 정산 아키텍처 리딩 역량이 독보적입니다. 제안 단계 기술 발표부터 본사업 오픈까지 본부 내 가장 신뢰하는 핵심 PL입니다.'
+    },
+    {
+      evaluatorType: '팀원',
+      evaluatorName: '윤서연 차장',
+      evaluatorOrg: '사내 데이터아키텍처팀 (함께 수행한 DA)',
+      overallScore: 4.9,
+      metrics: { expertise: 5.0, satisfaction: 5.0, communication: 4.9, schedule: 4.8, proactivity: 5.0 },
+      projectTitle: '신한은행 퇴직연금 차세대 원장 및 정산 시스템 구축',
+      contractTags: ['상주 수행', '연금정산 PL', '동료 협업'],
+      contractAmount: '월 1,250만원 (사내기준)',
+      durationDays: '270일',
+      contractDate: '2024년 03월 04일',
+      reviewDate: '2026.10.22.',
+      comment: '대용량 배치 튜닝 이슈가 발생했을 때 팀원들에게 책임을 전가하지 않고 직접 쿼리와 비즈니스 로직을 함께 분석해 해결해 주셔서 팀원들의 신뢰가 매우 높았습니다.'
+    },
+    {
+      evaluatorType: '고객사',
+      evaluatorName: 'sh****** (현업 차장)',
+      evaluatorOrg: '신한은행 연금사업본부 (발주처 담당)',
       overallScore: 5.0,
       metrics: { expertise: 5.0, satisfaction: 5.0, communication: 5.0, schedule: 5.0, proactivity: 5.0 },
       projectTitle: '신한은행 퇴직연금 차세대 원장 및 정산 시스템 구축',
@@ -1315,59 +1344,105 @@ const PROFILE_EVALUATIONS_MAP = {
       contractAmount: '112,500,000원',
       durationDays: '270일',
       contractDate: '2024년 03월 04일',
-      reviewDate: '2026.10.28.',
-      comment: 'DB/DC/IRP 전 영역의 정산 및 상품운용 아키텍처 이해도가 매우 높고, 대용량 일마감 배치 성능 이슈를 선제적으로 해결해 주셨습니다. 현업 및 유관 부서와의 소통도 완벽했습니다.'
+      reviewDate: '2026.10.30.',
+      comment: '현업의 복잡한 연금 수수료·세무 요건을 정확히 이해하고 선제적으로 대안을 제시해 주셔서 차세대 오픈을 무결점으로 마칠 수 있었습니다.'
     }
   ],
   p_2: [
     {
-      clientCode: 'ss******',
-      clientName: '삼성자산운용 글로벌운용본부',
+      evaluatorType: 'PM',
+      evaluatorName: '김지영 이사',
+      evaluatorOrg: '사내 전략제안·소싱팀 (수행 PM)',
       overallScore: 4.9,
       metrics: { expertise: 5.0, satisfaction: 5.0, communication: 4.8, schedule: 5.0, proactivity: 4.8 },
       projectTitle: '삼성자산운용 글로벌 채권·펀드 수탁 결제 플랫폼 구축',
-      contractTags: ['기간제(상주)', '아키텍트·개발', '웹·MSA'],
-      contractAmount: '94,500,000원',
+      contractTags: ['상주 수행', '백엔드 아키텍트(AA)', '채권·펀드 MSA'],
+      contractAmount: '월 1,050만원 (사내기준)',
       durationDays: '240일',
       contractDate: '2024년 06월 10일',
       reviewDate: '2026.11.02.',
       comment: '글로벌 채권/외화펀드 실시간 결제 전문 연동 및 Kafka 기반 비동기 정합성 설계를 안정적으로 리딩했습니다. 일정 준수와 기술적 문제 해결력이 탁월합니다.'
+    },
+    {
+      evaluatorType: '팀원',
+      evaluatorName: '조진희 차장',
+      evaluatorOrg: '사내 코어뱅킹팀 (후배 개발자)',
+      overallScore: 4.8,
+      metrics: { expertise: 5.0, satisfaction: 4.8, communication: 4.8, schedule: 4.8, proactivity: 4.7 },
+      projectTitle: '삼성자산운용 글로벌 채권·펀드 수탁 결제 플랫폼 구축',
+      contractTags: ['상주 수행', '아키텍처 리딩', '코드리뷰'],
+      contractAmount: '월 1,050만원 (사내기준)',
+      durationDays: '240일',
+      contractDate: '2024년 06월 10일',
+      reviewDate: '2026.10.29.',
+      comment: '공통 프레임워크와 MSA 트랜잭션 가이드가 명확해서 개발팀원들이 비즈니스 로직에만 집중할 수 있었습니다.'
     }
   ],
   p_3: [
     {
-      clientCode: 'nh******',
-      clientName: 'NH농협은행 디지털연금부',
-      overallScore: 4.8,
-      metrics: { expertise: 4.8, satisfaction: 4.8, communication: 5.0, schedule: 4.8, proactivity: 4.8 },
+      evaluatorType: 'PL',
+      evaluatorName: '정윤희 부장',
+      evaluatorOrg: '사내 연금신탁개발팀 (직속 PL)',
+      overallScore: 4.7,
+      metrics: { expertise: 4.6, satisfaction: 4.8, communication: 4.9, schedule: 4.8, proactivity: 4.6 },
       projectTitle: 'NH농협은행 퇴직연금 비대면 채널 및 스마트고지 고도화',
       contractTags: ['기간제(상주)', '응용개발', '웹·채널'],
       contractAmount: '68,000,000원',
       durationDays: '210일',
       contractDate: '2025년 01월 06일',
       reviewDate: '2026.10.30.',
-      comment: '금융 표준 프레임워크 및 WebSquare 화면·API 개발 속도가 매우 빠르며, 요구사항 변경에도 적극적으로 대응해 프로젝트 일정을 앞당기는 데 크게 기여했습니다.'
+      comment: '금융 표준 프레임워크 및 WebSquare 화면·API 개발 속도가 빠르며, 현업의 잦은 화면 변경 요청에도 밝은 태도로 끝까지 책임감 있게 대응했습니다.'
+    },
+    {
+      evaluatorType: '팀원',
+      evaluatorName: '윤서연 차장',
+      evaluatorOrg: '사내 데이터아키텍처팀 (협업 동료)',
+      overallScore: 4.8,
+      metrics: { expertise: 4.6, satisfaction: 4.8, communication: 5.0, schedule: 4.8, proactivity: 4.8 },
+      projectTitle: 'NH농협은행 퇴직연금 비대면 채널 및 스마트고지 고도화',
+      contractTags: ['기간제(상주)', '응용개발', '팀워크'],
+      contractAmount: '68,000,000원',
+      durationDays: '210일',
+      contractDate: '2025년 01월 06일',
+      reviewDate: '2026.10.27.',
+      comment: '백엔드 API 및 DB 인터페이스 협의 시 문서 정리가 깔끔하고 소통이 빨라 협업 만족도가 매우 높았습니다.'
     }
   ],
   p_4: [
     {
-      clientCode: 'mr******',
-      clientName: '미래에셋증권 연금솔루션본부',
+      evaluatorType: 'PL',
+      evaluatorName: '정윤희 부장',
+      evaluatorOrg: '사내 연금신탁개발팀 (프로젝트 PL)',
       overallScore: 5.0,
       metrics: { expertise: 5.0, satisfaction: 5.0, communication: 5.0, schedule: 5.0, proactivity: 5.0 },
       projectTitle: '미래에셋증권 퇴직연금 데이터마트 및 수익률 공시 시스템',
-      contractTags: ['기간제(상주)', 'DA·데이터모델링', 'DW/DM'],
-      contractAmount: '91,800,000원',
+      contractTags: ['상주 수행', 'DA·데이터모델링', 'DW/DM'],
+      contractAmount: '월 1,020만원 (사내기준)',
       durationDays: '240일',
       contractDate: '2024년 02월 15일',
       reviewDate: '2026.10.25.',
-      comment: '퇴직연금 수익률 공시 및 대용량 배치 SQL 튜닝에서 압도적인 전문성을 보여주셨습니다. 배치 수행 시간을 기존 대비 65% 단축하여 고객사 만족도가 매우 높았습니다.'
+      comment: '퇴직연금 수익률 공시 및 대용량 배치 SQL 튜닝에서 압도적인 전문성을 보여주었습니다. 배치 수행 시간을 기존 대비 65% 단축하여 프로젝트 성공의 일등공신이었습니다.'
+    },
+    {
+      evaluatorType: '임원',
+      evaluatorName: '조성현 상무',
+      evaluatorOrg: '사내 금융IT사업본부 (총괄임원)',
+      overallScore: 4.9,
+      metrics: { expertise: 5.0, satisfaction: 5.0, communication: 4.8, schedule: 5.0, proactivity: 4.9 },
+      projectTitle: '미래에셋증권 퇴직연금 데이터마트 및 수익률 공시 시스템',
+      contractTags: ['상주 수행', 'DA·SQL튜닝', '핵심인재'],
+      contractAmount: '월 1,020만원 (사내기준)',
+      durationDays: '240일',
+      contractDate: '2024년 02월 15일',
+      reviewDate: '2026.10.26.',
+      comment: '금융권 데이터 아키텍처와 대용량 배치 튜닝을 모두 소화할 수 있는 핵심 DA 인력으로 차기 전략 입찰 프로젝트에도 최우선 배정 대상입니다.'
     }
   ],
   p_5: [
     {
-      clientCode: 'kb******',
-      clientName: '교보생명 퇴직연금지원실',
+      evaluatorType: 'PL',
+      evaluatorName: '정윤희 부장',
+      evaluatorOrg: '사내 연금신탁개발팀 (수행 PL)',
       overallScore: 5.0,
       metrics: { expertise: 5.0, satisfaction: 5.0, communication: 5.0, schedule: 5.0, proactivity: 5.0 },
       projectTitle: '교보생명 퇴직연금 수수료 정산 및 결산 배치 코어 고도화',
@@ -1376,13 +1451,42 @@ const PROFILE_EVALUATIONS_MAP = {
       durationDays: '240일',
       contractDate: '2025년 02월 03일',
       reviewDate: '2026.11.05.',
-      comment: '당사 핵심 프로젝트를 2회 연속 무결점으로 완수한 검증된 특급 개발자입니다. 복잡한 원리금·실적배당 결산 배치 로직을 오차 없이 구현하고 일정 준수율 100%를 달성했습니다.'
+      comment: '당사 핵심 프로젝트를 2회 연속 무결점으로 완수한 검증된 특급 프리랜서입니다. 복잡한 원리금·실적배당 결산 배치 로직을 오차 없이 구현하고 일정 준수율 100%를 달성했습니다.'
+    },
+    {
+      evaluatorType: 'PM',
+      evaluatorName: '김지영 이사',
+      evaluatorOrg: '사내 전략제안·소싱팀 (소싱·계약 PM)',
+      overallScore: 4.8,
+      metrics: { expertise: 5.0, satisfaction: 4.9, communication: 4.7, schedule: 5.0, proactivity: 4.6 },
+      projectTitle: '교보생명 퇴직연금 수수료 정산 및 결산 배치 코어 고도화',
+      contractTags: ['기간제(상주)', '외주 특급', '재소싱 1순위'],
+      contractAmount: '100,800,000원',
+      durationDays: '240일',
+      contractDate: '2025년 02월 03일',
+      reviewDate: '2026.11.06.',
+      comment: '근태 및 보안 규정 준수가 철저하고 사내 정규직 팀원들과도 마찰 없이 융화되어 재계약·재소싱 최우선 인력입니다.'
+    },
+    {
+      evaluatorType: '고객사',
+      evaluatorName: 'kb****** (고객사 파트장)',
+      evaluatorOrg: '교보생명 퇴직연금지원실',
+      overallScore: 5.0,
+      metrics: { expertise: 5.0, satisfaction: 5.0, communication: 5.0, schedule: 5.0, proactivity: 5.0 },
+      projectTitle: '교보생명 퇴직연금 수수료 정산 및 결산 배치 코어 고도화',
+      contractTags: ['기간제(상주)', '배치·정산리드', '고객사 호평'],
+      contractAmount: '100,800,000원',
+      durationDays: '240일',
+      contractDate: '2025년 02월 03일',
+      reviewDate: '2026.11.08.',
+      comment: '결산 시즌 대용량 배치 장애 제로를 달성해 주셔서 현업 부서 만족도가 매우 높았습니다.'
     }
   ],
   p_6: [
     {
-      clientCode: 'kk******',
-      clientName: '주식회사 카카오뱅크',
+      evaluatorType: 'PM',
+      evaluatorName: '김지영 이사',
+      evaluatorOrg: '사내 전략제안·소싱팀 (수행 PM)',
       overallScore: 4.9,
       metrics: { expertise: 5.0, satisfaction: 4.9, communication: 5.0, schedule: 4.8, proactivity: 4.9 },
       projectTitle: '카카오뱅크 개인형IRP 및 마이데이터 자산관리 모바일 채널 개편',
@@ -1392,12 +1496,27 @@ const PROFILE_EVALUATIONS_MAP = {
       contractDate: '2025년 01월 13일',
       reviewDate: '2026.10.18.',
       comment: 'React/TypeScript 기반 비대면 연금 가입 퍼널 및 대시보드 UI 구현 완성도가 매우 높으며, 기획자·디자이너와의 협업 커뮤니케이션이 뛰어납니다.'
+    },
+    {
+      evaluatorType: '팀원',
+      evaluatorName: '조진희 차장',
+      evaluatorOrg: '사내 코어뱅킹팀 (백엔드 연동 동료)',
+      overallScore: 4.7,
+      metrics: { expertise: 4.8, satisfaction: 4.7, communication: 4.9, schedule: 4.6, proactivity: 4.7 },
+      projectTitle: '카카오뱅크 개인형IRP 및 마이데이터 자산관리 모바일 채널 개편',
+      contractTags: ['기간제(상주)', '프론트엔드 리드', '동료 평가'],
+      contractAmount: '76,000,000원',
+      durationDays: '180일',
+      contractDate: '2025년 01월 13일',
+      reviewDate: '2026.10.19.',
+      comment: '비동기 API 연동 규격 협의가 빠르고 엣지 케이스 예외 처리를 꼼꼼히 챙겨주어 통합 테스트 기간을 크게 줄였습니다.'
     }
   ],
   p_7: [
     {
-      clientCode: 'ka******',
-      clientName: '한국자산평가 금융공학본부',
+      evaluatorType: 'PL',
+      evaluatorName: '강동원 차장',
+      evaluatorOrg: '사내 자산운용개발팀 (채권·펀드 PL)',
       overallScore: 4.8,
       metrics: { expertise: 5.0, satisfaction: 4.8, communication: 4.7, schedule: 4.8, proactivity: 4.8 },
       projectTitle: '한국자산평가 채권 시가평가 및 장외파생 기준가 산출 엔진 고도화',
@@ -1407,12 +1526,27 @@ const PROFILE_EVALUATIONS_MAP = {
       contractDate: '2024년 08월 12일',
       reviewDate: '2026.10.29.',
       comment: '투자자산운용사 자격 기반의 채권 시가평가·경과이자 산출 도메인 지식이 탁월하여 현업 요건을 빠르게 코드로 구현했습니다.'
+    },
+    {
+      evaluatorType: '임원',
+      evaluatorName: '조성현 상무',
+      evaluatorOrg: '사내 금융IT사업본부 (면접·기술검증)',
+      overallScore: 4.6,
+      metrics: { expertise: 4.9, satisfaction: 4.6, communication: 4.5, schedule: 4.7, proactivity: 4.5 },
+      projectTitle: '한국자산평가 채권 시가평가 및 장외파생 기준가 산출 엔진 고도화',
+      contractTags: ['기간제(상주)', '채권평가 개발', '도메인 특화'],
+      contractAmount: '82,400,000원',
+      durationDays: '210일',
+      contractDate: '2024년 08월 12일',
+      reviewDate: '2026.10.31.',
+      comment: '채권·펀드 수탁 및 기준가(NAV) 도메인 지식이 탄탄하여 증권사/운용사 프로젝트 투입 시 즉시 전력감이 되는 인재입니다.'
     }
   ],
   p_8: [
     {
-      clientCode: '4v******',
-      clientName: 'NH농협은행 퇴직연금부 (주관: 포밸류소프트)',
+      evaluatorType: 'PL',
+      evaluatorName: '정윤희 부장',
+      evaluatorOrg: '사내 연금신탁개발팀 (수행 PL)',
       overallScore: 5.0,
       metrics: { expertise: 5.0, satisfaction: 5.0, communication: 5.0, schedule: 5.0, proactivity: 5.0 },
       projectTitle: 'NH농협은행 퇴직연금 디폴트옵션 및 대용량 수수료 정산 배치 구축',
@@ -1422,6 +1556,34 @@ const PROFILE_EVALUATIONS_MAP = {
       contractDate: '2024년 05월 07일',
       reviewDate: '2026.10.21.',
       comment: '대용량 일마감 정산 배치 튜닝 및 장애 대응 역량이 매우 우수하며, 오픈 초기부터 안정화 단계까지 책임감 있게 완수해 주셨습니다.'
+    },
+    {
+      evaluatorType: '팀원',
+      evaluatorName: '윤서연 차장',
+      evaluatorOrg: '사내 데이터아키텍처팀 (함께 수행한 DA)',
+      overallScore: 4.8,
+      metrics: { expertise: 5.0, satisfaction: 4.8, communication: 4.8, schedule: 4.9, proactivity: 4.7 },
+      projectTitle: 'NH농협은행 퇴직연금 디폴트옵션 및 대용량 수수료 정산 배치 구축',
+      contractTags: ['기간제(상주)', '배치 튜닝 협업', '동료 평가'],
+      contractAmount: '86,400,000원',
+      durationDays: '180일',
+      contractDate: '2024년 05월 07일',
+      reviewDate: '2026.10.23.',
+      comment: '대용량 파티션 테이블 조회 및 인덱스 힌트 적용 등 DA 가이드를 가장 정확하게 이해하고 배치 코드에 반영해 주셨습니다.'
+    },
+    {
+      evaluatorType: '고객사',
+      evaluatorName: '4v****** (협력·발주처 PM)',
+      evaluatorOrg: 'NH농협은행 퇴직연금부 (주관: 포밸류소프트)',
+      overallScore: 5.0,
+      metrics: { expertise: 5.0, satisfaction: 5.0, communication: 5.0, schedule: 5.0, proactivity: 5.0 },
+      projectTitle: 'NH농협은행 퇴직연금 디폴트옵션 및 대용량 수수료 정산 배치 구축',
+      contractTags: ['기간제(상주)', '배치·코어개발', '고객사 평가'],
+      contractAmount: '86,400,000원',
+      durationDays: '180일',
+      contractDate: '2024년 05월 07일',
+      reviewDate: '2026.10.25.',
+      comment: '디폴트옵션 만기 재예치 및 수수료 정산 배치를 기한 내 완벽히 구축해 주셔서 감사드립니다.'
     }
   ]
 };
@@ -1430,29 +1592,44 @@ function getProfileEvaluations(person) {
   if (person.id && PROFILE_EVALUATIONS_MAP[person.id]) {
     return PROFILE_EVALUATIONS_MAP[person.id];
   }
-  const byName = Object.values( state.data?.profiles || [] ).find(p => p.name === person.name);
+  const byName = Object.values(state.data?.profiles || []).find(p => p.name === person.name);
   if (byName && PROFILE_EVALUATIONS_MAP[byName.id]) {
     return PROFILE_EVALUATIONS_MAP[byName.id];
   }
   const firstCareer = (person.career_history && person.career_history[0]) || {
     project: `${(person.domains && person.domains[0]) || '금융권'} 스마트 코어·채널 시스템 구축`,
-    client: '주식회사 포밸류소프트',
+    client: '메이저 금융사',
     role: '선임 개발/기획'
   };
-  const baseScore = Number(person.rating || 5.0);
+  const baseScore = Number(person.rating || 4.8);
   return [
     {
-      clientCode: '4v******',
-      clientName: firstCareer.client || '주식회사 포밸류소프트',
-      overallScore: baseScore > 0 ? baseScore : 5.0,
-      metrics: { expertise: 5.0, satisfaction: 5.0, communication: 5.0, schedule: 5.0, proactivity: 5.0 },
+      evaluatorType: 'PL',
+      evaluatorName: '정윤희 부장',
+      evaluatorOrg: '사내 연금신탁개발팀 (수행 PL)',
+      overallScore: baseScore > 0 ? baseScore : 4.9,
+      metrics: { expertise: 5.0, satisfaction: 4.9, communication: 4.8, schedule: 5.0, proactivity: 4.8 },
       projectTitle: firstCareer.project,
-      contractTags: ['기간제(상주)', firstCareer.role || '개발·기획', (person.domains && person.domains[0]) || '웹'],
+      contractTags: ['기간제(상주)', firstCareer.role || '개발·설계', (person.domains && person.domains[0]) || '금융SI'],
       contractAmount: `${((Number(person.contract_rate || person.desired_rate || 950) * 6) * 10000).toLocaleString()}원`,
       durationDays: '180일',
       contractDate: '2025년 03월 07일',
       reviewDate: '2026.10.21.',
-      comment: person.review_summary || '프로젝트 수행 기간 동안 높은 전문성과 책임감으로 핵심 과업을 무결점으로 완수하였습니다.'
+      comment: person.review_summary || '프로젝트 수행 기간 동안 높은 기술 전문성과 책임감으로 핵심 과업을 완수하였으며 팀원들과의 호흡도 우수했습니다.'
+    },
+    {
+      evaluatorType: 'PM',
+      evaluatorName: '김지영 이사',
+      evaluatorOrg: '사내 전략제안·소싱팀 (프로젝트 PM)',
+      overallScore: 4.8,
+      metrics: { expertise: 4.8, satisfaction: 4.8, communication: 4.9, schedule: 4.9, proactivity: 4.7 },
+      projectTitle: firstCareer.project,
+      contractTags: ['기간제(상주)', '일정·품질관리', '내부 PM 평가'],
+      contractAmount: `${((Number(person.contract_rate || person.desired_rate || 950) * 6) * 10000).toLocaleString()}원`,
+      durationDays: '180일',
+      contractDate: '2025년 03월 07일',
+      reviewDate: '2026.10.24.',
+      comment: '진척도 관리와 이슈 공유가 투명하고 일정 준수 의지가 강해 PM 입장에서 매우 든든했던 인력입니다.'
     }
   ];
 }
@@ -1515,85 +1692,103 @@ function renderProfileIdentityHeader(person) {
   `;
 }
 
+function getEvaluatorBadgeMeta(type) {
+  const map = {
+    '임원': { label: '임원 평가', bg: '#f1f5f9', color: '#0f172a', avatarBg: '#0f172a' },
+    'PM': { label: 'PM 평가', bg: '#eff6ff', color: '#1d4ed8', avatarBg: '#1e3a8a' },
+    'PL': { label: 'PL 평가', bg: '#ecfdf5', color: '#047857', avatarBg: '#065f46' },
+    '팀원': { label: '팀원(동료) 평가', bg: '#f3e8ff', color: '#6d28d9', avatarBg: '#4c1d95' },
+    '고객사': { label: '고객사 평가', bg: '#e0f2fe', color: '#0369a1', avatarBg: '#0369a1' }
+  };
+  return map[type] || map['PL'];
+}
+
 function renderProfileEvaluationSection(person) {
   const evaluations = getProfileEvaluations(person);
+  const avgTotal = (evaluations.reduce((s, e) => s + Number(e.overallScore || 5), 0) / evaluations.length).toFixed(2);
   return `
     <div class="profile-eval-section">
       <div class="profile-eval-header">
-        <h4 class="profile-eval-title">평가</h4>
+        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+          <h4 class="profile-eval-title">프로젝트 수행 다면 평가 (${evaluations.length}건 · 평균 ★ ${avgTotal})</h4>
+          <span style="font-size:12px; color:#64748b;">사내 임원 · PM · PL · 동료 팀원 및 고객사 통합 평가</span>
+        </div>
         <span class="profile-eval-more">${evaluations.length}개 모두 보기 ›</span>
       </div>
-      ${evaluations.map(ev => `
-        <div class="profile-eval-card">
-          <div class="eval-client-row">
-            <div class="eval-client-logo">${ev.clientName.slice(0, 2)}</div>
-            <div class="eval-client-info">
-              <div class="eval-client-top">
-                <span class="eval-client-tag">클라이언트</span>
-                <strong class="eval-client-code">${ev.clientCode}</strong>
-                <span class="eval-client-sep">|</span>
-                <span class="eval-client-name">${ev.clientName}</span>
-              </div>
-              <div class="eval-client-rating">
-                ${renderStarIcons(ev.overallScore)}
-                <strong class="eval-score-num">${Number(ev.overallScore).toFixed(2)}</strong>
-              </div>
-            </div>
-          </div>
-
-          <div class="eval-detail-box">
-            <div class="eval-metrics-grid">
-              <div class="eval-metric-item">
-                <span class="eval-metric-label">전문성</span>
-                ${renderSegmentedEvalBar(ev.metrics.expertise)}
-                <strong class="eval-metric-val">${ev.metrics.expertise.toFixed(2)}</strong>
-              </div>
-              <div class="eval-metric-item">
-                <span class="eval-metric-label">만족도</span>
-                ${renderSegmentedEvalBar(ev.metrics.satisfaction)}
-                <strong class="eval-metric-val">${ev.metrics.satisfaction.toFixed(2)}</strong>
-              </div>
-              <div class="eval-metric-item">
-                <span class="eval-metric-label">의사소통</span>
-                ${renderSegmentedEvalBar(ev.metrics.communication)}
-                <strong class="eval-metric-val">${ev.metrics.communication.toFixed(2)}</strong>
-              </div>
-              <div class="eval-metric-item">
-                <span class="eval-metric-label">일정 준수</span>
-                ${renderSegmentedEvalBar(ev.metrics.schedule)}
-                <strong class="eval-metric-val">${ev.metrics.schedule.toFixed(2)}</strong>
-              </div>
-              <div class="eval-metric-item">
-                <span class="eval-metric-label">적극성</span>
-                ${renderSegmentedEvalBar(ev.metrics.proactivity)}
-                <strong class="eval-metric-val">${ev.metrics.proactivity.toFixed(2)}</strong>
+      ${evaluations.map(ev => {
+        const badgeMeta = getEvaluatorBadgeMeta(ev.evaluatorType);
+        return `
+          <div class="profile-eval-card">
+            <div class="eval-client-row">
+              <div class="eval-client-logo" style="background-color:${badgeMeta.avatarBg};">${ev.evaluatorType}</div>
+              <div class="eval-client-info">
+                <div class="eval-client-top">
+                  <span class="eval-client-tag" style="background-color:${badgeMeta.bg}; color:${badgeMeta.color};">${badgeMeta.label}</span>
+                  <strong class="eval-client-code">${ev.evaluatorName}</strong>
+                  <span class="eval-client-sep">|</span>
+                  <span class="eval-client-name">${ev.evaluatorOrg}</span>
+                </div>
+                <div class="eval-client-rating">
+                  ${renderStarIcons(ev.overallScore)}
+                  <strong class="eval-score-num">${Number(ev.overallScore).toFixed(2)}</strong>
+                </div>
               </div>
             </div>
 
-            <div class="eval-project-box">
-              <div class="eval-project-title">${ev.projectTitle} ›</div>
-              <div class="eval-project-tags">
-                ${ev.contractTags.map(t => `<span>${t}</span>`).join('<span class="eval-tag-sep">|</span>')}
+            <div class="eval-detail-box">
+              <div class="eval-metrics-grid">
+                <div class="eval-metric-item">
+                  <span class="eval-metric-label">전문성</span>
+                  ${renderSegmentedEvalBar(ev.metrics.expertise)}
+                  <strong class="eval-metric-val">${ev.metrics.expertise.toFixed(2)}</strong>
+                </div>
+                <div class="eval-metric-item">
+                  <span class="eval-metric-label">만족도</span>
+                  ${renderSegmentedEvalBar(ev.metrics.satisfaction)}
+                  <strong class="eval-metric-val">${ev.metrics.satisfaction.toFixed(2)}</strong>
+                </div>
+                <div class="eval-metric-item">
+                  <span class="eval-metric-label">의사소통</span>
+                  ${renderSegmentedEvalBar(ev.metrics.communication)}
+                  <strong class="eval-metric-val">${ev.metrics.communication.toFixed(2)}</strong>
+                </div>
+                <div class="eval-metric-item">
+                  <span class="eval-metric-label">일정 준수</span>
+                  ${renderSegmentedEvalBar(ev.metrics.schedule)}
+                  <strong class="eval-metric-val">${ev.metrics.schedule.toFixed(2)}</strong>
+                </div>
+                <div class="eval-metric-item">
+                  <span class="eval-metric-label">적극성</span>
+                  ${renderSegmentedEvalBar(ev.metrics.proactivity)}
+                  <strong class="eval-metric-val">${ev.metrics.proactivity.toFixed(2)}</strong>
+                </div>
               </div>
-              <div class="eval-project-meta">
-                <span>계약금액 <strong>${ev.contractAmount}</strong></span>
-                <span class="eval-tag-sep">|</span>
-                <span>프로젝트 기간 <strong>${ev.durationDays}</strong></span>
-                <span class="eval-tag-sep">|</span>
-                <span>최초 계약일 <strong>${ev.contractDate}</strong></span>
-              </div>
-            </div>
-          </div>
 
-          <div class="eval-comment-block">
-            <div class="eval-comment-head">
-              <strong>함께 일한 소감</strong>
-              <span>${ev.reviewDate}</span>
+              <div class="eval-project-box">
+                <div class="eval-project-title">${ev.projectTitle} ›</div>
+                <div class="eval-project-tags">
+                  ${ev.contractTags.map(t => `<span>${t}</span>`).join('<span class="eval-tag-sep">|</span>')}
+                </div>
+                <div class="eval-project-meta">
+                  <span>계약·기준금액 <strong>${ev.contractAmount}</strong></span>
+                  <span class="eval-tag-sep">|</span>
+                  <span>프로젝트 기간 <strong>${ev.durationDays}</strong></span>
+                  <span class="eval-tag-sep">|</span>
+                  <span>최초 투입·계약일 <strong>${ev.contractDate}</strong></span>
+                </div>
+              </div>
             </div>
-            <div class="eval-comment-body">${ev.comment}</div>
+
+            <div class="eval-comment-block">
+              <div class="eval-comment-head">
+                <strong>함께 일한 소감</strong>
+                <span>${ev.reviewDate}</span>
+              </div>
+              <div class="eval-comment-body">${ev.comment}</div>
+            </div>
           </div>
-        </div>
-      `).join('')}
+        `;
+      }).join('')}
     </div>
   `;
 }
