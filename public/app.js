@@ -2,6 +2,7 @@
 const state = {
   userId: 'u_master',
   activeTab: 'projects',
+  selectedProjectId: null,
   selectedProjectFilter: 'ALL',
   data: null,
   profileFilters: {
@@ -186,6 +187,9 @@ async function handleQuickAiInput() {
 }
 
 function switchTab(tabName) {
+  if (tabName === 'projects') {
+    state.selectedProjectId = null;
+  }
   state.activeTab = tabName;
   document.querySelectorAll('.nav-tab').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.tab === tabName);
@@ -273,14 +277,14 @@ function renderDashboardTab() {
         ${unfilledCount > 0 ? `
           <div class="zal-request-banner">
             <span>⏳ 미충원 TO ${unfilledCount}건 (사내외 적임자 매칭 및 구인 진행중)</span>
-            <button type="button" class="btn btn-sm btn-outline" style="border-color:#fca5a5; color:#dc2626;" onclick="switchTab('projects')">적임자 매칭</button>
+            <button type="button" class="btn btn-sm btn-outline" style="border-color:#fca5a5; color:#dc2626;" onclick="selectProjectDetail('${prj.id}')">적임자 매칭</button>
           </div>
         ` : ''}
 
         <div class="zal-card-footer">
           <div class="zal-reaction-group">
             <button type="button" class="zal-reaction-pill" onclick="openProposalSheetModal('${prj.id}')">📑 장표추출</button>
-            <button type="button" class="zal-reaction-pill" onclick="switchTab('projects')">🔍 TO관리 (${totalSlots})</button>
+            <button type="button" class="zal-reaction-pill" onclick="selectProjectDetail('${prj.id}')">🔍 TO관리 (${totalSlots})</button>
             <button type="button" class="zal-reaction-pill" onclick="showToast('🔗 프로젝트 공유 링크가 복사되었습니다!')">🔗 공유</button>
           </div>
           <span style="font-size:12px; color:#94a3b8; font-weight:600;">댓글 ${totalSlots}</span>
@@ -967,36 +971,182 @@ async function submitEditProfile(e, id) {
 }
 
 /* =========================================================================
-   TAB 3: PROJECT & RFP PROPOSAL MANAGEMENT
+   TAB 3: PROJECT & RFP PROPOSAL MANAGEMENT (List View -> Detail View)
    ========================================================================= */
+function selectProjectDetail(projectId) {
+  if (state.activeTab !== 'projects') {
+    switchTab('projects');
+  }
+  state.selectedProjectId = projectId;
+  renderProjectsTab();
+}
+
+function closeProjectDetail() {
+  state.selectedProjectId = null;
+  renderProjectsTab();
+}
+
 function renderProjectsTab() {
   const { projects, postings, interviews, templates, permissions, currentUser } = state.data;
   const el = document.getElementById('tab-projects');
-
   const canManagePrj = permissions.can_manage_projects || permissions.can_extract_proposal;
 
+  // If a project card is selected, render its Detail View
+  const selectedPrj = state.selectedProjectId
+    ? projects.find(p => p.id === state.selectedProjectId)
+    : null;
+
+  if (selectedPrj) {
+    renderProjectDetailView(el, selectedPrj, postings, interviews, templates, permissions, currentUser, canManagePrj);
+    return;
+  }
+
+  // Otherwise, render the Project List View with basic info cards only
   el.innerHTML = `
-    ${canManagePrj ? `
-      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:18px;">
-        <div>
-          <h3 style="font-size:17px; font-weight:800;">수행·예정(입찰) 프로젝트 TO 관리 및 제안서 장표 원클릭 추출</h3>
-        </div>
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:18px;">
+      <div>
+        <h3 style="font-size:17px; font-weight:800;">수행·예정(입찰) 프로젝트 목록</h3>
+        <p style="font-size:12.5px; color:#64748b; margin-top:2px;">카드를 선택하면 TO 배정·제안서 장표 추출·오픈 구인·면접 검증 등 상세 화면으로 이동합니다.</p>
+      </div>
+      ${canManagePrj ? `
         <button class="btn btn-primary" onclick="openNewProjectModal()">+ 신규 프로젝트 및 TO 등록</button>
-      </div>
-
-      <div style="display:flex; flex-direction:column; gap:20px; margin-bottom:32px;">
-        ${projects.map(prj => renderProjectCard(prj)).join('')}
-      </div>
-    ` : ''}
-
-    <!-- 오픈 구인 프로젝트 & 타겟 소싱 섹션 -->
-    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:14px;">
-      <h3 style="font-size:16.5px; font-weight:800;">📢 오픈 구인 포지션 & 인재 풀 타겟 소싱</h3>
-      <button class="btn btn-outline btn-sm" onclick="copyExternalShareLink()">🔗 비회원 오픈 구인 웹 링크 모드</button>
+      ` : ''}
     </div>
 
-    <div class="dashboard-feed-masonry" style="margin-bottom:32px;">
-      ${postings.map(post => `
+    <div style="display:flex; flex-direction:column; gap:14px;">
+      ${projects.map(prj => renderProjectSummaryCard(prj)).join('')}
+    </div>
+  `;
+}
+
+function renderProjectSummaryCard(prj) {
+  const totalSlots = prj.to_slots.length;
+  const filledSlots = prj.to_slots.filter(s => s.assigned_profile_id).length;
+
+  return `
+    <article
+      class="zal-feed-card"
+      style="cursor:pointer; padding:20px 24px;"
+      onclick="selectProjectDetail('${prj.id}')"
+    >
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:16px;">
+        <div>
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px; flex-wrap:wrap;">
+            <span class="zal-status-pill blue">${prj.domain}</span>
+            <span class="zal-status-pill gray">${prj.business_type}</span>
+            <span class="zal-status-pill ${filledSlots === totalSlots ? 'green' : 'amber'}">충원 ${filledSlots} / ${totalSlots}명</span>
+          </div>
+          <h3 class="zal-card-title" style="font-size:17px; margin:0;">${prj.name}</h3>
+          <div style="font-size:12.5px; color:#64748b; margin-top:6px;">
+            🏢 발주처: <strong>${prj.client}</strong> · 📅 기간: ${prj.start_date} ~ ${prj.end_date} · 📍 ${prj.location} · 💰 ${prj.budget_rate_info}
+          </div>
+        </div>
+        <div style="color:#94a3b8; font-size:13px; font-weight:700; white-space:nowrap; flex-shrink:0;">
+          상세보기 ›
+        </div>
+      </div>
+    </article>
+  `;
+}
+
+function renderProjectDetailView(el, prj, postings, interviews, templates, permissions, currentUser, canManagePrj) {
+  const totalSlots = prj.to_slots.length;
+  const filledSlots = prj.to_slots.filter(s => s.assigned_profile_id).length;
+  const projectPostings = postings.filter(p => p.project_id === prj.id);
+  const projectInterviews = interviews.filter(i => i.project_id === prj.id);
+
+  el.innerHTML = `
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:16px;">
+      <button type="button" class="btn btn-outline btn-sm" onclick="closeProjectDetail()">
+        ← 프로젝트 목록으로 돌아가기
+      </button>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        ${canManagePrj ? `
+          <button type="button" class="btn btn-primary btn-sm" onclick="openProposalSheetModal('${prj.id}')">
+            📑 수행인력 총괄표 · 표준 프로필 장표 추출
+          </button>
+        ` : ''}
+        <button type="button" class="btn btn-outline btn-sm" onclick="copyExternalShareLink()">
+          🔗 비회원 오픈 구인 웹 링크 모드
+        </button>
+      </div>
+    </div>
+
+    <!-- 프로젝트 기본 정보 및 TO 배정·매칭 카드 -->
+    <div class="zal-feed-card" style="margin-bottom:28px;">
+      <div class="zal-card-header" style="border-bottom:1px solid #f1f5f9; padding-bottom:14px;">
+        <div>
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px; flex-wrap:wrap;">
+            <span class="zal-status-pill blue">${prj.domain}</span>
+            <span class="zal-status-pill gray">${prj.business_type}</span>
+            <span class="zal-status-pill ${filledSlots === totalSlots ? 'green' : 'amber'}">충원 ${filledSlots} / ${totalSlots}명</span>
+          </div>
+          <h3 class="zal-card-title" style="font-size:18px;">${prj.name}</h3>
+          <div style="font-size:12.5px; color:#64748b; margin-top:4px;">
+            🏢 발주처: <strong>${prj.client}</strong> · 📅 기간: ${prj.start_date} ~ ${prj.end_date} · 📍 ${prj.location} · 💰 ${prj.budget_rate_info}
+          </div>
+        </div>
+      </div>
+
+      ${canManagePrj ? `
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>역할 / 포지션명</th>
+              <th>요구 등급</th>
+              <th>도메인 · 핵심 스킬</th>
+              <th>배정 인력</th>
+              <th>상태</th>
+              <th style="text-align:right;">액션 (RFP 매칭 / 외주 구인)</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${prj.to_slots.map(slot => `
+              <tr>
+                <td style="font-weight:800;">${slot.role_name}</td>
+                <td><span class="badge badge-grade">${slot.required_grade}</span></td>
+                <td>
+                  <span class="badge badge-domain">${slot.required_domain}</span>
+                  ${(slot.required_skills || []).map(sk => `<span class="badge badge-skill">${sk}</span>`).join(' ')}
+                </td>
+                <td>
+                  ${slot.assigned_profile_id
+                    ? `<strong style="color:#2563eb;">👤 ${slot.assigned_name}</strong>`
+                    : `<span style="color:#94a3b8;">미배정</span>`}
+                </td>
+                <td>
+                  <span class="zal-status-pill ${slot.assigned_profile_id ? 'green' : 'amber'}">${slot.status}</span>
+                </td>
+                <td style="text-align:right;">
+                  <div style="display:inline-flex; gap:6px; flex-wrap:wrap; justify-content:flex-end;">
+                    <button class="btn btn-primary btn-sm" onclick="openRfpMatchModal('${prj.id}', '${slot.slot_id}')">
+                      🔍 적임자 탐색·배정
+                    </button>
+                    ${!slot.assigned_profile_id ? `
+                      <button class="btn btn-outline btn-sm" onclick="openSlotToJobBoard('${prj.id}', '${slot.slot_id}')">
+                        📢 구인공고 오픈
+                      </button>
+                    ` : `
+                      <button class="btn btn-outline btn-sm" onclick="assignProfileToSlot('${prj.id}', '${slot.slot_id}', null)">
+                        해제
+                      </button>
+                    `}
+                  </div>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      ` : ''}
+    </div>
+
+    <!-- 해당 프로젝트 오픈 구인 포지션 & 타겟 소싱 섹션 -->
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:14px;">
+      <h3 style="font-size:16.5px; font-weight:800;">📢 오픈 구인 포지션 & 인재 풀 타겟 소싱 (${projectPostings.length}건)</h3>
+    </div>
+
+    <div class="dashboard-feed-masonry" style="margin-bottom:28px;">
+      ${projectPostings.length > 0 ? projectPostings.map(post => `
         <article class="zal-feed-card">
           <div class="zal-card-header">
             <div class="zal-author-box">
@@ -1032,19 +1182,23 @@ function renderProjectsTab() {
             </div>
           </div>
         </article>
-      `).join('')}
+      `).join('') : `
+        <div class="zal-feed-card" style="grid-column: 1 / -1; text-align:center; color:#64748b; padding:28px;">
+          현재 이 프로젝트에 오픈된 외주 구인 공고가 없습니다.
+        </div>
+      `}
     </div>
 
-    <!-- 프로젝트 인터뷰(면접) & 필수질문 검증 섹션 -->
+    <!-- 해당 프로젝트 지원자 인터뷰(면접) & 필수질문 검증 섹션 -->
     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:14px;">
-      <h3 style="font-size:16.5px; font-weight:800;">🎤 프로젝트 지원자 인터뷰(면접) 및 직무별 필수질문 검증</h3>
+      <h3 style="font-size:16.5px; font-weight:800;">🎤 지원자 인터뷰(면접) 및 직무별 필수질문 검증 (${projectInterviews.length}건)</h3>
       ${permissions.can_evaluate_interviews || permissions.can_schedule_interviews ? `
         <button class="btn btn-outline btn-sm" onclick="openQuestionTemplatesModal()">📋 직무별 필수 질문 리스트(${templates.length}종)</button>
       ` : ''}
     </div>
 
     <div class="dashboard-feed-masonry">
-      ${interviews.map(inv => `
+      ${projectInterviews.length > 0 ? projectInterviews.map(inv => `
         <article class="zal-feed-card">
           <div class="zal-card-header">
             <div class="zal-author-box">
@@ -1083,82 +1237,11 @@ function renderProjectsTab() {
             </div>
           </div>
         </article>
-      `).join('')}
-    </div>
-  `;
-}
-
-function renderProjectCard(prj) {
-  const totalSlots = prj.to_slots.length;
-  const filledSlots = prj.to_slots.filter(s => s.assigned_profile_id).length;
-
-  return `
-    <div class="zal-feed-card">
-      <div class="zal-card-header" style="border-bottom:1px solid #f1f5f9; padding-bottom:14px;">
-        <div>
-          <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
-            <span class="zal-status-pill blue">${prj.domain}</span>
-            <span class="zal-status-pill gray">${prj.business_type}</span>
-            <span class="zal-status-pill ${filledSlots === totalSlots ? 'green' : 'amber'}">충원 ${filledSlots} / ${totalSlots}명</span>
-          </div>
-          <h3 class="zal-card-title" style="font-size:17px;">${prj.name}</h3>
-          <div style="font-size:12.5px; color:#64748b; margin-top:4px;">
-            🏢 발주처: <strong>${prj.client}</strong> · 📅 기간: ${prj.start_date} ~ ${prj.end_date} · 📍 ${prj.location} · 💰 ${prj.budget_rate_info}
-          </div>
+      `).join('') : `
+        <div class="zal-feed-card" style="grid-column: 1 / -1; text-align:center; color:#64748b; padding:28px;">
+          현재 이 프로젝트에 등록된 지원자 인터뷰 내역이 없습니다.
         </div>
-        <button class="btn btn-primary" onclick="openProposalSheetModal('${prj.id}')">
-          📑 수행인력 총괄표 · 표준 프로필 장표 추출
-        </button>
-      </div>
-
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>역할 / 포지션명</th>
-            <th>요구 등급</th>
-            <th>도메인 · 핵심 스킬</th>
-            <th>배정 인력</th>
-            <th>상태</th>
-            <th style="text-align:right;">액션 (RFP 매칭 / 외주 구인)</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${prj.to_slots.map(slot => `
-            <tr>
-              <td style="font-weight:800;">${slot.role_name}</td>
-              <td><span class="badge badge-grade">${slot.required_grade}</span></td>
-              <td>
-                <span class="badge badge-domain">${slot.required_domain}</span>
-                ${(slot.required_skills || []).map(sk => `<span class="badge badge-skill">${sk}</span>`).join(' ')}
-              </td>
-              <td>
-                ${slot.assigned_profile_id
-                  ? `<strong style="color:#2563eb;">👤 ${slot.assigned_name}</strong>`
-                  : `<span style="color:#94a3b8;">미배정</span>`}
-              </td>
-              <td>
-                <span class="zal-status-pill ${slot.assigned_profile_id ? 'green' : 'amber'}">${slot.status}</span>
-              </td>
-              <td style="text-align:right;">
-                <div style="display:inline-flex; gap:6px; flex-wrap:wrap; justify-content:flex-end;">
-                  <button class="btn btn-primary btn-sm" onclick="openRfpMatchModal('${prj.id}', '${slot.slot_id}')">
-                    🔍 적임자 탐색·배정
-                  </button>
-                  ${!slot.assigned_profile_id ? `
-                    <button class="btn btn-outline btn-sm" onclick="openSlotToJobBoard('${prj.id}', '${slot.slot_id}')">
-                      📢 구인공고 오픈
-                    </button>
-                  ` : `
-                    <button class="btn btn-outline btn-sm" onclick="assignProfileToSlot('${prj.id}', '${slot.slot_id}', null)">
-                      해제
-                    </button>
-                  `}
-                </div>
-              </td>
-            </tr>
-          `).join('')}
-        </tbody>
-      </table>
+      `}
     </div>
   `;
 }
@@ -1259,9 +1342,8 @@ async function assignProfileToSlot(projectId, slotId, profileId) {
 
 async function openSlotToJobBoard(projectId, slotId) {
   await apiCall('/api/postings/open-from-slot', 'POST', { project_id: projectId, slot_id: slotId });
-  showToast('미충원 포지션이 외주 구인 보드에 오픈되었습니다!');
+  showToast('미충원 포지션이 해당 프로젝트의 오픈 구인 포지션에 등록되었습니다!');
   await loadState();
-  switchTab('sourcing');
 }
 
 function openProposalSheetModal(projectId) {
@@ -1663,9 +1745,8 @@ async function submitEasyApply(e, postingId) {
     create_profile_in_db: fd.get('create_profile_in_db') === 'on'
   });
   closeModal();
-  showToast('지원이 접수되었습니다! 면접·필수질문 탭으로 이동합니다.');
+  showToast('지원이 접수되었습니다! 프로젝트 인터뷰 목록에 즉시 반영되었습니다.');
   await loadState();
-  switchTab('interviews');
 }
 
 /* =========================================================================
