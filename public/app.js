@@ -1,7 +1,7 @@
 // ZAL : 잘될 (ZAL-WILL) — ZAL Universe Look & Feel Frontend
 const state = {
   userId: 'u_master',
-  activeTab: 'dashboard',
+  activeTab: 'projects',
   selectedProjectFilter: 'ALL',
   data: null,
   profileFilters: {
@@ -964,32 +964,120 @@ async function submitEditProfile(e, id) {
    TAB 3: PROJECT & RFP PROPOSAL MANAGEMENT
    ========================================================================= */
 function renderProjectsTab() {
-  const { projects, permissions } = state.data;
+  const { projects, postings, interviews, templates, permissions, currentUser } = state.data;
   const el = document.getElementById('tab-projects');
 
-  if (!permissions.can_manage_projects && !permissions.can_extract_proposal) {
-    el.innerHTML = `
-      <div class="card" style="text-align:center; padding:45px;">
-        <h3 style="margin-bottom:8px;">🔒 프로젝트 등록·관리 및 제안 장표 추출 권한 제한</h3>
-        <p style="color:#64748b; margin-bottom:16px;">
-          임원/부서장, 인력/제안 관리자, 또는 선별 권한(PM/PL)이 부여된 내부 구성원만 접근 가능합니다.
-        </p>
-        <button class="btn btn-primary" onclick="switchTab('sourcing')">오픈 구인 보드로 이동 →</button>
-      </div>
-    `;
-    return;
-  }
+  const canManagePrj = permissions.can_manage_projects || permissions.can_extract_proposal;
 
   el.innerHTML = `
-    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:18px;">
-      <div>
-        <h3 style="font-size:17px; font-weight:800;">수행·예정(입찰) 프로젝트 TO 관리 및 제안서 장표 원클릭 추출</h3>
+    ${canManagePrj ? `
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:18px;">
+        <div>
+          <h3 style="font-size:17px; font-weight:800;">수행·예정(입찰) 프로젝트 TO 관리 및 제안서 장표 원클릭 추출</h3>
+        </div>
+        <button class="btn btn-primary" onclick="openNewProjectModal()">+ 신규 프로젝트 및 TO 등록</button>
       </div>
-      <button class="btn btn-primary" onclick="openNewProjectModal()">+ 신규 프로젝트 및 TO 등록</button>
+
+      <div style="display:flex; flex-direction:column; gap:20px; margin-bottom:32px;">
+        ${projects.map(prj => renderProjectCard(prj)).join('')}
+      </div>
+    ` : ''}
+
+    <!-- 오픈 구인 프로젝트 & 타겟 소싱 섹션 -->
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:14px;">
+      <h3 style="font-size:16.5px; font-weight:800;">📢 오픈 구인 포지션 & 인재 풀 타겟 소싱</h3>
+      <button class="btn btn-outline btn-sm" onclick="copyExternalShareLink()">🔗 비회원 오픈 구인 웹 링크 모드</button>
     </div>
 
-    <div style="display:flex; flex-direction:column; gap:20px;">
-      ${projects.map(prj => renderProjectCard(prj)).join('')}
+    <div class="dashboard-feed-masonry" style="margin-bottom:32px;">
+      ${postings.map(post => `
+        <article class="zal-feed-card">
+          <div class="zal-card-header">
+            <div class="zal-author-box">
+              <div class="zal-avatar-circle"><img src="/pic1_thumb.png" alt="구인" /></div>
+              <div>
+                <span class="zal-author-name">${post.role_name}</span>
+                <span class="zal-author-role">${post.required_grade} · ${post.required_domain}</span>
+                <div class="zal-card-time">🕒 등록 ${post.created_at} | 타겟소싱 ${post.sourcing_sent_count}건</div>
+              </div>
+            </div>
+            <span class="zal-status-pill ${post.status === 'OPEN' ? 'green' : 'gray'}">${post.status === 'OPEN' ? '🟢 모집중' : '마감됨'}</span>
+          </div>
+
+          <div class="zal-card-title">${post.title}</div>
+
+          <div class="zal-meta-list">
+            <div class="zal-meta-row"><span class="zal-meta-label">📅 기간</span><span class="zal-meta-val">${post.period} (${post.work_location})</span></div>
+            <div class="zal-meta-row"><span class="zal-meta-label">💰 단가</span><span class="zal-meta-val">${post.rate_guide}</span></div>
+            <div class="zal-meta-row"><span class="zal-meta-label">🛠️ 스킬</span><span class="zal-meta-val">${post.required_skills.join(', ')}</span></div>
+          </div>
+
+          <div class="zal-card-footer">
+            <div class="zal-reaction-group">
+              ${post.status === 'OPEN' ? `
+                <button class="btn btn-primary btn-sm" onclick="openEasyApplyModal('${post.id}')">
+                  ✍️ ${currentUser?.role_group === 'INTERNAL' ? '사내 지인 추천' : '간편 지원하기'}
+                </button>
+              ` : ''}
+              ${permissions.can_manage_postings ? `
+                <button class="btn btn-outline btn-sm" onclick="openTargetSourcingModal('${post.id}')">🎯 타겟 소싱 발송</button>
+                <button class="btn btn-outline btn-sm" onclick="togglePostingStatus('${post.id}')">${post.status === 'OPEN' ? '마감' : '재오픈'}</button>
+              ` : ''}
+            </div>
+          </div>
+        </article>
+      `).join('')}
+    </div>
+
+    <!-- 프로젝트 인터뷰(면접) & 필수질문 검증 섹션 -->
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:14px;">
+      <h3 style="font-size:16.5px; font-weight:800;">🎤 프로젝트 지원자 인터뷰(면접) 및 직무별 필수질문 검증</h3>
+      ${permissions.can_evaluate_interviews || permissions.can_schedule_interviews ? `
+        <button class="btn btn-outline btn-sm" onclick="openQuestionTemplatesModal()">📋 직무별 필수 질문 리스트(${templates.length}종)</button>
+      ` : ''}
+    </div>
+
+    <div class="dashboard-feed-masonry">
+      ${interviews.map(inv => `
+        <article class="zal-feed-card">
+          <div class="zal-card-header">
+            <div class="zal-author-box">
+              <div class="zal-avatar-circle"><img src="/pic2_thumb.png" alt="${inv.candidate_name}" /></div>
+              <div>
+                <span class="zal-author-name">${inv.candidate_name}</span>
+                <span class="zal-author-role">${inv.tech_grade} · ${inv.candidate_type}</span>
+                <div class="zal-card-time">🕒 경로: ${inv.recommender || '직접지원'}</div>
+              </div>
+            </div>
+            <span class="zal-status-pill ${inv.status === '최종선정' || inv.status === '면접진행완료' ? 'green' : 'amber'}">${inv.status}</span>
+          </div>
+
+          <div class="zal-card-title">${inv.resume_summary}</div>
+
+          <div class="zal-meta-list">
+            <div class="zal-meta-row"><span class="zal-meta-label">📅 가용일</span><span class="zal-meta-val">${inv.available_from} (${inv.desired_rate !== null ? `희망 월 ${inv.desired_rate}만` : '🔒 단가비공개'})</span></div>
+            <div class="zal-meta-row"><span class="zal-meta-label">🗓️ 면접일정</span><span class="zal-meta-val">${inv.interview_date || '일정 미지정'} ${inv.interview_method ? `(${inv.interview_method})` : ''}</span></div>
+            <div class="zal-meta-row"><span class="zal-meta-label">👨‍💼 면접관</span><span class="zal-meta-val">${inv.interviewer_name || '미배정'}</span></div>
+          </div>
+
+          ${inv.total_score > 0 ? `
+            <div class="zal-request-banner" style="background:#ecfdf5; border-color:#a7f3d0; color:#059669;">
+              <span>⭐ 필수질문 체크리스트 평균 ${inv.total_score} / 5.0점 — "${inv.interviewer_opinion}"</span>
+            </div>
+          ` : ''}
+
+          <div class="zal-card-footer">
+            <div class="zal-reaction-group">
+              ${permissions.can_schedule_interviews ? `
+                <button class="btn btn-outline btn-sm" onclick="openScheduleInterviewModal('${inv.id}')">🗓️ 일정지정 · 면접관 배정</button>
+              ` : ''}
+              ${(permissions.can_evaluate_interviews || (currentUser && inv.interviewer_user_id === currentUser.id)) ? `
+                <button class="btn btn-primary btn-sm" onclick="openEvaluateChecklistModal('${inv.id}')">✅ 필수질문 평가 · 최종선발</button>
+              ` : ''}
+            </div>
+          </div>
+        </article>
+      `).join('')}
     </div>
   `;
 }
