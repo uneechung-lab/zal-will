@@ -1589,14 +1589,13 @@ function renderProjectDetailView(el, prj, postings, interviews, templates, permi
 
           <div class="zal-card-title">${post.title}</div>
 
-          <div class="posting-body-split">
-            <div class="zal-meta-list" style="flex:1; min-width:220px;">
-              <div class="zal-meta-row"><span class="zal-meta-label">${svgIcon('calendar', 14)} 기간</span><span class="zal-meta-val">${post.period} (${post.work_location})</span></div>
-              <div class="zal-meta-row"><span class="zal-meta-label">${svgIcon('dollar', 14)} 단가</span><span class="zal-meta-val">${post.rate_guide}</span></div>
-              <div class="zal-meta-row"><span class="zal-meta-label">${svgIcon('code', 14)} 스킬</span><span class="zal-meta-val">${post.required_skills.join(', ')}</span></div>
-            </div>
-            ${renderPostingApplicantBox(post)}
+          <div class="zal-meta-list">
+            <div class="zal-meta-row"><span class="zal-meta-label">${svgIcon('calendar', 14)} 기간</span><span class="zal-meta-val">${post.period} (${post.work_location})</span></div>
+            <div class="zal-meta-row"><span class="zal-meta-label">${svgIcon('dollar', 14)} 단가</span><span class="zal-meta-val">${post.rate_guide}</span></div>
+            <div class="zal-meta-row"><span class="zal-meta-label">${svgIcon('code', 14)} 스킬</span><span class="zal-meta-val">${post.required_skills.join(', ')}</span></div>
           </div>
+
+          ${renderPostingApplicantBox(post)}
 
           <div class="zal-card-footer">
             <div class="zal-reaction-group" style="flex-wrap:wrap;">
@@ -1987,14 +1986,13 @@ function renderSourcingTab() {
 
           <div class="zal-card-title">${post.title}</div>
 
-          <div class="posting-body-split">
-            <div class="zal-meta-list" style="flex:1; min-width:220px;">
-              <div class="zal-meta-row"><span class="zal-meta-label">${svgIcon('calendar', 14)} 기간</span><span class="zal-meta-val">${post.period} (${post.work_location})</span></div>
-              <div class="zal-meta-row"><span class="zal-meta-label">${svgIcon('dollar', 14)} 단가</span><span class="zal-meta-val">${post.rate_guide}</span></div>
-              <div class="zal-meta-row"><span class="zal-meta-label">${svgIcon('code', 14)} 스킬</span><span class="zal-meta-val">${post.required_skills.join(', ')}</span></div>
-            </div>
-            ${renderPostingApplicantBox(post)}
+          <div class="zal-meta-list">
+            <div class="zal-meta-row"><span class="zal-meta-label">${svgIcon('calendar', 14)} 기간</span><span class="zal-meta-val">${post.period} (${post.work_location})</span></div>
+            <div class="zal-meta-row"><span class="zal-meta-label">${svgIcon('dollar', 14)} 단가</span><span class="zal-meta-val">${post.rate_guide}</span></div>
+            <div class="zal-meta-row"><span class="zal-meta-label">${svgIcon('code', 14)} 스킬</span><span class="zal-meta-val">${post.required_skills.join(', ')}</span></div>
           </div>
+
+          ${renderPostingApplicantBox(post)}
 
           <div class="zal-card-footer">
             <div class="zal-reaction-group" style="flex-wrap:wrap;">
