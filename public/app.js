@@ -1406,8 +1406,8 @@ const PROFILE_EVALUATIONS_MAP = {
     },
     {
       evaluatorType: '고객사',
-      evaluatorName: 'sh****** (현업 차장)',
-      evaluatorOrg: '신한은행 연금사업본부 (발주처 담당)',
+      evaluatorName: 'nh****** (현업 차장)',
+      evaluatorOrg: '농협정보통신',
       overallScore: 5.0,
       metrics: { expertise: 5.0, satisfaction: 5.0, communication: 5.0, schedule: 5.0, proactivity: 5.0 },
       projectTitle: '신한은행 퇴직연금 차세대 원장 및 정산 시스템 구축',
@@ -1477,6 +1477,20 @@ const PROFILE_EVALUATIONS_MAP = {
       contractDate: '2025년 01월 06일',
       reviewDate: '2026.10.27.',
       comment: '백엔드 API 및 DB 인터페이스 협의 시 문서 정리가 깔끔하고 소통이 빨라 협업 만족도가 매우 높았습니다.'
+    },
+    {
+      evaluatorType: '고객사',
+      evaluatorName: 'nh****** (고객사 담당)',
+      evaluatorOrg: '농협정보통신',
+      overallScore: 4.9,
+      metrics: { expertise: 4.8, satisfaction: 5.0, communication: 5.0, schedule: 4.9, proactivity: 4.9 },
+      projectTitle: 'NH농협은행 퇴직연금 비대면 채널 및 스마트고지 고도화',
+      contractTags: ['기간제(상주)', '응용개발', '웹·채널'],
+      contractAmount: '68,000,000원',
+      durationDays: '210일',
+      contractDate: '2025년 01월 06일',
+      reviewDate: '2026.10.31.',
+      comment: '비대면 채널 및 스마트고지 화면 요건을 정확히 반영하고 일정 내 안정적으로 오픈을 지원해 주었습니다.'
     }
   ],
   p_4: [
@@ -1540,8 +1554,8 @@ const PROFILE_EVALUATIONS_MAP = {
     },
     {
       evaluatorType: '고객사',
-      evaluatorName: 'kb****** (고객사 파트장)',
-      evaluatorOrg: '교보생명 퇴직연금지원실',
+      evaluatorName: 'nh****** (고객사 파트장)',
+      evaluatorOrg: '농협정보통신',
       overallScore: 5.0,
       metrics: { expertise: 5.0, satisfaction: 5.0, communication: 5.0, schedule: 5.0, proactivity: 5.0 },
       projectTitle: '교보생명 퇴직연금 수수료 정산 및 결산 배치 코어 고도화',
