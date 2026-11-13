@@ -1296,12 +1296,83 @@ function renderPostingApplicantBox(post) {
       </div>
       <div class="posting-applicant-avatars">
         ${displayApplicants.length > 0 ? displayApplicants.map((label, idx) => `
-          <span class="posting-applicant-circle color-${idx % 4}">${label}</span>
+          <span class="posting-applicant-circle color-${idx % 4}" onclick="event.stopPropagation(); openApplicantDetailFromPosting('${post.id}', ${idx})" title="${label} 상세 프로필 보기">${label}</span>
         `).join('') : `<span style="font-size:12.5px; color:#94a3b8;">신청 대기중</span>`}
       </div>
     </div>
   `;
 }
+
+const APPLICANT_FALLBACK_MAP = {
+  '이준호': {
+    candidate_type: '외주 프리랜서',
+    tech_grade: '고급',
+    experience_years: 9,
+    education: '동국대학교 컴퓨터공학과 학사',
+    certifications: ['정보처리기사', 'SQLD'],
+    available_from: '2026-11-28',
+    desired_rate: 960,
+    recommender: '오픈 구인 직접 지원 (신규)',
+    domains: ['퇴직연금', '수신/신탁'],
+    skills: ['Java', 'Spring Boot', 'Spring Batch', 'Oracle'],
+    status: '참여신청 접수 (서류검토중)',
+    resume_summary: 'IBK기업은행 및 시중은행 퇴직연금 비대면 운용지시·정산 배치 개발 9년차 고급 개발자.',
+    career_history: [
+      { project: 'IBK기업은행 퇴직연금 비대면 운용지시 및 정산 개선', client: 'IBK기업은행', period: '2024.04 ~ 2026.09', role: '백엔드/배치 개발', tech: 'Java, Spring Batch, Oracle' }
+    ]
+  },
+  '박성진': {
+    candidate_type: '외주 프리랜서',
+    tech_grade: '고급',
+    experience_years: 11,
+    education: '서강대학교 컴퓨터공학과 학사',
+    certifications: ['정보처리기사', 'SQLP'],
+    available_from: '2026-11-25',
+    desired_rate: 980,
+    recommender: '오픈 구인 직접 지원 (신규)',
+    domains: ['퇴직연금', '채널계', '마이데이터'],
+    skills: ['React', 'TypeScript', 'WebSquare', 'Spring Boot'],
+    status: '참여신청 접수 (서류검토중)',
+    resume_summary: '메이저 증권사·빅테크 비대면 개인형IRP 가입/운용지시 채널 및 WebSquare5·React 하이브리드 UI 개발 11년차.',
+    career_history: [
+      { project: '한국투자증권 개인형IRP 비대면 채널 및 로보일임 화면 고도화', client: '한국투자증권', period: '2024.06 ~ 2026.10', role: '채널 프론트/백엔드 선임', tech: 'React, TypeScript, WebSquare, Spring Boot' }
+    ]
+  },
+  '김도윤': {
+    candidate_type: '외주 프리랜서',
+    tech_grade: '고급',
+    experience_years: 9,
+    education: '중앙대학교 소프트웨어학부 학사',
+    certifications: ['정보처리기사', 'SQLD'],
+    available_from: '2026-12-10',
+    desired_rate: 1000,
+    recommender: '오픈 구인 직접 지원 (신규)',
+    domains: ['채권', '펀드'],
+    skills: ['Java', 'Spring Boot', 'Oracle', '펀드회계'],
+    status: '참여신청 접수 (서류검토중)',
+    resume_summary: '외화채권 결제 및 펀드 기준가(NAV) 산출 원장/대외계 인터페이스 개발 9년차.',
+    career_history: [
+      { project: 'NH투자증권 글로벌 채권 및 외화펀드 결제 시스템 구축', client: 'NH투자증권', period: '2024.03 ~ 2026.09', role: '백엔드 개발', tech: 'Java, Spring Boot, Oracle' }
+    ]
+  },
+  '최민수': {
+    candidate_type: '외주 반프리',
+    tech_grade: '고급',
+    experience_years: 10,
+    education: '서울시립대학교 컴퓨터과학부 학사',
+    certifications: ['정보처리기사', '투자자산운용사'],
+    available_from: '2026-12-15',
+    desired_rate: 1020,
+    recommender: '타겟소싱 지원 (신규)',
+    domains: ['채권', '파생상품'],
+    skills: ['Java', 'Spring Boot', 'Oracle', '채권평가'],
+    status: '참여신청 접수 (서류검토중)',
+    resume_summary: '투자자산운용사 보유. 채권 시가평가 및 장외파생 상품 정산 엔진 개발 10년차.',
+    career_history: [
+      { project: '키움증권 채권 시가평가 및 장외파생 원장 고도화', client: '키움증권', period: '2024.05 ~ 2026.10', role: '응용개발', tech: 'Java, Spring Boot, Oracle' }
+    ]
+  }
+};
 
 const PROFILE_EVALUATIONS_MAP = {
   p_1: [
@@ -1918,23 +1989,19 @@ function openProfileDetailModal(profileId) {
   `);
 }
 
-function openCandidateResumeModal(interviewId) {
-  const interviews = state.data?.interviews || [];
-  const profiles = state.data?.profiles || [];
-  const inv = interviews.find(i => i.id === interviewId);
-  if (!inv) return;
-  const prof = profiles.find(p => p.id === inv.candidate_profile_id || p.name === inv.candidate_name);
-
-  const education = prof?.education || '컴퓨터공학 학사 졸업';
-  const experienceYears = prof?.experience_years || 11;
+function openCandidateResumeModalWithData(inv, prof) {
+  const education = prof?.education || inv.education || '컴퓨터공학 학사 졸업';
+  const experienceYears = prof?.experience_years || inv.experience_years || 11;
   const certifications = (prof?.certifications && prof.certifications.length > 0)
     ? prof.certifications.join(', ')
-    : '정보처리기사, SQLD';
+    : (Array.isArray(inv.certifications) && inv.certifications.length > 0 ? inv.certifications.join(', ') : '정보처리기사, SQLD');
   const careerHistory = (prof?.career_history && prof.career_history.length > 0)
     ? prof.career_history
-    : [
-        { project: `${(inv.domains && inv.domains[0]) || '금융'} 차세대 코어/배치 시스템 구축`, client: '메이저 금융사', period: '2024.03 ~ 2026.10', role: '선임/리드 개발', tech: (inv.skills || []).join(', ') }
-      ];
+    : (Array.isArray(inv.career_history) && inv.career_history.length > 0
+      ? inv.career_history
+      : [
+          { project: `${(inv.domains && inv.domains[0]) || '금융'} 차세대 코어/배치 시스템 구축`, client: '메이저 금융사', period: '2024.03 ~ 2026.10', role: '선임/리드 개발', tech: (inv.skills || []).join(', ') }
+        ]);
 
   const personObj = prof || {
     id: inv.candidate_profile_id,
@@ -1952,6 +2019,7 @@ function openCandidateResumeModal(interviewId) {
     resourced_count: 0
   };
   const workedBefore = hasWorkedWithCompany(personObj);
+  const hasInterviewRecord = Boolean(inv.id && !String(inv.id).startsWith('synthetic_'));
 
   openModal(`지원자 상세 프로필 — ${inv.candidate_name} (${inv.tech_grade})`, `
     <div style="display:flex; flex-direction:column; gap:18px;">
@@ -1975,7 +2043,7 @@ function openCandidateResumeModal(interviewId) {
           <div style="font-size:12px; color:#64748b; margin-bottom:4px;">투입 가용일 · 희망 단가</div>
           <div style="font-size:14px; font-weight:600; color:#059669;">가용일: ${inv.available_from}</div>
           <div style="font-size:12.5px; color:#0f172a; margin-top:2px;">
-            희망 단가: ${inv.desired_rate !== null ? `월 ${Number(inv.desired_rate).toLocaleString()}만원` : '단가 비공개'} · 경로: ${inv.recommender || '직접지원'}
+            희망 단가: ${inv.desired_rate !== null && inv.desired_rate !== undefined ? `월 ${Number(inv.desired_rate).toLocaleString()}만원` : '단가 비공개'} · 경로: ${inv.recommender || '직접지원'}
           </div>
         </div>
       </div>
@@ -2017,10 +2085,70 @@ function openCandidateResumeModal(interviewId) {
         </table>
       </div>
 
-      ${renderInterviewEvaluationSection(personObj, inv)}
+      ${hasInterviewRecord ? renderInterviewEvaluationSection(personObj, inv) : renderInterviewEvaluationSection(personObj)}
       ${renderProfileEvaluationSection(personObj)}
     </div>
   `);
+}
+
+function openCandidateResumeModal(interviewId) {
+  const interviews = state.data?.interviews || [];
+  const profiles = state.data?.profiles || [];
+  const inv = interviews.find(i => i.id === interviewId);
+  if (!inv) return;
+  const prof = profiles.find(p => p.id === inv.candidate_profile_id || p.name === inv.candidate_name);
+  openCandidateResumeModalWithData(inv, prof);
+}
+
+function openApplicantDetailFromPosting(postingId, applicantIndex) {
+  const postings = state.data?.postings || [];
+  const interviews = state.data?.interviews || [];
+  const profiles = state.data?.profiles || [];
+  const post = postings.find(p => p.id === postingId);
+  if (!post) return;
+
+  const defaultMap = {
+    post_1: ['신은숙', '김도현', '이준호'],
+    post_2: ['한지민', '박성진'],
+    post_3: ['오세훈', '김도윤', '최민수']
+  };
+  const rawApplicants = Array.isArray(post.applicants) ? post.applicants : (defaultMap[post.id] || []);
+  const rawName = String(rawApplicants[applicantIndex] || '').trim().replace(/\*\*$/, '');
+  if (!rawName) return;
+
+  const matchedInv = interviews.find(i => i.posting_id === postingId && i.candidate_name === rawName)
+    || interviews.find(i => i.candidate_name === rawName);
+  if (matchedInv) {
+    openCandidateResumeModal(matchedInv.id);
+    return;
+  }
+
+  const prof = profiles.find(p => p.name === rawName);
+  const fb = APPLICANT_FALLBACK_MAP[rawName] || {};
+  const canViewSensitive = Boolean(state.data?.permissions?.can_view_sensitive_info);
+
+  const syntheticInv = {
+    id: `synthetic_${postingId}_${applicantIndex}`,
+    posting_id: postingId,
+    project_id: post.project_id,
+    candidate_profile_id: prof?.id || null,
+    candidate_name: rawName,
+    candidate_type: prof?.employment_type || fb.candidate_type || '외주 프리랜서',
+    tech_grade: prof?.tech_grade || fb.tech_grade || post.required_grade || '고급',
+    experience_years: prof?.experience_years || fb.experience_years || 10,
+    education: prof?.education || fb.education || '컴퓨터공학 학사 졸업',
+    certifications: prof?.certifications || fb.certifications || ['정보처리기사', 'SQLD'],
+    available_from: prof?.available_date || fb.available_from || '2026-11-28',
+    desired_rate: canViewSensitive ? (prof?.desired_rate ?? fb.desired_rate ?? 980) : null,
+    recommender: fb.recommender || '오픈 구인 직접 지원',
+    domains: prof?.domains || fb.domains || [post.required_domain || '퇴직연금'],
+    skills: prof?.skills || fb.skills || post.required_skills || ['Java', 'Oracle'],
+    status: fb.status || '참여신청 접수 (서류검토중)',
+    resume_summary: (prof && canViewSensitive && prof.review_summary) ? prof.review_summary : (fb.resume_summary || `${post.required_domain} 시스템 설계 및 개발 전문 인력.`),
+    career_history: prof?.career_history || fb.career_history || []
+  };
+
+  openCandidateResumeModalWithData(syntheticInv, prof);
 }
 
 function renderInterviewVerticalCard(inv, idx, permissions, currentUser) {

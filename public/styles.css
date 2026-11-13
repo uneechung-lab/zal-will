@@ -1531,6 +1531,15 @@ button, input, select, textarea {
   letter-spacing: -0.5px;
   flex-shrink: 0;
   user-select: none;
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.posting-applicant-circle:hover {
+  transform: translateY(-2px);
+  z-index: 2;
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.22);
 }
 
 .posting-applicant-circle:first-child {
