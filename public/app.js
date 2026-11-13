@@ -1594,8 +1594,6 @@ function renderProjectDetailView(el, prj, postings, interviews, templates, permi
             <div class="zal-meta-row"><span class="zal-meta-label">${svgIcon('code', 14)} 스킬</span><span class="zal-meta-val">${post.required_skills.join(', ')}</span></div>
           </div>
 
-          ${renderPostingApplicantBox(post)}
-
           <div class="zal-card-footer">
             <div class="zal-reaction-group" style="flex-wrap:wrap;">
               <button type="button" class="btn btn-outline btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="event.stopPropagation(); copyPostingWebLink('${post.id}')">
@@ -1614,6 +1612,8 @@ function renderProjectDetailView(el, prj, postings, interviews, templates, permi
               <button type="button" class="btn btn-primary btn-sm" style="margin-left:auto;" onclick="event.stopPropagation(); togglePostingStatus('${post.id}')">${post.status === 'OPEN' ? '채용마감' : '재오픈'}</button>
             ` : ''}
           </div>
+
+          ${renderPostingApplicantBox(post)}
         </article>
       `).join('') : `
         <div class="zal-feed-card" style="grid-column: 1 / -1; text-align:center; color:#64748b; padding:28px;">
@@ -1993,8 +1993,6 @@ function renderSourcingTab() {
             <div class="zal-meta-row"><span class="zal-meta-label">${svgIcon('code', 14)} 스킬</span><span class="zal-meta-val">${post.required_skills.join(', ')}</span></div>
           </div>
 
-          ${renderPostingApplicantBox(post)}
-
           <div class="zal-card-footer">
             <div class="zal-reaction-group" style="flex-wrap:wrap;">
               <button type="button" class="btn btn-outline btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="event.stopPropagation(); copyPostingWebLink('${post.id}')">
@@ -2013,6 +2011,8 @@ function renderSourcingTab() {
               <button type="button" class="btn btn-primary btn-sm" style="margin-left:auto;" onclick="event.stopPropagation(); togglePostingStatus('${post.id}')">${post.status === 'OPEN' ? '채용마감' : '재오픈'}</button>
             ` : ''}
           </div>
+
+          ${renderPostingApplicantBox(post)}
         </article>
       `).join('')}
     </div>
