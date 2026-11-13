@@ -2328,37 +2328,44 @@ function openEvaluateChecklistModal(interviewId) {
   const tpl = templates.find(t => t.id === inv.template_id) || templates[0];
   const existingResults = inv.checklist_results || [];
 
-  openModal(`직무별 필수 질문 체크리스트 평가 및 최종 선발 — ${inv.candidate_name}`, `
+  openModal(`필수 질문 체크리스트 평가 (직무역량 · 성향/협업) — ${inv.candidate_name}`, `
     <form onsubmit="submitInterviewEvaluation(event, '${inv.id}')">
       <table class="data-table" style="margin-bottom:16px;">
         <thead>
           <tr>
-            <th style="width:48%;">필수 검증 질문 (체크리스트)</th>
-            <th style="width:22%;">기준</th>
-            <th style="width:14%;">점수</th>
-            <th style="width:16%;">확인 메모</th>
+            <th style="width:50%;">필수 검증 질문 (직무역량 & 성향·태도)</th>
+            <th style="width:22%;">평가 기준</th>
+            <th style="width:13%;">점수</th>
+            <th style="width:15%;">확인 메모</th>
           </tr>
         </thead>
         <tbody>
           ${tpl.questions.map((q, idx) => {
             const prev = existingResults[idx] || {};
+            const isPersonality = q.type && q.type.startsWith('성향');
+            const badgeStyle = isPersonality
+              ? 'background:#f3e8ff; color:#7e22ce; border:1px solid #e9d5ff;'
+              : 'background:#eff6ff; color:#2563eb; border:1px solid #dbeafe;';
             return `
               <tr>
                 <td>
-                  <label style="display:flex; gap:6px; align-items:flex-start; font-weight:700; cursor:pointer;">
-                    <input type="checkbox" name="q_checked_${idx}" checked style="margin-top:3px;" />
-                    <span>Q${idx + 1}. ${q.question}</span>
+                  <label style="display:flex; gap:7px; align-items:flex-start; font-weight:600; cursor:pointer;">
+                    <input type="checkbox" name="q_checked_${idx}" checked style="margin-top:4px;" />
+                    <span>
+                      <span style="display:inline-block; font-size:11.5px; font-weight:600; padding:1px 7px; border-radius:6px; margin-right:5px; ${badgeStyle}">${q.type || '직무역량'}</span>
+                      Q${idx + 1}. ${q.question}
+                    </span>
                   </label>
                   <input type="hidden" name="q_text_${idx}" value="${q.question}" />
                 </td>
-                <td style="font-size:11.5px; color:#64748b;">${q.criteria}</td>
+                <td style="font-size:12.5px; color:#64748b;">${q.criteria}</td>
                 <td>
                   <select class="select" name="q_score_${idx}" style="width:100%;">
                     ${[5, 4.5, 4, 3.5, 3].map(sc => `<option value="${sc}" ${(prev.score || 4.5) === sc ? 'selected' : ''}>${sc}점</option>`).join('')}
                   </select>
                 </td>
                 <td>
-                  <input class="input" name="q_note_${idx}" style="width:100%;" value="${prev.note || '검증 완료'}" />
+                  <input class="input" name="q_note_${idx}" style="width:100%;" value="${prev.note || (isPersonality ? '협업·태도 우수' : '검증 완료')}" />
                 </td>
               </tr>
             `;
@@ -2423,13 +2430,19 @@ async function submitInterviewEvaluation(e, interviewId) {
 
 function openQuestionTemplatesModal() {
   const { templates } = state.data;
-  openModal('직무·금융도메인별 표준 필수 질문 리스트 관리', `
+  openModal('직무역량 및 성향·태도 표준 필수 질문 리스트 관리', `
     <div style="display:flex; flex-direction:column; gap:12px;">
       ${templates.map(t => `
         <div style="border:1px solid #e2e8f0; border-radius:12px; padding:14px;">
-          <div style="font-weight:600; margin-bottom:6px;">[${t.domain_focus}] ${t.role_type}</div>
-          <ol style="padding-left:18px; font-size:12.5px; color:#475569;">
-            ${t.questions.map(q => `<li>${q.question}</li>`).join('')}
+          <div style="font-weight:600; margin-bottom:8px;">[${t.domain_focus}] ${t.role_type}</div>
+          <ol style="padding-left:18px; font-size:13.5px; color:#334155; display:flex; flex-direction:column; gap:6px; margin:0;">
+            ${t.questions.map(q => {
+              const isPersonality = q.type && q.type.startsWith('성향');
+              const badgeStyle = isPersonality
+                ? 'background:#f3e8ff; color:#7e22ce; border:1px solid #e9d5ff;'
+                : 'background:#eff6ff; color:#2563eb; border:1px solid #dbeafe;';
+              return `<li><span style="display:inline-block; font-size:11.5px; font-weight:600; padding:1px 7px; border-radius:6px; margin-right:5px; ${badgeStyle}">${q.type || '직무역량'}</span>${q.question} <span style="font-size:12px; color:#94a3b8;">(${q.criteria})</span></li>`;
+            }).join('')}
           </ol>
         </div>
       `).join('')}

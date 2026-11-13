@@ -2,7 +2,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
 
-const TMP_STORE_PATH = path.join(os.tmpdir(), 'zalwill-vercel-store-v9.json');
+const TMP_STORE_PATH = path.join(os.tmpdir(), 'zalwill-vercel-store-v10.json');
 
 function getInitialStore() {
   return {
@@ -477,23 +477,29 @@ function getInitialStore() {
       {
         id: 'tpl_pension_batch', category: '금융 코어/배치 검증', role_type: '퇴직연금 백엔드/배치 개발자', domain_focus: '퇴직연금',
         questions: [
-          { id: 'q1', question: 'DB/DC/IRP 제도별 부담금 입금 및 원리금보장·실적배당 상품 매수/매도 일마감 정산 프로세스를 설명할 수 있는가?', criteria: '실제 퇴직연금 원장 및 상품결제 테이블 설계/개발 경험 확인', weight: 35 },
-          { id: 'q2', question: '수백만 건 이상의 연금 수수료 계산 및 수익률 산출 대용량 배치(Spring Batch/ProFrame) 재처리 및 최적화 경험이 있는가?', criteria: '대용량 트랜잭션 락 회피 및 파티셔닝 실무 능력', weight: 35 },
-          { id: 'q3', question: 'Oracle 대용량 조인 실행계획 분석 및 인덱스/힌트 튜닝을 직접 수행할 수 있는가?', criteria: '실제 SQL 튜닝 사례 검증', weight: 30 }
+          { id: 'q1', type: '직무역량', question: 'DB/DC/IRP 제도별 부담금 입금 및 원리금보장·실적배당 상품 매수/매도 일마감 정산 프로세스를 설명할 수 있는가?', criteria: '실제 퇴직연금 원장 및 상품결제 테이블 설계/개발 경험 확인', weight: 25 },
+          { id: 'q2', type: '직무역량', question: '수백만 건 이상의 연금 수수료 계산 및 수익률 산출 대용량 배치(Spring Batch/ProFrame) 재처리 및 최적화 경험이 있는가?', criteria: '대용량 트랜잭션 락 회피 및 파티셔닝 실무 능력', weight: 25 },
+          { id: 'q3', type: '직무역량', question: 'Oracle 대용량 조인 실행계획 분석 및 인덱스/힌트 튜닝을 직접 수행할 수 있는가?', criteria: '실제 SQL 튜닝 사례 검증', weight: 20 },
+          { id: 'q4', type: '성향·소통', question: '고객사 현업 담당자 또는 타 파트(기획/채널)와 요건 해석이나 설계 이견이 발생했을 때 어떻게 조율하고 해결하는 편인가?', criteria: '갈등 관리 방식, 커뮤니케이션 유연성 및 협업 태도', weight: 15 },
+          { id: 'q5', type: '성향·책임감', question: '오픈 직전 통합테스트 중 긴급 결함이나 대용량 배치 지연 이슈가 발생했을 때 본인의 대처 방식과 스트레스 관리 성향은?', criteria: '압박 상황 대처 능력, 완수 책임감 및 중도이탈 방지 검증', weight: 15 }
         ]
       },
       {
         id: 'tpl_bond_fund', category: '자본시장/운용 검증', role_type: '채권·펀드 수탁/원장 개발자', domain_focus: '채권',
         questions: [
-          { id: 'q1', question: '채권 종류별 경과이자 계산 및 시가평가/듀레이션 산출 로직을 이해하고 있는가?', criteria: '자본시장 채권/펀드 도메인 이해도', weight: 50 },
-          { id: 'q2', question: '펀드 설정/환매 및 일별 기준가(NAV) 산출 시 예탁원/채권평가사 대외 전문 연동 경험이 있는가?', criteria: '대외계 전문 송수신 및 대사 경험', weight: 50 }
+          { id: 'q1', type: '직무역량', question: '채권 종류별 경과이자 계산 및 시가평가/듀레이션 산출 로직을 이해하고 있는가?', criteria: '자본시장 채권/펀드 도메인 이해도', weight: 30 },
+          { id: 'q2', type: '직무역량', question: '펀드 설정/환매 및 일별 기준가(NAV) 산출 시 예탁원/채권평가사 대외 전문 연동 경험이 있는가?', criteria: '대외계 전문 송수신 및 대사 경험', weight: 30 },
+          { id: 'q3', type: '성향·소통', question: '운용역/회계팀 등 현업의 잦은 산식 변경 요청이나 긴급 데이터 검증 요청 시 어떻게 소통하며 우선순위를 조율하는가?', criteria: '현업 응대 태도, 침착성 및 원만한 커뮤니케이션 성향', weight: 20 },
+          { id: 'q4', type: '성향·팀워크', question: '사내 정규직 PL 및 외부 프리랜서 동료들과 상주 협업할 때 본인이 선호하는 업무 공유 방식과 팀 적응 스타일은?', criteria: '조직 융화력, 이슈 투명 공유 성향 및 근태 신뢰도', weight: 20 }
         ]
       },
       {
         id: 'tpl_channel_front', category: '금융 채널/프론트 검증', role_type: '금융 비대면 채널/UI 개발자', domain_focus: '채널계',
         questions: [
-          { id: 'q1', question: '개인형IRP 비대면 계좌개설/상품변경 등 금융 소비자보호법 UI 플로우 구현 경험이 있는가?', criteria: '금융 비대면 프로세스 구현 경험', weight: 50 },
-          { id: 'q2', question: 'React/TypeScript 상태관리 및 WebSquare5 등 금융권 표준 UI 솔루션 연동 역량', criteria: '금융 그리드/차트 성능 최적화', weight: 50 }
+          { id: 'q1', type: '직무역량', question: '개인형IRP 비대면 계좌개설/상품변경 등 금융 소비자보호법 UI 플로우 구현 경험이 있는가?', criteria: '금융 비대면 프로세스 구현 경험', weight: 30 },
+          { id: 'q2', type: '직무역량', question: 'React/TypeScript 상태관리 및 WebSquare5 등 금융권 표준 UI 솔루션 연동 역량', criteria: '금융 그리드/차트 성능 최적화', weight: 30 },
+          { id: 'q3', type: '성향·소통', question: '기획자·디자이너·백엔드 개발자 사이에서 UI/UX 변경이나 API 스펙 수정이 빈번할 때 본인의 협업 및 피드백 스타일은?', criteria: '타 직군 존중 태도, 적극적 소통 및 유연한 문제 해결 성향', weight: 20 },
+          { id: 'q4', type: '성향·책임감', question: '일정이 촉박한 프로젝트 후반부(통합테스트/리허설)에서 본인의 업무 페이스를 유지하고 마감을 지키는 나만의 방식은?', criteria: '성실성, 일정 준수 의지 및 프로젝트 완주 책임감', weight: 20 }
         ]
       }
     ],
@@ -518,7 +524,9 @@ function getInitialStore() {
         interviewer_user_id: 'u_master', interviewer_name: '조성현 상무', template_id: 'tpl_channel_front',
         checklist_results: [
           { question: '개인형IRP 비대면 계좌개설 UI 플로우 구현 경험', score: 5, checked: true, note: '카카오뱅크 IRP 비대면 개설 리딩' },
-          { question: 'React/TypeScript 및 WebSquare5 연동 역량', score: 4.5, checked: true, note: '즉시 투입 가능' }
+          { question: 'React/TypeScript 및 WebSquare5 연동 역량', score: 4.5, checked: true, note: '즉시 투입 가능' },
+          { question: '기획·디자인·백엔드 간 UI/API 스펙 조율 및 협업 스타일', score: 5, checked: true, note: '커뮤니케이션이 매우 유연하고 적극적임' },
+          { question: '통합테스트/일정 압박 상황에서의 책임감 및 마감 준수 성향', score: 4.5, checked: true, note: '차분하고 책임감 있게 완수하는 성향' }
         ],
         total_score: 4.8, interviewer_opinion: '비대면 퇴직연금/IRP 채널 경험이 매우 탁월함. 즉시 선발 강력 추천.',
         final_decision_note: '', created_at: '2026-11-11'
