@@ -2224,9 +2224,13 @@ function renderInterviewVerticalCard(inv, idx, permissions, currentUser) {
           ${permissions.can_schedule_interviews ? `
             <button class="btn btn-outline btn-sm" style="flex:1; display:inline-flex; align-items:center; justify-content:center; gap:5px;" onclick="openScheduleInterviewModal('${inv.id}')">${svgIcon('calendar', 14)} 일정·면접관</button>
           ` : ''}
-          ${(permissions.can_evaluate_interviews || (currentUser && inv.interviewer_user_id === currentUser.id)) ? `
-            <button class="btn btn-primary btn-sm" style="flex:1; display:inline-flex; align-items:center; justify-content:center; gap:5px;" onclick="openEvaluateChecklistModal('${inv.id}')">${svgIcon('check', 14)} 필수질문·평가</button>
-          ` : ''}
+          ${(permissions.can_evaluate_interviews || (currentUser && inv.interviewer_user_id === currentUser.id)) ? (
+            isDone ? `
+              <button class="btn btn-primary btn-sm" style="flex:1; display:inline-flex; align-items:center; justify-content:center; gap:5px;" onclick="openInterviewResultViewModal('${inv.id}')">${svgIcon('file', 14)} 인터뷰 결과 보기</button>
+            ` : `
+              <button class="btn btn-primary btn-sm" style="flex:1; display:inline-flex; align-items:center; justify-content:center; gap:5px;" onclick="openEvaluateChecklistModal('${inv.id}')">${svgIcon('check', 14)} 필수질문·평가</button>
+            `
+          ) : ''}
         </div>
       ` : ''}
     </article>
@@ -3149,15 +3153,132 @@ async function submitScheduleInterview(e, interviewId) {
   await loadState();
 }
 
-function openEvaluateChecklistModal(interviewId) {
+function openInterviewResultViewModal(interviewId) {
+  const { interviews, templates, projects, postings, permissions, currentUser } = state.data;
+  const inv = (interviews || []).find(i => i.id === interviewId);
+  if (!inv) return;
+  const tpl = (templates || []).find(t => t.id === inv.template_id) || templates?.[0];
+  const prj = (projects || []).find(p => p.id === inv.project_id);
+  const post = (postings || []).find(p => p.id === inv.posting_id);
+  const results = Array.isArray(inv.checklist_results) ? inv.checklist_results : [];
+  const scoreVal = Number(inv.total_score || 0);
+  const canEdit = Boolean(permissions?.can_evaluate_interviews || (currentUser && inv.interviewer_user_id === currentUser.id));
+
+  openModal(`인터뷰 결과 보기 — ${inv.candidate_name} (${inv.tech_grade})`, `
+    <div style="display:flex; flex-direction:column; gap:18px;">
+      <!-- 상단 인터뷰 요약 헤더 -->
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:14px; flex-wrap:wrap; padding:18px 20px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px;">
+        <div style="display:flex; flex-direction:column; gap:6px;">
+          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+            <span class="zal-status-pill green">${inv.status}</span>
+            <span class="zal-status-pill blue">${tpl ? tpl.category : '기술·성향 검증'}</span>
+            <span class="badge badge-grade">${inv.tech_grade}</span>
+          </div>
+          <div style="font-size:18px; font-weight:700; color:#0f172a; margin-top:2px;">
+            ${inv.candidate_name} <span style="font-size:14px; font-weight:500; color:#475569;">(${inv.candidate_type} · 가용일 ${inv.available_from})</span>
+          </div>
+          <div style="font-size:13px; color:#64748b;">
+            지원 프로젝트: <strong style="color:#334155;">${prj ? prj.name : '미래에셋증권 퇴직연금 차세대'}</strong>
+            ${post ? ` · 포지션: <strong style="color:#334155;">${post.role_name}</strong>` : ''}
+          </div>
+          <div style="font-size:13px; color:#64748b;">
+            면접 일시: <strong style="color:#334155;">${inv.interview_date || '2026-11-13'}</strong> (${inv.interview_method || '화상'}) · 담당 면접관: <strong style="color:#334155;">${inv.interviewer_name || '조성현 상무'}</strong>
+          </div>
+        </div>
+
+        <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px; background:#ffffff; border:1px solid #e2e8f0; padding:12px 16px; border-radius:12px; min-width:160px;">
+          <span style="font-size:12px; color:#64748b; font-weight:600;">종합 검증 점수</span>
+          <div style="display:flex; align-items:center; gap:8px;">
+            ${renderStarIcons(scoreVal)}
+            <strong style="font-size:20px; font-weight:700; color:#0f172a;">${scoreVal.toFixed(2)}</strong>
+            <span style="font-size:12.5px; color:#94a3b8;">/ 5.0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 필수 검증 질문별 평가 결과 내역 -->
+      <div>
+        <div style="font-size:14px; font-weight:600; color:#0f172a; margin-bottom:8px;">
+          필수 질문별 검증 내역 (직무역량 & 성향·태도 — 총 ${results.length}문항)
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width:54%;">검증 질문 항목</th>
+              <th style="width:24%;">면접관 확인 메모</th>
+              <th style="width:22%;">평가 점수</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${results.map((item, idx) => {
+              const tplQ = tpl?.questions?.[idx];
+              const qType = tplQ?.type || (idx >= 2 ? '성향·태도' : '직무역량');
+              const isPersonality = qType.startsWith('성향');
+              const badgeStyle = isPersonality
+                ? 'background:#f3e8ff; color:#7e22ce; border:1px solid #e9d5ff;'
+                : 'background:#eff6ff; color:#2563eb; border:1px solid #dbeafe;';
+              return `
+                <tr>
+                  <td>
+                    <div style="display:flex; align-items:flex-start; gap:6px; font-weight:500; color:#0f172a; line-height:1.45;">
+                      <span style="display:inline-block; font-size:11px; font-weight:600; padding:1px 7px; border-radius:6px; white-space:nowrap; margin-top:1px; ${badgeStyle}">${qType}</span>
+                      <span>Q${idx + 1}. ${item.question}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <span style="font-size:12.5px; color:#334155; background:#f8fafc; padding:4px 9px; border-radius:6px; border:1px solid #e2e8f0; display:inline-block;">
+                      ${item.note || '검증 완료'}
+                    </span>
+                  </td>
+                  <td>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                      ${renderSegmentedEvalBar(item.score)}
+                      <strong style="font-size:13.5px; color:#0f172a; min-width:36px; text-align:right;">${Number(item.score || 4.5).toFixed(1)}점</strong>
+                    </div>
+                  </td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 면접관 종합 평가 의견 -->
+      <div style="padding:16px 18px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <strong style="font-size:13.5px; color:#0f172a;">면접관 종합 평가 의견</strong>
+          <span style="font-size:12px; color:#94a3b8;">작성자: ${inv.interviewer_name || '조성현 상무'}</span>
+        </div>
+        <div style="font-size:14px; color:#334155; line-height:1.6;">
+          ${inv.interviewer_opinion || '직무 역량 및 협업 태도 검증 완료.'}
+        </div>
+      </div>
+
+      <!-- 하단 액션 영역: 상세 프로필 보기 & 수정하기 -->
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; padding-top:8px; border-top:1px solid #f1f5f9;">
+        <button type="button" class="btn btn-outline btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="openCandidateResumeModal('${inv.id}')">
+          ${svgIcon('user', 13)} 지원자 상세 프로필 보기
+        </button>
+        ${canEdit ? `
+          <button type="button" class="btn btn-primary btn-sm" style="display:inline-flex; align-items:center; gap:5px; margin-left:auto;" onclick="openEvaluateChecklistModal('${inv.id}', true)">
+            ${svgIcon('edit', 13)} 인터뷰 결과 수정하기
+          </button>
+        ` : ''}
+      </div>
+    </div>
+  `);
+}
+
+function openEvaluateChecklistModal(interviewId, fromViewModal = false) {
   const { interviews, templates } = state.data;
   const inv = interviews.find(i => i.id === interviewId);
   if (!inv) return;
   const tpl = templates.find(t => t.id === inv.template_id) || templates[0];
   const existingResults = inv.checklist_results || [];
+  const isEditingExisting = existingResults.length > 0;
 
-  openModal(`필수 질문 체크리스트 평가 (직무역량 · 성향/협업) — ${inv.candidate_name}`, `
-    <form onsubmit="submitInterviewEvaluation(event, '${inv.id}')">
+  openModal(`${isEditingExisting ? '인터뷰 결과 수정' : '필수 질문 체크리스트 평가'} (직무역량 · 성향/협업) — ${inv.candidate_name}`, `
+    <form onsubmit="submitInterviewEvaluation(event, '${inv.id}', ${Boolean(fromViewModal)})">
       <table class="data-table" style="margin-bottom:16px;">
         <thead>
           <tr>
@@ -3184,7 +3305,7 @@ function openEvaluateChecklistModal(interviewId) {
                       Q${idx + 1}. ${q.question}
                     </span>
                   </label>
-                  <input type="hidden" name="q_text_${idx}" value="${q.question}" />
+                  <input type="hidden" name="q_text_${idx}" value="${prev.question || q.question}" />
                 </td>
                 <td style="font-size:12.5px; color:#64748b;">${q.criteria}</td>
                 <td>
@@ -3220,14 +3341,14 @@ function openEvaluateChecklistModal(interviewId) {
       </div>
 
       <div style="display:flex; justify-content:flex-end; gap:10px;">
-        <button type="button" class="btn btn-outline" onclick="closeModal()">취소</button>
-        <button type="submit" class="btn btn-primary">평가 저장 및 DB 자동 연동</button>
+        <button type="button" class="btn btn-outline" onclick="${fromViewModal ? `openInterviewResultViewModal('${inv.id}')` : 'closeModal()'}">${fromViewModal ? '← 결과 보기로 돌아가기' : '취소'}</button>
+        <button type="submit" class="btn btn-primary">${isEditingExisting ? '수정 내용 저장' : '평가 저장 및 DB 자동 연동'}</button>
       </div>
     </form>
   `);
 }
 
-async function submitInterviewEvaluation(e, interviewId) {
+async function submitInterviewEvaluation(e, interviewId, returnToViewModal = false) {
   e.preventDefault();
   const fd = new FormData(e.target);
   const count = Number(fd.get('question_count') || 0);
@@ -3247,13 +3368,17 @@ async function submitInterviewEvaluation(e, interviewId) {
     interviewer_opinion: fd.get('interviewer_opinion'),
     final_status: finalStatus
   });
-  closeModal();
   showToast(
     finalStatus === '최종선정'
       ? `🎉 최종선정 완료! 인력 DB 평점(${res.avgScore}점) 반영 및 프로젝트 TO 자동 배정이 완료되었습니다.`
-      : `면접 평가(${res.avgScore}점)가 인력 DB에 연동되었습니다.`
+      : `면접 평가(${res.avgScore}점)가 저장 및 인력 DB에 연동되었습니다.`
   );
   await loadState();
+  if (returnToViewModal) {
+    openInterviewResultViewModal(interviewId);
+  } else {
+    closeModal();
+  }
 }
 
 function openQuestionTemplatesModal() {
