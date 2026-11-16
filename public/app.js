@@ -798,21 +798,45 @@ function renderDashboardTab() {
 
           <div class="exec-risk-group">
             ${urgentUnfilledItems.length > 0 ? urgentUnfilledItems.map(item => {
-              const firstSlot = item.openSlots[0];
               const isOrange = item.diffDays >= 20;
+              const allSlots = item.prj.to_slots || [];
+              const sortedSlots = allSlots.slice().sort((a, b) => (b.assigned_profile_id ? 1 : 0) - (a.assigned_profile_id ? 1 : 0));
+              const renderChairBtn = (slot) => {
+                const filled = Boolean(slot.assigned_profile_id);
+                const titleText = filled
+                  ? `[충원완료] ${slot.role_name} — ${slot.assigned_name || ''}`
+                  : `[미충원 · 클릭 시 즉시배정] ${slot.role_name} (${slot.required_grade})`;
+                const clickAction = filled
+                  ? `openProfileDetailModal('${slot.assigned_profile_id}')`
+                  : `openRfpMatchModal('${item.prj.id}', '${slot.slot_id}')`;
+                const chairSvgMarkup = filled
+                  ? `<svg width="24" height="24" viewBox="0 0 48 48" fill="currentColor">
+                      <path d="M9.65,42q-0.6,0-1.05-0.45T8.15,40.5V38.4H7.5q-2.29,0-3.9-1.6T2,32.9V20.7q0-2.55 1.55-3.88T7.2,15.5V11.2q0-2.3 1.45-3.75T12.4,6H35.65q2.3,0 3.73,1.45T40.8,11.2v4.3q2.1,0 3.65,1.32T46,20.7V32.9q0,2.29-1.6,3.9t-3.9,1.6H39.85v2.1q0,0.6-0.45,1.05T38.35,42T37.3,41.55T36.85,40.5V38.4H11.15v2.1q0,0.6-0.45,1.05T9.65,42Z"/>
+                    </svg>`
+                  : `<svg width="24" height="24" viewBox="0 0 48 48" fill="currentColor">
+                      <path d="M9.65,42q-0.6,0-1.05-0.45T8.15,40.5V38.4H7.5q-2.29,0-3.9-1.6T2,32.9V20.7q0-2.55 1.55-3.88T7.2,15.5V11.2q0-2.3 1.45-3.75T12.4,6H35.65q2.3,0 3.73,1.45T40.8,11.2v4.3q2.1,0 3.65,1.32T46,20.7V32.9q0,2.29-1.6,3.9t-3.9,1.6H39.85v2.1q0,0.6-0.45,1.05T38.35,42T37.3,41.55T36.85,40.5V38.4H11.15v2.1q0,0.6-0.45,1.05T9.65,42ZM7.5,35.4h33q1,0 1.75-0.75T43,32.9V20.7q0-1-0.6-1.6t-1.6-0.6t-1.6,0.6t-0.6,1.6v8.8H9.4V20.7q0-1-0.6-1.6T7.2,18.5T5.6,19.1T5,20.7V32.9q0,1 0.75,1.75T7.5,35.4Zm4.9-8.9H35.6V20.7q0-1.55 0.7-2.57t1.5-1.63V11.2q0-1-0.6-1.6T35.61,9H12.39Q11.4,9 10.8,9.6t-0.6,1.6v5.3q0.8,0.6 1.5,1.63t0.7,2.57v5.8Z"/>
+                    </svg>`;
+                return `
+                  <button type="button" class="exec-chair-btn ${filled ? 'filled' : 'empty'}" title="${escAttr(titleText)}" onclick="${clickAction}">
+                    ${chairSvgMarkup}
+                  </button>
+                `;
+              };
               return `
                 <div class="exec-risk-item danger" onclick="selectProjectDetail('${item.prj.id}')">
-                  <span class="exec-dday-pill ${isOrange ? 'orange' : ''}">D-${item.diffDays}</span>
                   <div class="exec-risk-left">
-                    <div class="exec-risk-main-title">${item.prj.client} — 미충원 ${item.openSlots.length}석</div>
+                    <div class="exec-risk-top-line">
+                      <span class="exec-risk-main-title">${item.prj.client} — 미충원 ${item.openSlots.length}석</span>
+                      <span class="exec-to-dday-badge ${isOrange ? 'orange' : ''}">D-${item.diffDays}</span>
+                    </div>
                     <div class="exec-risk-sub-desc">
                       ${item.openSlots.map(s => `${s.role_name}(${s.required_grade})`).join(', ')}
                     </div>
                   </div>
                   <div class="exec-risk-actions" onclick="event.stopPropagation();">
-                    <button type="button" class="exec-action-btn red" onclick="openRfpMatchModal('${item.prj.id}', '${firstSlot.slot_id}')">
-                      즉시 배정
-                    </button>
+                    <div class="exec-chair-list" aria-label="투입 좌석 현황">
+                      ${sortedSlots.map(s => renderChairBtn(s)).join('')}
+                    </div>
                   </div>
                 </div>
               `;

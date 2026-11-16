@@ -3313,6 +3313,72 @@ button, input, select, textarea {
   background: #f97316;
 }
 
+.exec-risk-top-line {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+
+.exec-to-dday-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.exec-to-dday-badge.orange {
+  background: #fff7ed;
+  color: #ea580c;
+  border-color: #fed7aa;
+}
+
+.exec-chair-list {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.exec-chair-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  line-height: 1;
+  transition: transform 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.exec-chair-btn.filled {
+  color: #ef4444;
+}
+
+.exec-chair-btn.filled:hover {
+  background: #fee2e2;
+  transform: translateY(-1px);
+}
+
+.exec-chair-btn.empty {
+  color: #dc2626;
+}
+
+.exec-chair-btn.empty:hover {
+  background: #ffffff;
+  border-color: #fca5a5;
+  transform: translateY(-1px) scale(1.06);
+}
+
 .exec-risk-main-title {
   font-size: 14px;
   font-weight: 800;
