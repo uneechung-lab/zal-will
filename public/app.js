@@ -1,7 +1,7 @@
 // ZAL : 잘될 (ZAL-WILL) — ZAL Universe Look & Feel Frontend
 const state = {
   userId: 'u_master',
-  activeTab: 'projects',
+  activeTab: 'dashboard',
   selectedProjectId: null,
   selectedProjectFilter: 'PLANNED',
   data: null,
@@ -179,18 +179,11 @@ function renderHeaderAndPermissions() {
     ].join('');
   }
 
-  // Render Subtle Permission Summary Pills on Sticky Tab Bar
+  // Permission strip hidden on top bar per design
   const strip = document.getElementById('permissionStrip');
-  const p = permissions;
-  const chip = (label, statusType, statusText) =>
-    `<span class="perm-chip ${statusType}">${label}: ${statusText}</span>`;
-
-  strip.innerHTML = `
-    ${chip('전체프로필', p.can_view_all_profiles ? (p.role_group === 'INTERNAL' ? 'selective' : 'allowed') : 'denied', p.can_view_all_profiles ? 'ON' : '본인한정')}
-    ${chip('제안·장표', p.can_extract_proposal ? (p.role_group === 'INTERNAL' ? 'selective' : 'allowed') : 'denied', p.can_extract_proposal ? 'ON' : '불가')}
-    ${chip('면접평가', p.can_evaluate_interviews ? (p.role_group === 'INTERNAL' ? 'selective' : 'allowed') : 'denied', p.can_evaluate_interviews ? 'ON' : '불가')}
-    ${chip('단가·평점', p.can_view_sensitive_info ? 'allowed' : 'denied', p.can_view_sensitive_info ? '열람허용' : '🔒비공개')}
-  `;
+  if (strip) {
+    strip.innerHTML = '';
+  }
 }
 
 function switchUserRole(userId) {
@@ -223,7 +216,7 @@ async function handleQuickAiInput() {
 
 function buildNavigationUrl(tabName, projectId) {
   const params = new URLSearchParams(window.location.search);
-  if (tabName && tabName !== 'projects') {
+  if (tabName && tabName !== 'dashboard') {
     params.set('tab', tabName);
   } else {
     params.delete('tab');
@@ -296,325 +289,561 @@ function renderActiveTab() {
 }
 
 /* =========================================================================
-   TAB 1: DASHBOARD (2-Column Feed Masonry + Right Timeline Sidebar like 잘됨)
+   TAB 1: EXECUTIVE (MASTER) 1-PAGE GOLDEN RATIO DASHBOARD
    ========================================================================= */
+function filterProfilesFromDashboard(empType = 'ALL', grade = 'ALL', domain = 'ALL') {
+  state.profileFilters.empType = empType;
+  state.profileFilters.grade = grade;
+  state.profileFilters.domain = domain;
+  state.profileFilters.availability = 'ALL';
+  state.profileFilters.verifiedOnly = false;
+  state.profileFilters.keyword = '';
+  switchTab('profiles');
+}
+
+function jumpToPlannedProjectsFromDashboard(groupKey = 'PLANNED') {
+  state.selectedProjectFilter = groupKey;
+  state.selectedProjectId = null;
+  switchTab('projects');
+}
+
+async function quickConfirmCandidateSelection(interviewId) {
+  const inv = (state.data?.interviews || []).find(i => i.id === interviewId);
+  if (!inv) return;
+  await apiCall('/api/interviews/evaluate', 'POST', {
+    interview_id: inv.id,
+    checklist_results: inv.checklist_results || [],
+    interviewer_opinion: inv.interviewer_opinion || '임원 최종 컨펌을 통해 선발 확정함.',
+    final_status: '최종선정'
+  });
+  showToast(`✅ ${inv.candidate_name} (${inv.tech_grade}) 후보자 최종 선발이 승인되어 프로젝트 슬롯에 자동 배정되었습니다.`);
+  await loadState();
+}
+
+function openQuickAssignForProfile(profileId) {
+  const allProfiles = state.data?.dashboardProfiles || state.data?.profiles || [];
+  const prof = allProfiles.find(p => p.id === profileId);
+  const plannedProjects = (state.data?.projects || []).filter(p => (p.project_group || 'PLANNED') === 'PLANNED');
+
+  // Find a matching unfilled slot in planned projects
+  for (const prj of plannedProjects) {
+    for (const slot of prj.to_slots) {
+      if (!slot.assigned_profile_id && prof && (prof.domains || []).includes(slot.required_domain)) {
+        openRfpMatchModal(prj.id, slot.slot_id);
+        return;
+      }
+    }
+  }
+  for (const prj of plannedProjects) {
+    for (const slot of prj.to_slots) {
+      if (!slot.assigned_profile_id) {
+        openRfpMatchModal(prj.id, slot.slot_id);
+        return;
+      }
+    }
+  }
+  openProfileDetailModal(profileId);
+}
+
 function renderDashboardTab() {
-  const { kpis, projects, interviews, postings, profiles } = state.data;
+  const { kpis, projects, interviews, postings, permissions } = state.data;
+  const allProfiles = state.data.dashboardProfiles || state.data.profiles || [];
   const el = document.getElementById('tab-dashboard');
+  const canViewSensitive = Boolean(permissions?.can_view_sensitive_info);
 
-  const filteredProjects = state.selectedProjectFilter === 'ALL'
-    ? projects
-    : projects.filter(p => p.id === state.selectedProjectFilter);
+  // 1. Project & Slot Aggregations
+  const ongoingProjects = projects.filter(p => p.project_group === 'ONGOING');
+  const plannedProjects = projects.filter(p => (p.project_group || 'PLANNED') === 'PLANNED');
 
-  // Build Feed Cards in the exact visual style of 잘됨
-  const feedCardsHtml = [];
+  const plannedTotalSlots = plannedProjects.reduce((acc, p) => acc + p.to_slots.length, 0);
+  const plannedFilledSlots = plannedProjects.reduce((acc, p) => acc + p.to_slots.filter(s => s.assigned_profile_id).length, 0);
+  const plannedUnfilledSlots = plannedTotalSlots - plannedFilledSlots;
+  const plannedFillRate = plannedTotalSlots ? Math.round((plannedFilledSlots / plannedTotalSlots) * 100) : 100;
 
-  // 1. Project RFP & TO Cards
-  filteredProjects.forEach(prj => {
-    const totalSlots = prj.to_slots.length;
-    const filledSlots = prj.to_slots.filter(s => s.assigned_profile_id).length;
-    const unfilledCount = totalSlots - filledSlots;
+  const ongoingUnfilledSlots = ongoingProjects.reduce((acc, p) => acc + p.to_slots.filter(s => !s.assigned_profile_id).length, 0);
+  const totalUnfilledSlots = plannedUnfilledSlots + ongoingUnfilledSlots;
+  const openPostingsCount = postings.filter(p => p.status === 'OPEN').length;
 
-    feedCardsHtml.push(`
-      <article class="zal-feed-card">
-        <div class="zal-card-header">
-          <div class="zal-author-box">
-            <div class="zal-avatar-circle">
-              <img src="/pic1_thumb.png" alt="PM" />
-            </div>
-            <div>
-              <div>
-                <span class="zal-author-name">김지영</span>
-                <span class="zal-author-role">제안PM · ${prj.domain}</span>
-              </div>
-              <div class="zal-card-time">
-                <span>${svgIcon('clock', 12)} ${prj.created_at}</span>
-                <span>|</span>
-                <span>충원 ${filledSlots}/${totalSlots}명 ↗</span>
-              </div>
-            </div>
-          </div>
-          <span class="zal-status-pill blue">${svgIcon('briefcase', 13)} ${prj.status}</span>
-        </div>
-
-        <div class="zal-card-title" style="display:inline-flex; align-items:center; gap:6px;">${svgIcon('file', 16)} ${prj.name}</div>
-
-        <div class="zal-meta-list">
-          <div class="zal-meta-row">
-            <span class="zal-meta-label">${svgIcon('briefcase', 14)} 발주처</span>
-            <span class="zal-meta-val">${prj.client} (${prj.location})</span>
-          </div>
-          <div class="zal-meta-row">
-            <span class="zal-meta-label">${svgIcon('calendar', 14)} 기간</span>
-            <span class="zal-meta-val">${prj.start_date} ~ ${prj.end_date}</span>
-          </div>
-          <div class="zal-meta-row">
-            <span class="zal-meta-label">${svgIcon('users', 14)} 배정현황</span>
-            <span class="zal-meta-val">${prj.to_slots.map(s => s.assigned_name ? s.assigned_name.split(' ')[0] : '미충원').join(', ')}</span>
-          </div>
-        </div>
-
-        ${unfilledCount > 0 ? `
-          <div class="zal-request-banner">
-            <span style="display:inline-flex; align-items:center; gap:5px;">${svgIcon('clock', 14)} 미충원 TO ${unfilledCount}건 (사내외 적임자 매칭 및 구인 진행중)</span>
-            <button type="button" class="btn btn-sm btn-outline" style="border-color:#fca5a5; color:#dc2626;" onclick="selectProjectDetail('${prj.id}')">적임자 매칭</button>
-          </div>
-        ` : ''}
-
-        <div class="zal-card-footer">
-          <div class="zal-reaction-group">
-            <button type="button" class="zal-reaction-pill" onclick="openProposalSheetModal('${prj.id}')">${svgIcon('file', 13)} 장표추출</button>
-            <button type="button" class="zal-reaction-pill" onclick="selectProjectDetail('${prj.id}')">${svgIcon('search', 13)} TO관리 (${totalSlots})</button>
-            <button type="button" class="zal-reaction-pill" onclick="showToast('프로젝트 공유 링크가 복사되었습니다!')">${svgIcon('link', 13)} 공유</button>
-          </div>
-          <span style="font-size:12px; color:#94a3b8; font-weight:600;">댓글 ${totalSlots}</span>
-        </div>
-      </article>
-    `);
+  // Map profileId -> next assigned PLANNED project
+  const nextAssignmentMap = {};
+  plannedProjects.forEach(prj => {
+    prj.to_slots.forEach(slot => {
+      if (slot.assigned_profile_id && !nextAssignmentMap[slot.assigned_profile_id]) {
+        nextAssignmentMap[slot.assigned_profile_id] = {
+          projectId: prj.id,
+          projectName: prj.name,
+          client: prj.client,
+          roleName: slot.role_name
+        };
+      }
+    });
   });
 
-  // 2. Interview & Checklist Verification Feed Cards
-  interviews.forEach(inv => {
-    const isCompleted = inv.status === '면접진행완료' || inv.status === '최종선정';
-    feedCardsHtml.push(`
-      <article class="zal-feed-card">
-        <div class="zal-card-header">
-          <div class="zal-author-box">
-            <div class="zal-avatar-circle">
-              <img src="/pic2_thumb.png" alt="면접관" />
-            </div>
-            <div>
-              <div>
-                <span class="zal-author-name">${inv.interviewer_name || '정윤희 부장'}</span>
-                <span class="zal-author-role">기술면접관</span>
-              </div>
-              <div class="zal-card-time">
-                <span>${svgIcon('clock', 12)} ${inv.created_at}</span>
-                <span>|</span>
-                <span>${inv.candidate_type} ↗</span>
-              </div>
-            </div>
-          </div>
-          <span class="zal-status-pill ${isCompleted ? 'green' : 'amber'}">
-            ${isCompleted ? '검증완료' : '면접예정'}
-          </span>
-        </div>
-
-        <div class="zal-card-title" style="display:inline-flex; align-items:center; gap:6px;">${svgIcon('calendar', 16)} [${inv.domains.join('/')}] ${inv.candidate_name} (${inv.tech_grade}) 기술검증 인터뷰</div>
-
-        <div class="zal-meta-list">
-          <div class="zal-meta-row">
-            <span class="zal-meta-label">${svgIcon('user', 14)} 지원자</span>
-            <span class="zal-meta-val">${inv.candidate_name} (${inv.tech_grade} · 가용일 ${inv.available_from})</span>
-          </div>
-          <div class="zal-meta-row">
-            <span class="zal-meta-label">${svgIcon('calendar', 14)} 면접일시</span>
-            <span class="zal-meta-val">${inv.interview_date || '일정 조율중'} (${inv.interview_method || '화상'})</span>
-          </div>
-          <div class="zal-meta-row">
-            <span class="zal-meta-label">${svgIcon('code', 14)} 핵심스킬</span>
-            <span class="zal-meta-val">${inv.skills.join(', ')}</span>
-          </div>
-        </div>
-
-        ${inv.status === '면접진행완료' ? `
-          <div class="zal-request-banner">
-            <span style="display:inline-flex; align-items:center; gap:5px;">${svgIcon('clock', 14)} 필수질문 평점 ${inv.total_score}점 완료 (임원/PM 최종선발 확정 대기)</span>
-            <button type="button" class="btn btn-sm btn-outline" style="border-color:#fca5a5; color:#dc2626;" onclick="openEvaluateChecklistModal('${inv.id}')">최종확정</button>
-          </div>
-        ` : inv.status === '인터뷰통보완료' ? `
-          <div class="zal-request-banner">
-            <span style="display:inline-flex; align-items:center; gap:5px;">${svgIcon('clock', 14)} 필수 질문 리스트 기반 기술 면접 대기중</span>
-            <button type="button" class="btn btn-sm btn-outline" onclick="openEvaluateChecklistModal('${inv.id}')">면접평가 입력</button>
-          </div>
-        ` : ''}
-
-        <div class="zal-card-footer">
-          <div class="zal-reaction-group">
-            <button type="button" class="zal-reaction-pill" onclick="openEvaluateChecklistModal('${inv.id}')">${svgIcon('star', 13)} 평가점수 ${inv.total_score || '-'}</button>
-            <button type="button" class="zal-reaction-pill" onclick="openScheduleInterviewModal('${inv.id}')">${svgIcon('calendar', 13)} 일정조율</button>
-          </div>
-          <span style="font-size:12px; color:#94a3b8; font-weight:600;">필수질문 체크리스트</span>
-        </div>
-      </article>
-    `);
+  // Map profileId -> current ONGOING project
+  const currentOngoingMap = {};
+  ongoingProjects.forEach(prj => {
+    prj.to_slots.forEach(slot => {
+      if (slot.assigned_profile_id && !currentOngoingMap[slot.assigned_profile_id]) {
+        currentOngoingMap[slot.assigned_profile_id] = {
+          projectId: prj.id,
+          projectName: prj.name,
+          client: prj.client,
+          roleName: slot.role_name
+        };
+      }
+    });
   });
 
-  // 3. Featured Verified Talent & Open Sourcing Feed Cards
-  postings.slice(0, 2).forEach(post => {
-    feedCardsHtml.push(`
-      <article class="zal-feed-card">
-        <div class="zal-card-header">
-          <div class="zal-author-box">
-            <div class="zal-avatar-circle">
-              <img src="/pic1_thumb.png" alt="소싱" />
-            </div>
-            <div>
-              <div>
-                <span class="zal-author-name">소싱관리팀</span>
-                <span class="zal-author-role">외주 구인·타겟소싱</span>
-              </div>
-              <div class="zal-card-time">
-                <span>${svgIcon('clock', 12)} ${post.created_at}</span>
-                <span>|</span>
-                <span>타겟알림 ${post.sourcing_sent_count}건 ↗</span>
-              </div>
-            </div>
-          </div>
-          <span class="zal-status-pill ${post.status === 'OPEN' ? 'purple' : 'gray'}">
-            ${post.status === 'OPEN' ? '구인오픈' : '마감됨'}
-          </span>
-        </div>
+  // 2. Internal & External Workforce Aggregations
+  const internalList = allProfiles.filter(p => p.is_internal);
+  const externalList = allProfiles.filter(p => !p.is_internal);
+  const verifiedExternalList = externalList.filter(p => p.verified);
 
-        <div class="zal-card-title">${post.title}</div>
+  const totalInternalHeadcount = 40;
+  const waitingInternalCount = internalList.length; // 4명
+  const activeInternalCount = totalInternalHeadcount - waitingInternalCount; // 36명
+  const nextConfirmedInternalCount = internalList.filter(p => nextAssignmentMap[p.id]).length; // 3명
+  const unassignedInternalList = internalList.filter(p => !nextAssignmentMap[p.id]); // 1명
+  const nextUnconfirmedInternalCount = unassignedInternalList.length;
+  const internalUtilizationRate = Math.round((activeInternalCount / totalInternalHeadcount) * 100);
 
-        <div class="zal-meta-list">
-          <div class="zal-meta-row">
-            <span class="zal-meta-label">${svgIcon('user', 14)} 요구등급</span>
-            <span class="zal-meta-val">${post.required_grade} (${post.required_domain} 도메인)</span>
-          </div>
-          <div class="zal-meta-row">
-            <span class="zal-meta-label">${svgIcon('calendar', 14)} 수행기간</span>
-            <span class="zal-meta-val">${post.period} (${post.work_location})</span>
-          </div>
-          <div class="zal-meta-row">
-            <span class="zal-meta-label">${svgIcon('dollar', 14)} 단가가이드</span>
-            <span class="zal-meta-val">${post.rate_guide}</span>
-          </div>
-        </div>
+  const deployedExternalList = externalList.filter(p => currentOngoingMap[p.id]);
+  const deployedExternalCount = deployedExternalList.length;
+  const expiringExternalList = deployedExternalList.filter(p => p.current_end_date && p.current_end_date <= '2026-12-05');
 
-        <div class="zal-card-footer">
-          <div class="zal-reaction-group">
-            <button type="button" class="zal-reaction-pill" onclick="openEasyApplyModal('${post.id}')">${svgIcon('edit', 13)} 간편지원·추천</button>
-            <button type="button" class="zal-reaction-pill" onclick="openTargetSourcingModal('${post.id}')">${svgIcon('target', 13)} 타겟소싱 (${post.sourcing_sent_count})</button>
-          </div>
-          <span style="font-size:12px; color:#94a3b8; font-weight:600;">통합 DB 연동</span>
-        </div>
-      </article>
-    `);
+  // 3. Middle-Left: Roll-off Timeline Items (Internal + Verified External sorted by current_end_date)
+  const rollOffCandidates = allProfiles
+    .filter(p => p.is_internal || p.verified)
+    .slice()
+    .sort((a, b) => String(a.current_end_date || a.available_date).localeCompare(String(b.current_end_date || b.available_date)));
+
+  const getWeekBucketLabel = (dateStr = '') => {
+    if (!dateStr) return '상시 가용';
+    const d = dateStr.slice(5); // MM-DD
+    if (d <= '11-15') return '11월 2주차 (철수완료)';
+    if (d <= '11-22') return '11월 3주차 (철수임박)';
+    if (d <= '11-30') return '11월 4주차 (월말철수)';
+    return '12월 1주차 이후';
+  };
+
+  const unassignedRollOffCount = rollOffCandidates.filter(p => !nextAssignmentMap[p.id]).length;
+
+  // 4. Middle-Right: Domain x Tech Grade Mini Heatmap
+  const heatmapRows = [
+    { label: '퇴직연금', filterDomain: '퇴직연금', matchDomains: ['퇴직연금'] },
+    { label: '채권 · 펀드', filterDomain: '채권', matchDomains: ['채권', '펀드', '자산운용/수탁', '파생상품'] },
+    { label: '채널 · 마이데이터', filterDomain: '마이데이터', matchDomains: ['마이데이터', '채널계'] },
+    { label: '계정계 코어 · DW', filterDomain: '계정계 코어', matchDomains: ['계정계 코어', '정보계/DW', '신탁/수탁', '수신/신탁'] }
+  ];
+  const grades = ['특급', '고급', '중급'];
+
+  // 5. Bottom-Left: Executive Interview Briefing & Approval Queue
+  const sortedInterviews = interviews.slice().sort((a, b) => {
+    const order = { '면접진행완료': 1, '인터뷰통보완료': 2, '서류검토중': 3, '최종선정': 4 };
+    return (order[a.status] || 9) - (order[b.status] || 9);
   });
+  const pendingApprovalCount = interviews.filter(i => i.status === '면접진행완료').length;
+  const scheduledInterviewCount = interviews.filter(i => i.status === '인터뷰통보완료').length;
+
+  // 6. Bottom-Right: Risk Watch (Urgent Unfilled TOs + Top External Talent >= 4.5 Ending Soon)
+  const urgentUnfilledItems = [];
+  plannedProjects.forEach(prj => {
+    const openSlots = prj.to_slots.filter(s => !s.assigned_profile_id);
+    if (openSlots.length > 0) {
+      const deadline = prj.staffing_deadline || '2026-11-30';
+      const baseDate = new Date('2026-11-16T00:00:00');
+      const targetDate = new Date(`${deadline}T00:00:00`);
+      const diffDays = Math.max(1, Math.round((targetDate - baseDate) / (1000 * 60 * 60 * 24)));
+      urgentUnfilledItems.push({
+        prj,
+        openSlots,
+        deadline,
+        diffDays
+      });
+    }
+  });
+  urgentUnfilledItems.sort((a, b) => a.diffDays - b.diffDays);
+
+  const starExternalTalents = externalList
+    .filter(p => p.verified && Number(p.rating || 0) >= 4.5 && !nextAssignmentMap[p.id])
+    .sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0));
+
+  const totalRiskWatchCount = urgentUnfilledItems.length + starExternalTalents.length;
 
   el.innerHTML = `
-    <div class="dashboard-layout-container">
-      <!-- LEFT: 2-Column Masonry Cards -->
-      <section class="dashboard-feed-masonry">
-        ${feedCardsHtml.join('')}
+    <div class="exec-dashboard-wrap">
+      <!-- TOP 4 KPI CARDS -->
+      <section class="exec-kpi-grid">
+        <!-- KPI 1: 수행 프로젝트 -->
+        <article class="exec-kpi-card" onclick="jumpToPlannedProjectsFromDashboard('ONGOING')">
+          <div class="exec-kpi-top">
+            <span class="exec-kpi-label">수행 프로젝트</span>
+            <span class="exec-kpi-icon">${svgIcon('briefcase', 26)}</span>
+          </div>
+          <div class="exec-kpi-value-row">
+            <div class="exec-kpi-main-val">${ongoingProjects.length}<span class="exec-kpi-unit">건</span></div>
+          </div>
+          <div class="exec-kpi-foot">
+            <span>수행중 결원 ${ongoingUnfilledSlots}석</span>
+          </div>
+        </article>
+
+        <!-- KPI 2: 입찰 예정 -->
+        <article class="exec-kpi-card" onclick="jumpToPlannedProjectsFromDashboard('PLANNED')">
+          <div class="exec-kpi-top">
+            <span class="exec-kpi-label">입찰 예정</span>
+            <span class="exec-kpi-icon">${svgIcon('file', 26)}</span>
+          </div>
+          <div class="exec-kpi-value-row">
+            <div class="exec-kpi-main-val">${plannedProjects.length}<span class="exec-kpi-unit">건</span> <span class="exec-kpi-sub-val">(${plannedFilledSlots}/${plannedTotalSlots}석 확정 · ${plannedFillRate}%)</span></div>
+          </div>
+          <div class="exec-kpi-foot">
+            <span>잔여 ${plannedUnfilledSlots}석 매칭중</span>
+          </div>
+        </article>
+
+        <!-- KPI 3: 내부 가동률 -->
+        <article class="exec-kpi-card" onclick="filterProfilesFromDashboard('INTERNAL', 'ALL', 'ALL')">
+          <div class="exec-kpi-top">
+            <span class="exec-kpi-label">내부 가동률</span>
+            <span class="exec-kpi-icon">${svgIcon('users', 26)}</span>
+          </div>
+          <div class="exec-kpi-value-row">
+            <div class="exec-kpi-main-val">${internalUtilizationRate}<span class="exec-kpi-unit">%</span> <span class="exec-kpi-sub-val">(${activeInternalCount}/${totalInternalHeadcount})</span></div>
+          </div>
+          <div class="exec-kpi-foot">
+            <span>수행중 ${activeInternalCount}명 · 대기중 ${waitingInternalCount}명 (차기확정 ${nextConfirmedInternalCount}명 · 미확정 ${nextUnconfirmedInternalCount}명)</span>
+          </div>
+        </article>
+
+        <!-- KPI 4: 외주 투입 -->
+        <article class="exec-kpi-card" onclick="filterProfilesFromDashboard('EXTERNAL', 'ALL', 'ALL')">
+          <div class="exec-kpi-top">
+            <span class="exec-kpi-label">외주 투입</span>
+            <span class="exec-kpi-icon">${svgIcon('award', 26)}</span>
+          </div>
+          <div class="exec-kpi-value-row">
+            <div class="exec-kpi-main-val">${deployedExternalCount}<span class="exec-kpi-unit">명</span></div>
+          </div>
+          <div class="exec-kpi-foot">
+            <span>수행중 ${deployedExternalCount}명 (만료임박 2명, 차기 확정 1명)</span>
+          </div>
+        </article>
       </section>
 
-      <!-- RIGHT: Timeline & KPI Sidebar (Exact visual match to 잘됨 타임라인) -->
-      <aside class="zal-timeline-sidebar">
-        <div class="zal-timeline-header">
-          <span class="zal-timeline-title">타임라인 · 핵심지표</span>
-          <button type="button" class="zal-timeline-link" onclick="switchTab('profiles')">총 ${profiles.length}명 인재 DB 등록됨 ›</button>
-        </div>
+      <!-- 2x2 MAIN GOLDEN RATIO GRID -->
+      <div class="exec-quad-grid">
+        <!-- MIDDLE LEFT: 일자/주차별 철수 예정 타임라인 -->
+        <section class="exec-widget-card">
+          <div class="exec-widget-header">
+            <div>
+              <div class="exec-widget-title-row">
+                <h3 class="exec-widget-title">${svgIcon('calendar', 16)} 일자/주차별 철수 예정 타임라인</h3>
+                <span class="zal-status-pill ${unassignedRollOffCount > 0 ? 'red' : 'green'}">
+                  차기 미배정 경고 ${unassignedRollOffCount}명
+                </span>
+              </div>
+              <p class="exec-widget-question">"다음 달에 누가 빠지고, 놀게 될 인력은 누구인가?"</p>
+            </div>
+            <button type="button" class="btn btn-outline btn-sm" onclick="switchTab('profiles')">전체 가용일 관리 ›</button>
+          </div>
 
-        <!-- Mini 2x2 KPI Summary inside Right Sidebar -->
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-          <div style="padding:10px 12px; border:1px solid #e2e8f0; border-radius:12px;">
-            <div style="font-size:11px; color:#64748b; font-weight:600;">사내 기술인력 DB화</div>
-            <div style="font-size:18px; font-weight:600; color:#0f172a;">${kpis.internal_db_rate}% <span style="font-size:11px; color:#059669;">달성</span></div>
-          </div>
-          <div style="padding:10px 12px; border:1px solid #e2e8f0; border-radius:12px;">
-            <div style="font-size:11px; color:#64748b; font-weight:600;">AI 파싱·검수 시간</div>
-            <div style="font-size:18px; font-weight:600; color:#0f172a;">${kpis.avg_parse_seconds}초 <span style="font-size:11px; color:#2563eb;">&lt;2분</span></div>
-          </div>
-          <div style="padding:10px 12px; border:1px solid #e2e8f0; border-radius:12px;">
-            <div style="font-size:11px; color:#64748b; font-weight:600;">제안서 장표 추출</div>
-            <div style="font-size:18px; font-weight:600; color:#0f172a;">${kpis.proposal_extract_minutes}분 <span style="font-size:11px; color:#6366f1;">원클릭</span></div>
-          </div>
-          <div style="padding:10px 12px; border:1px solid #e2e8f0; border-radius:12px;">
-            <div style="font-size:11px; color:#64748b; font-weight:600;">기검증 재소싱률</div>
-            <div style="font-size:18px; font-weight:600; color:#0f172a;">${kpis.resourcing_rate}% <span style="font-size:11px; color:#d97706;">우수풀</span></div>
-          </div>
-        </div>
+          <div class="exec-rolloff-list">
+            ${rollOffCandidates.map(p => {
+              const nextPrj = nextAssignmentMap[p.id];
+              const curOngoing = currentOngoingMap[p.id];
+              const lastCareer = (p.career_history && p.career_history[0]) ? p.career_history[0].project : '현 프로젝트 수행';
+              const currentPrjLabel = curOngoing ? `${curOngoing.client} (${curOngoing.projectName.slice(0, 14)})` : lastCareer.slice(0, 20);
+              const weekLabel = getWeekBucketLabel(p.current_end_date || p.available_date);
 
-        <!-- Schedule & Pipeline Grid (Identical to 잘됨 타임라인 table) -->
-        <table class="zal-timeline-grid">
-          <thead>
-            <tr>
-              <th style="width:44px; color:#94a3b8; font-weight:600;">시간</th>
-              <th>
-                <div style="display:flex; flex-direction:column; align-items:center; gap:3px;">
-                  <img src="/pic1_thumb.png" style="width:28px; height:28px; border-radius:50%; border:1px solid #e2e8f0;" />
-                  <span style="font-size:11.5px; font-weight:600; color:#0f172a;">김지영 <span style="font-weight:500; color:#64748b;">이사</span></span>
+              return `
+                <div class="exec-rolloff-item ${!nextPrj ? 'unassigned-warn' : ''}" onclick="openProfileDetailModal('${p.id}')">
+                  <div class="exec-rolloff-date-col">
+                    <span class="exec-week-tag">${weekLabel}</span>
+                    <div class="exec-end-date">종료 ${(p.current_end_date || '-').slice(5).replace('-', '.')} <span style="color:#059669; font-weight:600;">(가용 ${(p.available_date || '-').slice(5).replace('-', '.')})</span></div>
+                  </div>
+
+                  <div class="exec-rolloff-person-col">
+                    <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                      <strong class="exec-person-name">${p.name}</strong>
+                      <span class="exec-emp-badge ${p.is_internal ? 'internal' : 'external'}">${p.is_internal ? '내부' : '외주'} · ${p.employment_type.replace('사내 ', '').replace('외주 ', '')}</span>
+                      <span class="exec-grade-tag">${p.tech_grade}</span>
+                    </div>
+                    <div class="exec-rolloff-sub">
+                      현 수행: ${currentPrjLabel} · 주력: ${(p.domains || []).slice(0, 2).join('/')}
+                    </div>
+                  </div>
+
+                  <div class="exec-rolloff-action-col" onclick="event.stopPropagation();">
+                    ${nextPrj ? `
+                      <span class="exec-assigned-pill" onclick="selectProjectDetail('${nextPrj.projectId}')" title="${nextPrj.projectName} (${nextPrj.roleName})">
+                        ${svgIcon('check', 12)} 차기확정: ${nextPrj.client}
+                      </span>
+                    ` : `
+                      <div style="display:flex; align-items:center; gap:6px;">
+                        <span class="exec-unassigned-alert">미배정 ${p.is_internal ? '(유휴위험)' : '(이탈위험)'}</span>
+                        <button type="button" class="btn btn-primary btn-sm" style="padding:4px 9px; font-size:11.5px;" onclick="openQuickAssignForProfile('${p.id}')">
+                          즉시배정
+                        </button>
+                      </div>
+                    `}
+                  </div>
                 </div>
-              </th>
-              <th>
-                <div style="display:flex; flex-direction:column; align-items:center; gap:3px;">
-                  <img src="/pic2_thumb.png" style="width:28px; height:28px; border-radius:50%; border:1px solid #e2e8f0;" />
-                  <span style="font-size:11.5px; font-weight:600; color:#0f172a;">정윤희 <span style="font-weight:500; color:#64748b;">부장</span></span>
+              `;
+            }).join('')}
+          </div>
+        </section>
+
+        <!-- MIDDLE RIGHT: 도메인 × 기술등급 가용 인력 미니 히트맵 & 입찰 프로젝트 매칭 현황 -->
+        <section class="exec-widget-card">
+          <div class="exec-widget-header">
+            <div>
+              <div class="exec-widget-title-row">
+                <h3 class="exec-widget-title">${svgIcon('target', 16)} 도메인 × 기술등급 가용 인력 히트맵 & 입찰 매칭</h3>
+                <span class="zal-status-pill blue">입찰 ${plannedProjects.length}건 검증</span>
+              </div>
+              <p class="exec-widget-question">"이번 신규 입찰 건, 우리 내부/검증 인력으로 칠 수 있나?"</p>
+            </div>
+            <button type="button" class="btn btn-outline btn-sm" onclick="jumpToPlannedProjectsFromDashboard('PLANNED')">입찰 편성표 ›</button>
+          </div>
+
+          <!-- Part A: Mini Heatmap Table -->
+          <div class="exec-heatmap-box">
+            <table class="exec-heatmap-table">
+              <thead>
+                <tr>
+                  <th style="text-align:left;">핵심 금융 도메인</th>
+                  <th>특급</th>
+                  <th>고급</th>
+                  <th>중급</th>
+                  <th>내부/검증 풀</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${heatmapRows.map(row => {
+                  const rowProfiles = allProfiles.filter(p => (p.domains || []).some(d => row.matchDomains.includes(d)));
+                  const rowInternal = rowProfiles.filter(p => p.is_internal).length;
+                  const rowVerifiedExt = rowProfiles.filter(p => !p.is_internal && p.verified).length;
+
+                  const gradeCells = grades.map(g => {
+                    const cellProfiles = rowProfiles.filter(p => p.tech_grade === g);
+                    const cnt = cellProfiles.length;
+                    const intCnt = cellProfiles.filter(p => p.is_internal).length;
+                    const heatClass = cnt === 0 ? 'heat-0' : cnt === 1 ? 'heat-1' : cnt === 2 ? 'heat-2' : 'heat-3';
+                    return `
+                      <td>
+                        <button type="button" class="exec-heat-cell ${heatClass}" onclick="filterProfilesFromDashboard('ALL', '${g}', '${row.filterDomain}')" title="${row.label} ${g}: ${cellProfiles.map(x => x.name).join(', ') || '없음'}">
+                          <strong>${cnt}명</strong>
+                          <span>${cnt > 0 ? `(내부${intCnt}·외주${cnt - intCnt})` : '충원필요'}</span>
+                        </button>
+                      </td>
+                    `;
+                  }).join('');
+
+                  return `
+                    <tr>
+                      <td style="font-weight:600; color:#0f172a; font-size:13px;">${row.label}</td>
+                      ${gradeCells}
+                      <td style="text-align:center; font-size:12px; color:#334155; font-weight:600;">
+                        총 ${rowProfiles.length}명 <span style="color:#64748b; font-weight:500;">(내부${rowInternal}/검증${rowVerifiedExt})</span>
+                      </td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Part B: Planned Bid Projects Staffing Readiness -->
+          <div class="exec-bid-match-list">
+            <div class="exec-sub-section-label">신규 입찰 프로젝트 인력 편성 및 매칭 현황</div>
+            ${plannedProjects.map(prj => {
+              const total = prj.to_slots.length;
+              const filled = prj.to_slots.filter(s => s.assigned_profile_id).length;
+              const rate = total ? Math.round((filled / total) * 100) : 100;
+              const firstOpenSlot = prj.to_slots.find(s => !s.assigned_profile_id);
+              const openRoles = prj.to_slots.filter(s => !s.assigned_profile_id).map(s => `${s.role_name.slice(0, 12)}(${s.required_grade})`).join(', ');
+
+              return `
+                <div class="exec-bid-row" onclick="selectProjectDetail('${prj.id}')">
+                  <div class="exec-bid-info">
+                    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                      <span class="badge badge-domain">${prj.domain}</span>
+                      <strong class="exec-bid-name">${prj.name}</strong>
+                    </div>
+                    <div class="exec-bid-meta">
+                      <span>확정 <strong>${filled}/${total}석 (${rate}%)</strong></span>
+                      <span>·</span>
+                      <span style="color:${openRoles ? '#dc2626' : '#059669'}; font-weight:500;">
+                        ${openRoles ? `미충원: ${openRoles}` : '전 포지션 편성 완료'}
+                      </span>
+                    </div>
+                  </div>
+                  <div class="exec-bid-actions" onclick="event.stopPropagation();">
+                    <div class="exec-mini-bar"><div class="exec-mini-bar-fill" style="width:${rate}%;"></div></div>
+                    ${firstOpenSlot ? `
+                      <button type="button" class="btn btn-primary btn-sm" style="padding:4px 9px; font-size:11.5px;" onclick="openRfpMatchModal('${prj.id}', '${firstOpenSlot.slot_id}')">
+                        적임자 매칭
+                      </button>
+                    ` : ''}
+                    <button type="button" class="btn btn-outline btn-sm" style="padding:4px 9px; font-size:11.5px;" onclick="openProposalSheetModal('${prj.id}')">
+                      장표추출
+                    </button>
+                  </div>
                 </div>
-              </th>
-              <th>
-                <div style="display:flex; flex-direction:column; align-items:center; gap:3px;">
-                  <img src="/pic1_thumb.png" style="width:28px; height:28px; border-radius:50%; border:1px solid #e2e8f0;" />
-                  <span style="font-size:11.5px; font-weight:600; color:#0f172a;">신은숙 <span style="font-weight:500; color:#64748b;">외주</span></span>
+              `;
+            }).join('')}
+          </div>
+        </section>
+
+        <!-- BOTTOM LEFT: 핵심 인터뷰 브리핑 & 채용 최종 승인 대기함 -->
+        <section class="exec-widget-card">
+          <div class="exec-widget-header">
+            <div>
+              <div class="exec-widget-title-row">
+                <h3 class="exec-widget-title">${svgIcon('check', 16)} 핵심 인터뷰 브리핑 & 채용 최종 승인 대기함</h3>
+                <span class="zal-status-pill ${pendingApprovalCount > 0 ? 'amber' : 'green'}">
+                  최종컨펌 대기 ${pendingApprovalCount}건 · 예정 ${scheduledInterviewCount}건
+                </span>
+              </div>
+              <p class="exec-widget-question">"검증 끝난 후보자 중 내가 최종 컨펌할 사람은 누구인가?"</p>
+            </div>
+            <button type="button" class="btn btn-outline btn-sm" onclick="switchTab('interviews')">면접·검증 전체 ›</button>
+          </div>
+
+          <div class="exec-interview-list">
+            ${sortedInterviews.map(inv => {
+              const targetPrj = projects.find(p => p.id === inv.project_id);
+              const isReadyToApprove = inv.status === '면접진행완료';
+              const isApproved = inv.status === '최종선정';
+              const rateText = canViewSensitive && inv.desired_rate
+                ? `희망 월 ${Number(inv.desired_rate).toLocaleString()}만`
+                : '단가 비공개';
+
+              return `
+                <div class="exec-interview-item ${isReadyToApprove ? 'ready-approve' : ''}" onclick="openCandidateResumeModal('${inv.id}')">
+                  <div class="exec-int-main">
+                    <div style="display:flex; align-items:center; gap:7px; flex-wrap:wrap;">
+                      <span class="zal-status-pill ${isApproved ? 'green' : isReadyToApprove ? 'blue' : 'amber'}" style="padding:2px 8px; font-size:11.5px;">
+                        ${isApproved ? '선발확정' : isReadyToApprove ? '승인대기 (검증완료)' : inv.status}
+                      </span>
+                      <strong style="font-size:14.5px; color:#0f172a;">${inv.candidate_name}</strong>
+                      <span style="font-size:12.5px; color:#475569; font-weight:500;">${inv.candidate_type} · ${inv.tech_grade}</span>
+                      <span class="exec-rate-pill">${rateText}</span>
+                    </div>
+
+                    <div class="exec-int-target">
+                      타겟 사업: <strong>${targetPrj ? targetPrj.client : '미래에셋증권'}</strong> (${(inv.domains || []).join('/')} · 가용일 ${inv.available_from})
+                    </div>
+
+                    <div class="exec-int-eval-summary">
+                      ${inv.total_score > 0 ? `
+                        <span class="exec-score-badge">★ ${Number(inv.total_score).toFixed(1)} / 5.0</span>
+                        <span style="color:#334155;">"${inv.interviewer_opinion || '필수질문 기술·성향 검증 완료'}" <span style="color:#94a3b8;">— ${inv.interviewer_name}</span></span>
+                      ` : `
+                        <span style="color:#d97706; font-weight:500;">면접 일시: ${inv.interview_date || '일정 조율중'} (${inv.interview_method || '화상'}) · 면접관: ${inv.interviewer_name || '조성현 상무'}</span>
+                      `}
+                    </div>
+                  </div>
+
+                  <div class="exec-int-actions" onclick="event.stopPropagation();">
+                    ${isReadyToApprove ? `
+                      <button type="button" class="btn btn-outline btn-sm" style="padding:5px 9px; font-size:11.5px;" onclick="openInterviewResultViewModal('${inv.id}')">
+                        결과브리핑
+                      </button>
+                      <button type="button" class="btn btn-primary btn-sm" style="padding:5px 10px; font-size:11.5px; background:#059669; border-color:#059669;" onclick="quickConfirmCandidateSelection('${inv.id}')">
+                        최종 선발 컨펌
+                      </button>
+                    ` : isApproved ? `
+                      <button type="button" class="btn btn-outline btn-sm" style="padding:5px 9px; font-size:11.5px;" onclick="openInterviewResultViewModal('${inv.id}')">
+                        평가결과 보기
+                      </button>
+                    ` : `
+                      <button type="button" class="btn btn-outline btn-sm" style="padding:5px 9px; font-size:11.5px;" onclick="openEvaluateChecklistModal('${inv.id}')">
+                        면접평가 입력
+                      </button>
+                    `}
+                  </div>
                 </div>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td style="color:#64748b; font-weight:600;">09:00</td>
-              <td>
-                <div class="zal-timeline-event" onclick="triggerSampleParse('sample1')" style="cursor:pointer;">
-                  AI 이력서 파싱<br/><span style="font-weight:500; opacity:0.85;">09:00~10:00</span>
+              `;
+            }).join('')}
+          </div>
+        </section>
+
+        <!-- BOTTOM RIGHT: 리스크 워치 (착수 임박 미충원 경고 · ★4.5 이상 우수 외주 타사업 종료 알림) -->
+        <section class="exec-widget-card">
+          <div class="exec-widget-header">
+            <div>
+              <div class="exec-widget-title-row">
+                <h3 class="exec-widget-title">${svgIcon('bolt', 16)} 리스크 워치 (착수 임박 미충원 · 우수 외주 선점)</h3>
+                <span class="zal-status-pill red">즉시 지시·선점 ${totalRiskWatchCount}건</span>
+              </div>
+              <p class="exec-widget-question">"오늘 당장 지시하거나 선점해야 할 급한 불은 무엇인가?"</p>
+            </div>
+            <button type="button" class="btn btn-outline btn-sm" onclick="switchTab('sourcing')">타겟소싱 관제 ›</button>
+          </div>
+
+          <div class="exec-risk-container">
+            <!-- Risk Part 1: Urgent Unfilled TOs -->
+            <div class="exec-sub-section-label" style="color:#dc2626;">🚨 착수/편성 마감 임박 미충원 TO 경고</div>
+            <div class="exec-risk-group">
+              ${urgentUnfilledItems.length > 0 ? urgentUnfilledItems.map(item => {
+                const firstSlot = item.openSlots[0];
+                return `
+                  <div class="exec-risk-item danger" onclick="selectProjectDetail('${item.prj.id}')">
+                    <div class="exec-risk-left">
+                      <div style="display:flex; align-items:center; gap:7px; flex-wrap:wrap;">
+                        <span class="exec-dday-badge">D-${item.diffDays} (${item.deadline.slice(5).replace('-', '/')} 마감)</span>
+                        <strong style="font-size:13.5px; color:#0f172a;">${item.prj.client} — 미충원 ${item.openSlots.length}석</strong>
+                      </div>
+                      <div style="font-size:12px; color:#475569; margin-top:3px;">
+                        긴급 포지션: ${item.openSlots.map(s => `${s.role_name}(${s.required_grade})`).join(', ')}
+                      </div>
+                    </div>
+                    <div class="exec-risk-actions" onclick="event.stopPropagation();">
+                      <button type="button" class="btn btn-primary btn-sm" style="padding:4px 9px; font-size:11.5px; background:#dc2626; border-color:#dc2626;" onclick="openRfpMatchModal('${item.prj.id}', '${firstSlot.slot_id}')">
+                        즉시 매칭지시
+                      </button>
+                    </div>
+                  </div>
+                `;
+              }).join('') : `
+                <div style="padding:12px; font-size:13px; color:#059669; background:#ecfdf5; border-radius:10px;">
+                  모든 입찰 예정 프로젝트의 핵심 TO 편성이 완료되었습니다.
                 </div>
-              </td>
-              <td></td>
-              <td></td>
-            </tr>
-            <tr>
-              <td style="color:#64748b; font-weight:600;">10:00</td>
-              <td></td>
-              <td>
-                <div class="zal-timeline-event green" onclick="switchTab('interviews')" style="cursor:pointer;">
-                  한지민 기술면접<br/><span style="font-weight:500; opacity:0.85;">10:00~11:00</span>
-                </div>
-              </td>
-              <td></td>
-            </tr>
-            <tr>
-              <td style="color:#64748b; font-weight:600;">12:00</td>
-              <td>
-                <div class="zal-timeline-event purple">
-                  점심시간<br/><span style="font-weight:500; opacity:0.85;">12:00~13:00</span>
-                </div>
-              </td>
-              <td></td>
-              <td></td>
-            </tr>
-            <tr>
-              <td style="color:#64748b; font-weight:600;">14:00</td>
-              <td>
-                <div class="zal-timeline-event purple" onclick="openProposalSheetModal('prj_1')" style="cursor:pointer;">
-                  제안서 장표추출<br/><span style="font-weight:500; opacity:0.85;">14:00~15:00</span>
-                </div>
-              </td>
-              <td>
-                <div class="zal-timeline-event purple" onclick="switchTab('interviews')" style="cursor:pointer;">
-                  신은숙 화상면접<br/><span style="font-weight:500; opacity:0.85;">14:00~15:00</span>
-                </div>
-              </td>
-              <td>
-                <div class="zal-timeline-event purple" onclick="switchTab('interviews')" style="cursor:pointer;">
-                  신은숙 화상면접<br/><span style="font-weight:500; opacity:0.85;">14:00~15:00</span>
-                </div>
-              </td>
-            </tr>
-            <tr>
-              <td style="color:#64748b; font-weight:600;">16:00</td>
-              <td>
-                <div class="zal-timeline-event" onclick="switchTab('sourcing')" style="cursor:pointer;">
-                  외주 타겟소싱<br/><span style="font-weight:500; opacity:0.85;">16:00~17:00</span>
-                </div>
-              </td>
-              <td></td>
-              <td></td>
-            </tr>
-          </tbody>
-        </table>
-      </aside>
+              `}
+            </div>
+
+            <!-- Risk Part 2: ★4.5+ Verified External Talents Ending Other Projects Soon -->
+            <div class="exec-sub-section-label" style="color:#b45309; margin-top:6px;">⭐ ★4.5 이상 기검증 우수 외주 타사업 종료 알림 (선점 대상)</div>
+            <div class="exec-risk-group">
+              ${starExternalTalents.map(p => {
+                const lastPrj = (p.career_history && p.career_history[0]) ? p.career_history[0].project : '금융권 코어 프로젝트';
+                const rateLabel = canViewSensitive && p.desired_rate ? `희망 ${p.desired_rate}만` : '기검증 우수';
+                return `
+                  <div class="exec-risk-item Opportunity" onclick="openProfileDetailModal('${p.id}')">
+                    <div class="exec-risk-left">
+                      <div style="display:flex; align-items:center; gap:7px; flex-wrap:wrap;">
+                        <span class="exec-star-pill">★ ${Number(p.rating || 4.8).toFixed(1)} (재소싱 ${p.resourced_count}회)</span>
+                        <strong style="font-size:13.5px; color:#0f172a;">${p.name}</strong>
+                        <span style="font-size:12px; color:#475569;">${p.employment_type} · ${p.tech_grade} (${rateLabel})</span>
+                      </div>
+                      <div style="font-size:12px; color:#475569; margin-top:3px;">
+                        타사업 종료: <strong style="color:#d97706;">${p.current_end_date}</strong> (투입가능: <strong style="color:#059669;">${p.available_date}</strong>) · ${lastPrj.slice(0, 22)}
+                      </div>
+                    </div>
+                    <div class="exec-risk-actions" onclick="event.stopPropagation();">
+                      <button type="button" class="btn btn-outline btn-sm" style="padding:4px 9px; font-size:11.5px; border-color:#f59e0b; color:#b45309;" onclick="openQuickAssignForProfile('${p.id}')">
+                        선점 배정
+                      </button>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        </section>
+      </div>
     </div>
   `;
 }
@@ -1274,7 +1503,7 @@ function renderProjectSummaryCard(prj) {
 
 function renderPostingApplicantBox(post) {
   const defaultMap = {
-    post_1: ['신은숙', '김도현', '이준호'],
+    post_1: ['양동근', '김도현', '이준호'],
     post_2: ['한지민', '박성진'],
     post_3: ['오세훈', '김도윤', '최민수']
   };
@@ -1436,8 +1665,8 @@ const PROFILE_EVALUATIONS_MAP = {
     },
     {
       evaluatorType: '팀원',
-      evaluatorName: '조진희 차장',
-      evaluatorOrg: '사내 코어뱅킹팀 (후배 개발자)',
+      evaluatorName: '신은숙 부장',
+      evaluatorOrg: '사내 코어뱅킹팀 (협업 동료)',
       overallScore: 4.8,
       metrics: { expertise: 5.0, satisfaction: 4.8, communication: 4.8, schedule: 4.8, proactivity: 4.7 },
       projectTitle: '삼성자산운용 글로벌 채권·펀드 수탁 결제 플랫폼 구축',
@@ -1545,7 +1774,7 @@ const PROFILE_EVALUATIONS_MAP = {
       overallScore: 4.8,
       metrics: { expertise: 5.0, satisfaction: 4.9, communication: 4.7, schedule: 5.0, proactivity: 4.6 },
       projectTitle: '교보생명 퇴직연금 수수료 정산 및 결산 배치 코어 고도화',
-      contractTags: ['기간제(상주)', '외주 특급', '재소싱 1순위'],
+      contractTags: ['기간제(상주)', '외주 과장급', '재소싱 1순위'],
       contractAmount: '100,800,000원',
       durationDays: '240일',
       contractDate: '2025년 02월 03일',
@@ -1584,7 +1813,7 @@ const PROFILE_EVALUATIONS_MAP = {
     },
     {
       evaluatorType: '팀원',
-      evaluatorName: '조진희 차장',
+      evaluatorName: '신은숙 부장',
       evaluatorOrg: '사내 코어뱅킹팀 (백엔드 연동 동료)',
       overallScore: 4.7,
       metrics: { expertise: 4.8, satisfaction: 4.7, communication: 4.9, schedule: 4.6, proactivity: 4.7 },
@@ -2122,7 +2351,7 @@ function openApplicantDetailFromPosting(postingId, applicantIndex) {
   if (!post) return;
 
   const defaultMap = {
-    post_1: ['신은숙', '김도현', '이준호'],
+    post_1: ['양동근', '김도현', '이준호'],
     post_2: ['한지민', '박성진'],
     post_3: ['오세훈', '김도윤', '최민수']
   };
@@ -3508,7 +3737,7 @@ document.addEventListener('DOMContentLoaded', () => {
     switchUserRole(e.target.value);
   });
 
-  document.getElementById('openMyProfileBtn').addEventListener('click', () => {
+  document.getElementById('openMyProfileBtn')?.addEventListener('click', () => {
     const cur = state.data?.currentUser;
     if (cur?.linked_profile_id) {
       openProfileDetailModal(cur.linked_profile_id);
@@ -3528,8 +3757,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Initialize browser History API state so Back button returns to previous view inside SPA
   const urlParams = new URLSearchParams(window.location.search);
-  const initialTab = urlParams.get('tab') || 'projects';
   const initialProjectId = urlParams.get('project') || null;
+  const initialTab = urlParams.get('tab') || (initialProjectId ? 'projects' : 'dashboard');
   state.activeTab = initialTab;
   state.selectedProjectId = initialProjectId;
   applyTabDomState(state.activeTab);
@@ -3561,8 +3790,9 @@ document.addEventListener('DOMContentLoaded', () => {
       state.selectedProjectId = histState.projectId || null;
     } else {
       const params = new URLSearchParams(window.location.search);
-      state.activeTab = params.get('tab') || 'projects';
-      state.selectedProjectId = params.get('project') || null;
+      const prjParam = params.get('project') || null;
+      state.activeTab = params.get('tab') || (prjParam ? 'projects' : 'dashboard');
+      state.selectedProjectId = prjParam;
     }
     applyTabDomState(state.activeTab);
     renderActiveTab();
