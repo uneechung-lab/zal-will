@@ -3,17 +3,32 @@ const state = {
   userId: 'u_master',
   activeTab: 'dashboard',
   selectedProjectId: null,
+  selectedProfileId: null,
+  selectedPostingId: null,
   selectedProjectFilter: 'PLANNED',
+  projectKeyword: '',
   calTab: 'ALL',
   calExpanded: false,
   calSelectedDay: null,
   data: null,
   profileFilters: {
     empType: 'ALL',
+    jobCategory: 'ALL',
     grade: 'ALL',
     domain: 'ALL',
     availability: 'ALL',
-    verifiedOnly: false,
+    verifiedType: 'ALL',
+    keyword: ''
+  },
+  sourcingFilters: {
+    status: 'ALL',
+    grade: 'ALL',
+    domain: 'ALL',
+    keyword: ''
+  },
+  interviewFilters: {
+    status: 'ALL',
+    grade: 'ALL',
     keyword: ''
   }
 };
@@ -102,7 +117,9 @@ function svgIcon(name, size = 15) {
     bolt: '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
     folder: '<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>',
     list: '<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>',
-    heart: '<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>'
+    heart: '<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>',
+    mail: '<rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22,6 12,13 2,6"/>',
+    phone: '<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>'
   };
   return `<svg class="ui-svg-icon" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; flex-shrink:0;">${paths[name] || paths.file}</svg>`;
 }
@@ -217,7 +234,7 @@ async function handleQuickAiInput() {
   }
 }
 
-function buildNavigationUrl(tabName, projectId) {
+function buildNavigationUrl(tabName, projectId, profileId, postingId) {
   const params = new URLSearchParams(window.location.search);
   if (tabName && tabName !== 'dashboard') {
     params.set('tab', tabName);
@@ -229,6 +246,16 @@ function buildNavigationUrl(tabName, projectId) {
   } else {
     params.delete('project');
   }
+  if (profileId) {
+    params.set('profile', profileId);
+  } else {
+    params.delete('profile');
+  }
+  if (postingId) {
+    params.set('posting', postingId);
+  } else {
+    params.delete('posting');
+  }
   const qs = params.toString();
   return `${window.location.pathname}${qs ? `?${qs}` : ''}`;
 }
@@ -236,15 +263,19 @@ function buildNavigationUrl(tabName, projectId) {
 function pushNavigationState(replace = false) {
   const navState = {
     tab: state.activeTab,
-    projectId: state.selectedProjectId || null
+    projectId: state.selectedProjectId || null,
+    profileId: state.selectedProfileId || null,
+    postingId: state.selectedPostingId || null
   };
-  const nextUrl = buildNavigationUrl(navState.tab, navState.projectId);
+  const nextUrl = buildNavigationUrl(navState.tab, navState.projectId, navState.profileId, navState.postingId);
   const curState = window.history.state;
   if (
     !replace &&
     curState &&
     curState.tab === navState.tab &&
-    (curState.projectId || null) === navState.projectId
+    (curState.projectId || null) === navState.projectId &&
+    (curState.profileId || null) === navState.profileId &&
+    (curState.postingId || null) === navState.postingId
   ) {
     return;
   }
@@ -271,6 +302,12 @@ function switchTab(tabName, options = {}) {
   if (tabName === 'projects' && !options.keepProject) {
     state.selectedProjectId = null;
   }
+  if (tabName === 'profiles' && !options.keepProfile) {
+    state.selectedProfileId = null;
+  }
+  if (tabName === 'sourcing' && !options.keepPosting) {
+    state.selectedPostingId = null;
+  }
   state.activeTab = tabName;
   applyTabDomState(tabName);
   if (!options.fromPopState) {
@@ -296,10 +333,11 @@ function renderActiveTab() {
    ========================================================================= */
 function filterProfilesFromDashboard(empType = 'ALL', grade = 'ALL', domain = 'ALL') {
   state.profileFilters.empType = empType;
+  state.profileFilters.jobCategory = 'ALL';
   state.profileFilters.grade = grade;
   state.profileFilters.domain = domain;
   state.profileFilters.availability = 'ALL';
-  state.profileFilters.verifiedOnly = false;
+  state.profileFilters.verifiedType = 'ALL';
   state.profileFilters.keyword = '';
   switchTab('profiles');
 }
@@ -510,33 +548,19 @@ function renderDashboardTab() {
         </div>
         <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
           ${canCreateProject ? `
-            <button type="button" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:6px;" onclick="openNewProjectModal()">
-              ${svgIcon('file', 14)} 프로젝트 등록하기
+            <button type="button" class="btn btn-primary" style="width:170px; height:42px; padding:0 14px; font-size:14.5px; font-weight:700; box-sizing:border-box; display:inline-flex; align-items:center; justify-content:center; gap:6px;" onclick="openNewProjectModal()">
+              ${svgIcon('file', 15)} 프로젝트 등록하기
             </button>
           ` : ''}
-          <button type="button" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:6px;" onclick="openNewTalentModal()">
-            ${svgIcon('user', 14)} 인재 등록하기
+          <button type="button" class="btn btn-primary" style="width:170px; height:42px; padding:0 14px; font-size:14.5px; font-weight:700; box-sizing:border-box; display:inline-flex; align-items:center; justify-content:center; gap:6px;" onclick="openNewTalentModal()">
+            ${svgIcon('user', 15)} 인재 등록하기
           </button>
         </div>
       </div>
 
       <!-- TOP 4 KPI CARDS -->
       <section class="exec-kpi-grid">
-        <!-- KPI 1: 수행 프로젝트 -->
-        <article class="exec-kpi-card" onclick="jumpToPlannedProjectsFromDashboard('ONGOING')">
-          <div class="exec-kpi-top">
-            <span class="exec-kpi-label">수행 프로젝트</span>
-            <span class="exec-kpi-icon">${svgIcon('briefcase', 26)}</span>
-          </div>
-          <div class="exec-kpi-value-row">
-            <div class="exec-kpi-main-val">${ongoingProjects.length}<span class="exec-kpi-unit">건</span></div>
-          </div>
-          <div class="exec-kpi-foot">
-            <span>수행중 결원 ${ongoingUnfilledSlots}석</span>
-          </div>
-        </article>
-
-        <!-- KPI 2: 입찰 예정 -->
+        <!-- KPI 1: 입찰 예정 -->
         <article class="exec-kpi-card" onclick="jumpToPlannedProjectsFromDashboard('PLANNED')">
           <div class="exec-kpi-top">
             <span class="exec-kpi-label">입찰 예정</span>
@@ -547,6 +571,20 @@ function renderDashboardTab() {
           </div>
           <div class="exec-kpi-foot">
             <span>잔여 ${plannedUnfilledSlots}석 매칭중</span>
+          </div>
+        </article>
+
+        <!-- KPI 2: 수행 프로젝트 -->
+        <article class="exec-kpi-card" onclick="jumpToPlannedProjectsFromDashboard('ONGOING')">
+          <div class="exec-kpi-top">
+            <span class="exec-kpi-label">수행 프로젝트</span>
+            <span class="exec-kpi-icon">${svgIcon('briefcase', 26)}</span>
+          </div>
+          <div class="exec-kpi-value-row">
+            <div class="exec-kpi-main-val">${ongoingProjects.length}<span class="exec-kpi-unit">건</span></div>
+          </div>
+          <div class="exec-kpi-foot">
+            <span>수행중 결원 ${ongoingUnfilledSlots}석</span>
           </div>
         </article>
 
@@ -571,10 +609,10 @@ function renderDashboardTab() {
             <span class="exec-kpi-icon">${svgIcon('award', 26)}</span>
           </div>
           <div class="exec-kpi-value-row">
-            <div class="exec-kpi-main-val">30<span class="exec-kpi-unit">명</span></div>
+            <div class="exec-kpi-main-val">${activeInternalCount + 12}<span class="exec-kpi-unit">명</span></div>
           </div>
           <div class="exec-kpi-foot">
-            <span>정규직 18명 · 프리랜서 8명 · 협력사 4명</span>
+            <span>정규직 ${activeInternalCount}명 · 프리랜서 8명 · 협력사 4명</span>
           </div>
         </article>
       </section>
@@ -809,12 +847,15 @@ function renderDashboardTab() {
                 const clickAction = filled
                   ? `openProfileDetailModal('${slot.assigned_profile_id}')`
                   : `openRfpMatchModal('${item.prj.id}', '${slot.slot_id}')`;
+                const chairOutlinePath = `M9.65,42q-0.6,0-1.05-0.45T8.15,40.5V38.4H7.5q-2.29,0-3.9-1.6T2,32.9V20.7q0-2.55 1.55-3.88T7.2,15.5V11.2q0-2.3 1.45-3.75T12.4,6H35.65q2.3,0 3.73,1.45T40.8,11.2v4.3q2.1,0 3.65,1.32T46,20.7V32.9q0,2.29-1.6,3.9t-3.9,1.6H39.85v2.1q0,0.6-0.45,1.05T38.35,42T37.3,41.55T36.85,40.5V38.4H11.15v2.1q0,0.6-0.45,1.05T9.65,42ZM7.5,35.4h33q1,0 1.75-0.75T43,32.9V20.7q0-1-0.6-1.6t-1.6-0.6t-1.6,0.6t-0.6,1.6v8.8H9.4V20.7q0-1-0.6-1.6T7.2,18.5T5.6,19.1T5,20.7V32.9q0,1 0.75,1.75T7.5,35.4Zm4.9-8.9H35.6V20.7q0-1.55 0.7-2.57t1.5-1.63V11.2q0-1-0.6-1.6T35.61,9H12.39Q11.4,9 10.8,9.6t-0.6,1.6v5.3q0.8,0.6 1.5,1.63t0.7,2.57v5.8Z`;
+                const chairInnerFillPath = `M7.5,35.4h33q1,0 1.75-0.75T43,32.9V20.7q0-1-0.6-1.6t-1.6-0.6t-1.6,0.6t-0.6,1.6v8.8H9.4V20.7q0-1-0.6-1.6T7.2,18.5T5.6,19.1T5,20.7V32.9q0,1 0.75,1.75T7.5,35.4ZM12.4,26.5H35.6V20.7q0-1.55 0.7-2.57t1.5-1.63V11.2q0-1-0.6-1.6T35.61,9H12.39Q11.4,9 10.8,9.6t-0.6,1.6v5.3q0.8,0.6 1.5,1.63t0.7,2.57v5.8Z`;
                 const chairSvgMarkup = filled
-                  ? `<svg width="24" height="24" viewBox="0 0 48 48" fill="currentColor">
-                      <path d="M9.65,42q-0.6,0-1.05-0.45T8.15,40.5V38.4H7.5q-2.29,0-3.9-1.6T2,32.9V20.7q0-2.55 1.55-3.88T7.2,15.5V11.2q0-2.3 1.45-3.75T12.4,6H35.65q2.3,0 3.73,1.45T40.8,11.2v4.3q2.1,0 3.65,1.32T46,20.7V32.9q0,2.29-1.6,3.9t-3.9,1.6H39.85v2.1q0,0.6-0.45,1.05T38.35,42T37.3,41.55T36.85,40.5V38.4H11.15v2.1q0,0.6-0.45,1.05T9.65,42Z"/>
+                  ? `<svg width="24" height="24" viewBox="0 0 48 48" fill="none">
+                      <path d="${chairInnerFillPath}" fill="currentColor" fill-opacity="0.45"/>
+                      <path d="${chairOutlinePath}" fill="currentColor"/>
                     </svg>`
-                  : `<svg width="24" height="24" viewBox="0 0 48 48" fill="currentColor">
-                      <path d="M9.65,42q-0.6,0-1.05-0.45T8.15,40.5V38.4H7.5q-2.29,0-3.9-1.6T2,32.9V20.7q0-2.55 1.55-3.88T7.2,15.5V11.2q0-2.3 1.45-3.75T12.4,6H35.65q2.3,0 3.73,1.45T40.8,11.2v4.3q2.1,0 3.65,1.32T46,20.7V32.9q0,2.29-1.6,3.9t-3.9,1.6H39.85v2.1q0,0.6-0.45,1.05T38.35,42T37.3,41.55T36.85,40.5V38.4H11.15v2.1q0,0.6-0.45,1.05T9.65,42ZM7.5,35.4h33q1,0 1.75-0.75T43,32.9V20.7q0-1-0.6-1.6t-1.6-0.6t-1.6,0.6t-0.6,1.6v8.8H9.4V20.7q0-1-0.6-1.6T7.2,18.5T5.6,19.1T5,20.7V32.9q0,1 0.75,1.75T7.5,35.4Zm4.9-8.9H35.6V20.7q0-1.55 0.7-2.57t1.5-1.63V11.2q0-1-0.6-1.6T35.61,9H12.39Q11.4,9 10.8,9.6t-0.6,1.6v5.3q0.8,0.6 1.5,1.63t0.7,2.57v5.8Z"/>
+                  : `<svg width="24" height="24" viewBox="0 0 48 48" fill="none">
+                      <path d="${chairOutlinePath}" fill="currentColor"/>
                     </svg>`;
                 return `
                   <button type="button" class="exec-chair-btn ${filled ? 'filled' : 'empty'}" title="${escAttr(titleText)}" onclick="${clickAction}">
@@ -826,8 +867,8 @@ function renderDashboardTab() {
                 <div class="exec-risk-item danger" onclick="selectProjectDetail('${item.prj.id}')">
                   <div class="exec-risk-left">
                     <div class="exec-risk-top-line">
-                      <span class="exec-risk-main-title">${item.prj.client} — 미충원 ${item.openSlots.length}석</span>
                       <span class="exec-to-dday-badge ${isOrange ? 'orange' : ''}">D-${item.diffDays}</span>
+                      <span class="exec-risk-main-title">${item.prj.client} — 미충원 ${item.openSlots.length}석</span>
                     </div>
                     <div class="exec-risk-sub-desc">
                       ${item.openSlots.map(s => `${s.role_name}(${s.required_grade})`).join(', ')}
@@ -897,19 +938,34 @@ function renderDashboardTab() {
 /* =========================================================================
    TAB 2: INTEGRATED TALENT DB & AI NON-STOP RESUME PARSING
    ========================================================================= */
-function renderProfilesTab() {
-  const { profiles, permissions, currentUser } = state.data;
-  const el = document.getElementById('tab-profiles');
-  const f = state.profileFilters;
+function matchesProfileJobCategory(p, cat) {
+  if (!cat || cat === 'ALL') return true;
+  if (p.job_category && p.job_category === cat) return true;
+  const hay = `${p.main_skill || ''} ${(p.skills || []).join(' ')} ${(p.domains || []).join(' ')} ${p.review_summary || ''} ${(p.career_history || []).map(c => `${c.role || ''} ${c.tech || ''} ${c.project || ''}`).join(' ')}`;
+  if (cat === '디자인') return /디자인|디자이너|UI\/UX|GUI|Figma|XD|Sketch|BX|BI/i.test(hay);
+  if (cat === '퍼블리싱') return /퍼블리싱|퍼블리셔|HTML|CSS|마크업|WebSquare/i.test(hay);
+  if (cat === '기획') return /기획|화면설계|스토리보드|PMO|요구사항|ISP|PI|UI\/UX/i.test(hay);
+  if (cat === '컨설팅') return /컨설팅|컨설턴트|ISP|PI|BPR|아키텍트|AA|DA|TA|데이터모델/i.test(hay);
+  if (cat === '개발') {
+    if (/디자인|디자이너|퍼블리셔/i.test(p.main_skill || '') && !/Java|Spring|Oracle|React|Python|C#/i.test(hay)) return false;
+    return /개발|Java|Spring|Oracle|React|TypeScript|Next\.js|Python|C#|배치|코어|백엔드|프론트엔드|PL|SQL/i.test(hay) || !p.main_skill;
+  }
+  return true;
+}
 
-  const filtered = profiles.filter(p => {
+function getFilteredProfilesList() {
+  const { profiles } = state.data;
+  const f = state.profileFilters;
+  return profiles.filter(p => {
     if (f.empType === 'INTERNAL' && !p.is_internal) return false;
     if (f.empType === 'EXTERNAL' && p.is_internal) return false;
     if (!['ALL', 'INTERNAL', 'EXTERNAL'].includes(f.empType) && !String(p.employment_type || '').includes(f.empType)) return false;
+    if (!matchesProfileJobCategory(p, f.jobCategory)) return false;
     if (f.grade !== 'ALL' && p.tech_grade !== f.grade) return false;
     if (f.domain !== 'ALL' && !p.domains.includes(f.domain)) return false;
     if (f.availability !== 'ALL' && p.availability_status !== f.availability) return false;
-    if (f.verifiedOnly && !p.verified) return false;
+    if (f.verifiedType === 'VERIFIED' && !p.verified) return false;
+    if (f.verifiedType === 'NEW' && p.verified) return false;
     if (f.keyword) {
       const kw = f.keyword.toLowerCase();
       const hay = `${p.name} ${p.employment_type} ${p.skills.join(' ')} ${p.domains.join(' ')} ${p.certifications.join(' ')}`.toLowerCase();
@@ -917,125 +973,300 @@ function renderProfilesTab() {
     }
     return true;
   });
+}
 
-  el.innerHTML = `
-    ${permissions.can_view_all_profiles ? `
-      <div class="ai-parse-banner">
-        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px;">
-          <div>
-            <span class="zal-status-pill green" style="margin-bottom:6px; display:inline-flex; align-items:center; gap:5px;">${svgIcon('bolt', 13)} AI 무정차 이력서 파싱 엔진 (1건당 검수·등록 2분 이내)</span>
-            <h3 style="font-size:16px; font-weight:600; color:#0f172a;">워드(.docx) · 엑셀(.xlsx) · PDF 이력서 업로드 시 표준 DB 자동 적재</h3>
-          </div>
-          <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
-            <label class="btn btn-primary" style="cursor:pointer; display:inline-flex; align-items:center; gap:6px;">
-              ${svgIcon('file', 14)} 내 PC 이력서 업로드
-              <input type="file" id="resumeFileInput" accept=".pdf,.ppt,.pptx,.doc,.docx,.xls,.xlsx,.hwp,.hwpx,.txt" style="display:none;" onchange="handleResumeFileUpload(event)" />
-            </label>
-            <button class="btn btn-outline" onclick="triggerSampleParse('sample1')">샘플1: 퇴직연금 특급</button>
-            <button class="btn btn-outline" onclick="triggerSampleParse('sample2')">샘플2: 채권·펀드 고급</button>
-            <button class="btn btn-outline" onclick="triggerSampleParse('sample3')">샘플3: 마이데이터 정규직</button>
-          </div>
-        </div>
-      </div>
-    ` : `
-      <div class="zal-request-banner" style="margin-bottom:18px;">
-        <span style="display:inline-flex; align-items:center; gap:5px;">${svgIcon('lock', 14)} 현재 역할(${currentUser ? currentUser.title : '외부 방문자'})은 본인 프로필 또는 면접관으로 지정된 지원자 이력만 열람 가능합니다.</span>
-        ${currentUser?.linked_profile_id ? `<button class="btn btn-primary btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="openEditProfileModal('${currentUser.linked_profile_id}')">${svgIcon('edit', 13)} 내 프로필 · 가용일 수정</button>` : ''}
-      </div>
-    `}
-
-    <div class="filter-bar">
-      <div class="filter-group">
-        <label>구분</label>
-        <select class="select" onchange="updateProfileFilter('empType', this.value)">
-          <option value="ALL" ${f.empType === 'ALL' ? 'selected' : ''}>전체 (${profiles.length}명)</option>
-          <option value="정규직" ${f.empType === '정규직' ? 'selected' : ''}>정규직</option>
-          <option value="전문계약직" ${f.empType === '전문계약직' ? 'selected' : ''}>전문계약직</option>
-          <option value="프리랜서" ${f.empType === '프리랜서' ? 'selected' : ''}>프리랜서</option>
-          <option value="반프리" ${f.empType === '반프리' ? 'selected' : ''}>반프리</option>
-          <option value="개인사업자" ${f.empType === '개인사업자' ? 'selected' : ''}>개인사업자</option>
-          <option value="협력사" ${f.empType === '협력사' ? 'selected' : ''}>협력사</option>
-        </select>
-      </div>
-      <div class="filter-group">
-        <label>등급</label>
-        <select class="select" onchange="updateProfileFilter('grade', this.value)">
-          <option value="ALL" ${f.grade === 'ALL' ? 'selected' : ''}>전체 등급</option>
-          <option value="특급" ${f.grade === '특급' ? 'selected' : ''}>특급</option>
-          <option value="고급" ${f.grade === '고급' ? 'selected' : ''}>고급</option>
-          <option value="중급" ${f.grade === '중급' ? 'selected' : ''}>중급</option>
-        </select>
-      </div>
-      <div class="filter-group">
-        <label>도메인</label>
-        <select class="select" onchange="updateProfileFilter('domain', this.value)">
-          <option value="ALL" ${f.domain === 'ALL' ? 'selected' : ''}>전체 도메인</option>
-          <option value="퇴직연금" ${f.domain === '퇴직연금' ? 'selected' : ''}>퇴직연금</option>
-          <option value="펀드" ${f.domain === '펀드' ? 'selected' : ''}>펀드</option>
-          <option value="채권" ${f.domain === '채권' ? 'selected' : ''}>채권</option>
-          <option value="계정계 코어" ${f.domain === '계정계 코어' ? 'selected' : ''}>계정계 코어</option>
-          <option value="마이데이터" ${f.domain === '마이데이터' ? 'selected' : ''}>마이데이터</option>
-          <option value="채널계" ${f.domain === '채널계' ? 'selected' : ''}>채널계</option>
-          <option value="정보계/DW" ${f.domain === '정보계/DW' ? 'selected' : ''}>정보계/DW</option>
-        </select>
-      </div>
-      <label class="switch-label">
-        <input type="checkbox" ${f.verifiedOnly ? 'checked' : ''} onchange="updateProfileFilter('verifiedOnly', this.checked)" />
-        기검증 우수인력만
-      </label>
+function renderChipSearchBox(inputId, value, placeholder, scopeKey) {
+  const safeVal = String(value || '').replace(/"/g, '&quot;');
+  const hasVal = safeVal.length > 0;
+  return `
+    <div class="zal-search-wrap">
       <input
         type="text"
-        class="input"
-        style="flex:1; min-width:180px;"
-        placeholder="이름, 스킬(Java, ProFrame, React), 자격증 검색..."
-        value="${f.keyword}"
-        oninput="updateProfileFilter('keyword', this.value)"
+        id="${inputId}"
+        class="zal-chip-input"
+        placeholder="${placeholder}"
+        value="${safeVal}"
+        oninput="handleChipSearchInput(this, '${scopeKey}')"
       />
-    </div>
-
-    <div class="dashboard-feed-masonry">
-      ${filtered.map(p => renderProfileCard(p, permissions, currentUser)).join('') || `
-        <div class="card" style="grid-column: 1 / -1; text-align:center; padding:40px;">
-          조건에 부합하거나 열람 권한이 있는 인재 프로필이 없습니다.
-        </div>
-      `}
+      <button
+        type="button"
+        class="zal-search-clear-btn"
+        style="display:${hasVal ? 'inline-flex' : 'none'};"
+        onclick="clearChipSearchInput(this, '${inputId}', '${scopeKey}')"
+        title="검색어 지우기"
+      >&times;</button>
     </div>
   `;
+}
+
+function handleChipSearchInput(inputEl, scopeKey) {
+  const val = inputEl.value;
+  const clearBtn = inputEl.parentElement?.querySelector('.zal-search-clear-btn');
+  if (clearBtn) {
+    clearBtn.style.display = val.length > 0 ? 'inline-flex' : 'none';
+  }
+  if (scopeKey === 'projects') updateProjectKeyword(val);
+  else if (scopeKey === 'profiles') updateProfileFilter('keyword', val);
+  else if (scopeKey === 'sourcing') updateSourcingFilter('keyword', val);
+  else if (scopeKey === 'interviews') updateInterviewFilter('keyword', val);
+}
+
+function clearChipSearchInput(btnEl, inputId, scopeKey) {
+  const inputEl = document.getElementById(inputId);
+  if (inputEl) {
+    inputEl.value = '';
+    inputEl.focus();
+  }
+  if (btnEl) {
+    btnEl.style.display = 'none';
+  }
+  if (scopeKey === 'projects') updateProjectKeyword('');
+  else if (scopeKey === 'profiles') updateProfileFilter('keyword', '');
+  else if (scopeKey === 'sourcing') updateSourcingFilter('keyword', '');
+  else if (scopeKey === 'interviews') updateInterviewFilter('keyword', '');
+}
+
+function renderProfileCardsHtml() {
+  const { permissions, currentUser } = state.data;
+  const filtered = getFilteredProfilesList();
+  if (filtered.length === 0) {
+    return `
+      <div class="card" style="grid-column: 1 / -1; text-align:center; padding:40px;">
+        조건에 부합하거나 열람 권한이 있는 인재 프로필이 없습니다.
+      </div>
+    `;
+  }
+  const cols = [[], [], []];
+  filtered.forEach((p, idx) => {
+    cols[idx % 3].push(renderProfileCard(p, permissions, currentUser));
+  });
+  return cols.map(colCards => `
+    <div class="talent-masonry-col">
+      ${colCards.join('')}
+    </div>
+  `).join('');
+}
+
+function renderProfilesTab() {
+  const { profiles, permissions, currentUser } = state.data;
+  const el = document.getElementById('tab-profiles');
+  const f = state.profileFilters;
+
+  const selectedProf = state.selectedProfileId
+    ? profiles.find(p => p.id === state.selectedProfileId)
+    : null;
+  if (selectedProf) {
+    renderProfileDetailPageView(el, selectedProf, permissions, currentUser);
+    return;
+  }
+
+  const internalCount = profiles.filter(p => p.is_internal).length;
+  const externalCount = profiles.filter(p => !p.is_internal).length;
+
+  el.innerHTML = `
+    <div class="filter-bar">
+      <button type="button" class="zal-chip-btn ${f.empType === 'ALL' ? 'active' : ''}" onclick="updateProfileFilter('empType', 'ALL')">
+        전체 인력 (${profiles.length})
+      </button>
+      <button type="button" class="zal-chip-btn ${f.empType === 'INTERNAL' ? 'active' : ''}" onclick="updateProfileFilter('empType', 'INTERNAL')">
+        사내 인력 (${internalCount})
+      </button>
+      <button type="button" class="zal-chip-btn ${f.empType === 'EXTERNAL' ? 'active' : ''}" onclick="updateProfileFilter('empType', 'EXTERNAL')">
+        외주 인력 (${externalCount})
+      </button>
+      <select class="zal-chip-select ${(f.jobCategory || 'ALL') !== 'ALL' ? 'active' : ''}" onchange="updateProfileFilter('jobCategory', this.value)">
+        <option value="ALL" ${(f.jobCategory || 'ALL') === 'ALL' ? 'selected' : ''}>전체 업무</option>
+        <option value="개발" ${f.jobCategory === '개발' ? 'selected' : ''}>개발</option>
+        <option value="컨설팅" ${f.jobCategory === '컨설팅' ? 'selected' : ''}>컨설팅</option>
+        <option value="기획" ${f.jobCategory === '기획' ? 'selected' : ''}>기획</option>
+        <option value="디자인" ${f.jobCategory === '디자인' ? 'selected' : ''}>디자인</option>
+        <option value="퍼블리싱" ${f.jobCategory === '퍼블리싱' ? 'selected' : ''}>퍼블리싱</option>
+      </select>
+      <select class="zal-chip-select ${f.grade !== 'ALL' ? 'active' : ''}" onchange="updateProfileFilter('grade', this.value)">
+        <option value="ALL" ${f.grade === 'ALL' ? 'selected' : ''}>전체 등급</option>
+        <option value="특급" ${f.grade === '특급' ? 'selected' : ''}>특급</option>
+        <option value="고급" ${f.grade === '고급' ? 'selected' : ''}>고급</option>
+        <option value="중급" ${f.grade === '중급' ? 'selected' : ''}>중급</option>
+      </select>
+      <select class="zal-chip-select ${f.domain !== 'ALL' ? 'active' : ''}" onchange="updateProfileFilter('domain', this.value)">
+        <option value="ALL" ${f.domain === 'ALL' ? 'selected' : ''}>전체 도메인</option>
+        <option value="퇴직연금" ${f.domain === '퇴직연금' ? 'selected' : ''}>퇴직연금</option>
+        <option value="펀드" ${f.domain === '펀드' ? 'selected' : ''}>펀드</option>
+        <option value="채권" ${f.domain === '채권' ? 'selected' : ''}>채권</option>
+        <option value="계정계 코어" ${f.domain === '계정계 코어' ? 'selected' : ''}>계정계 코어</option>
+        <option value="마이데이터" ${f.domain === '마이데이터' ? 'selected' : ''}>마이데이터</option>
+        <option value="채널계" ${f.domain === '채널계' ? 'selected' : ''}>채널계</option>
+        <option value="정보계/DW" ${f.domain === '정보계/DW' ? 'selected' : ''}>정보계/DW</option>
+      </select>
+      <select class="zal-chip-select ${(f.verifiedType || 'ALL') !== 'ALL' ? 'active' : ''}" onchange="updateProfileFilter('verifiedType', this.value)">
+        <option value="ALL" ${(f.verifiedType || 'ALL') === 'ALL' ? 'selected' : ''}>전체</option>
+        <option value="VERIFIED" ${f.verifiedType === 'VERIFIED' ? 'selected' : ''}>기검증 우수인력만</option>
+        <option value="NEW" ${f.verifiedType === 'NEW' ? 'selected' : ''}>신규인력만</option>
+      </select>
+      ${renderChipSearchBox('profileSearchInput', f.keyword, '이름, 스킬(Java, ProFrame, React), 자격증 검색...', 'profiles')}
+      ${permissions.can_view_all_profiles ? `
+        <button type="button" class="btn btn-primary" style="width:170px; height:42px; padding:0 14px; font-size:14.5px; font-weight:700; box-sizing:border-box; display:inline-flex; align-items:center; justify-content:center; gap:6px; margin-left:auto;" onclick="openNewTalentModal()">
+          ${svgIcon('user', 15)} 인재 등록하기
+        </button>
+      ` : currentUser?.linked_profile_id ? `
+        <button type="button" class="btn btn-primary btn-sm" style="display:inline-flex; align-items:center; gap:5px; margin-left:auto;" onclick="openEditProfileModal('${currentUser.linked_profile_id}')">
+          ${svgIcon('edit', 13)} 내 프로필 · 가용일 수정
+        </button>
+      ` : ''}
+    </div>
+
+    <div id="profileCardsGrid" class="talent-dir-grid">
+      ${renderProfileCardsHtml()}
+    </div>
+  `;
+}
+
+function toggleProfileCardMore(btnEl, profileId) {
+  const moreBox = document.getElementById(`profileCardMore_${profileId}`);
+  const skillsEl = document.getElementById(`profileCardSkills_${profileId}`);
+  if (!moreBox) return;
+  const isHidden = moreBox.style.display === 'none' || !moreBox.style.display;
+  moreBox.style.display = isHidden ? 'flex' : 'none';
+  if (skillsEl) {
+    skillsEl.style.whiteSpace = isHidden ? 'normal' : 'nowrap';
+    skillsEl.style.overflow = isHidden ? 'visible' : 'hidden';
+    skillsEl.style.textOverflow = isHidden ? 'clip' : 'ellipsis';
+  }
+  if (btnEl) {
+    btnEl.innerHTML = isHidden
+      ? `접기 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>`
+      : `더보기 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>`;
+  }
+}
+
+function openProfileTargetSourcingModal(profileId) {
+  const { profiles = [], projects = [], postings = [] } = state.data || {};
+  const p = profiles.find(x => x.id === profileId);
+  if (!p) return;
+
+  const candidateProjects = [];
+  projects.filter(prj => prj.project_group !== 'COMPLETED').forEach(prj => {
+    (prj.to_slots || []).forEach(slot => {
+      if (!slot.assigned_profile_id) {
+        const { score, reasons } = computeMatchScore(p, slot, prj.start_date);
+        const linkedPosting = postings.find(post => post.project_id === prj.id && post.role_name === slot.role_name)
+          || postings.find(post => post.project_id === prj.id);
+        candidateProjects.push({ prj, slot, score, reasons, linkedPosting });
+      }
+    });
+  });
+  candidateProjects.sort((a, b) => b.score - a.score);
+
+  openModal(`인재 맞춤 타겟 소싱 발송 — ${p.name} (${p.tech_grade} · ${p.employment_type})`, `
+    <form onsubmit="submitProfileTargetSourcing(event, '${p.id}')">
+      <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:12px 16px; border-radius:12px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+        <div>
+          <strong>대상 인재:</strong> ${p.name} (${p.tech_grade} · ${p.experience_years}년차) ·
+          <span style="color:#059669; font-weight:600;">가용일 ${p.available_date}</span>
+        </div>
+        <div style="font-size:12.5px; color:#64748b;">
+          ${p.email || '-'} | ${p.phone || '-'}
+        </div>
+      </div>
+
+      <div style="margin-bottom:14px;">
+        <label style="font-size:12.5px; font-weight:700; color:#0f172a; display:block; margin-bottom:8px;">
+          ${p.name}님에게 적합한 추천 프로젝트 및 미충원 TO 선택 (${candidateProjects.length}건)
+        </label>
+        <div style="display:flex; flex-direction:column; gap:8px; max-height:260px; overflow-y:auto; border:1px solid #e2e8f0; padding:12px; border-radius:12px;">
+          ${candidateProjects.map((item, idx) => `
+            <label style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding:10px 12px; border:1px solid #e2e8f0; border-radius:10px; cursor:pointer; background:#ffffff;">
+              <div style="display:flex; align-items:flex-start; gap:9px;">
+                <input type="checkbox" name="target_slot" value="${item.prj.id}::${item.slot.slot_id}::${item.linkedPosting?.id || ''}" ${idx === 0 ? 'checked' : ''} style="margin-top:3px;" />
+                <div>
+                  <div style="font-size:13.5px; font-weight:700; color:#0f172a;">
+                    [${item.prj.client}] ${item.prj.name}
+                  </div>
+                  <div style="font-size:12.5px; color:#334155; margin-top:2px;">
+                    포지션: <strong>${item.slot.role_name}</strong> (${item.slot.required_grade} · ${item.slot.required_domain}) · 기간: ${item.prj.period_label || `${item.prj.start_date} ~ ${item.prj.end_date}`}
+                  </div>
+                  <div style="font-size:11.5px; color:#64748b; margin-top:2px;">
+                    매칭 사유: ${item.reasons.join(' · ') || '핵심 기술스택 부합'}
+                  </div>
+                </div>
+              </div>
+              <span class="zal-status-pill ${item.score >= 80 ? 'green' : 'blue'}" style="flex-shrink:0;">
+                ${item.score}% 매칭
+              </span>
+            </label>
+          `).join('')}
+        </div>
+      </div>
+
+      <div class="form-field" style="margin-bottom:16px;">
+        <label>타겟 소싱 초청 메시지</label>
+        <textarea class="textarea" name="custom_message">[잘될 플랫폼 타겟 소싱 안내] ${p.name}님, 귀하의 ${(p.domains || [])[0] || '금융 IT'} 및 ${(p.skills || []).slice(0, 2).join(', ')} 전문 수행 경험이 당사 주요 프로젝트 핵심 포지션에 부합하여 우선 초청드립니다.</textarea>
+      </div>
+
+      <div style="display:flex; justify-content:flex-end; gap:10px;">
+        <button type="button" class="btn btn-outline" onclick="closeModal()">취소</button>
+        <button type="submit" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:5px;">
+          ${svgIcon('send', 14)} 타겟 소싱 발송
+        </button>
+      </div>
+    </form>
+  `);
+}
+
+async function submitProfileTargetSourcing(e, profileId) {
+  e.preventDefault();
+  const { profiles = [], postings = [] } = state.data || {};
+  const p = profiles.find(x => x.id === profileId);
+  const fd = new FormData(e.target);
+  const selected = fd.getAll('target_slot');
+  if (selected.length === 0) {
+    showToast('타겟 소싱을 발송할 프로젝트를 1개 이상 선택해주세요.');
+    return;
+  }
+  const firstPostId = selected.map(s => s.split('::')[2]).find(Boolean) || postings[0]?.id;
+  if (firstPostId) {
+    await apiCall('/api/postings/target-sourcing', 'POST', {
+      posting_id: firstPostId,
+      candidate_ids: [profileId],
+      custom_message: fd.get('custom_message')
+    });
+  }
+  closeModal();
+  showToast(`✨ ${p ? p.name : '인재'}님에게 선택한 프로젝트(${selected.length}건) 타겟 소싱 알림을 발송했습니다!`);
+  await loadState();
 }
 
 function renderProfileCard(p, permissions, currentUser) {
   const isOwn = currentUser && currentUser.linked_profile_id === p.id;
   const canEdit = permissions.can_view_all_profiles || isOwn;
+  const hasRating = p.rating !== null && p.rating !== undefined && Number(p.rating) > 0;
+  const rateValueText = p.is_internal
+    ? (p.contract_rate ? `월 ${Number(p.contract_rate).toLocaleString()}만원` : '비공개')
+    : (p.desired_rate ? `월 ${Number(p.desired_rate).toLocaleString()}만원 (희망)` : '비공개');
 
   return `
     <article class="zal-feed-card" style="cursor:pointer;" onclick="openProfileDetailModal('${p.id}')" title="클릭하여 상세 프로필 및 프로젝트 수행 평가 열람">
-      <div class="zal-card-header">
+      <div class="zal-card-header" style="align-items:flex-start;">
         <div class="zal-author-box">
           <div class="zal-avatar-circle">
             <img src="${getAvatarForId(p.id)}" alt="${p.name}" />
           </div>
           <div>
-            <div>
+            <div style="display:flex; align-items:center; flex-wrap:wrap; gap:2px;">
               <span class="zal-author-name">${p.name}</span>
               <span class="zal-author-role">${p.employment_type} · ${p.tech_grade} (${p.experience_years}년)</span>
             </div>
-            <div class="zal-card-time">
+            <div class="zal-card-time" style="margin-top:2px;">
               <span>${svgIcon('clock', 12)} 최신화 ${p.updated_at}</span>
-              <span>|</span>
-              <span>${p.education}</span>
             </div>
           </div>
         </div>
-        <span class="zal-status-pill ${p.verified ? 'green' : 'amber'}">
-          ${p.verified ? `${svgIcon('award', 13)} 기검증 ${p.resourced_count > 0 ? `(재소싱 ${p.resourced_count})` : ''}` : '신규파싱'}
+        <span class="zal-status-pill ${p.verified ? 'green' : 'amber'}" style="padding:2px 8px; font-size:11px; border-radius:8px; flex-shrink:0;">
+          ${p.verified ? `${svgIcon('award', 11)} 기검증 ${p.resourced_count > 0 ? `(재소싱 ${p.resourced_count})` : ''}` : '신규파싱'}
         </span>
       </div>
 
       <div class="zal-meta-list">
-        <div class="zal-meta-row">
-          <span class="zal-meta-label">${svgIcon('briefcase', 14)} 도메인</span>
-          <span class="zal-meta-val">${p.domains.join(' · ')}</span>
-        </div>
         <div class="zal-meta-row">
           <span class="zal-meta-label">${svgIcon('calendar', 14)} 가용일</span>
           <span class="zal-meta-val" style="color:${p.availability_status === '즉시투입가능' ? '#059669' : '#d97706'};">
@@ -1044,33 +1275,50 @@ function renderProfileCard(p, permissions, currentUser) {
         </div>
         <div class="zal-meta-row">
           <span class="zal-meta-label">${svgIcon('code', 14)} 스킬셋</span>
-          <span class="zal-meta-val">${p.skills.join(', ')}</span>
+          <span id="profileCardSkills_${p.id}" class="zal-meta-val" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0;">${p.skills.join(', ')}</span>
         </div>
-        <div class="zal-meta-row">
-          <span class="zal-meta-label">${svgIcon('file', 14)} 자격증</span>
-          <span class="zal-meta-val">${p.certifications.join(', ')}</span>
+
+        <div id="profileCardMore_${p.id}" style="display:none; flex-direction:column; gap:8px;">
+          <div class="zal-meta-row">
+            <span class="zal-meta-label">${svgIcon('briefcase', 14)} 도메인</span>
+            <span class="zal-meta-val">${(p.domains || []).join(' · ') || '-'}</span>
+          </div>
+          <div class="zal-meta-row">
+            <span class="zal-meta-label">${svgIcon('dollar', 14)} 기준단가</span>
+            <span class="zal-meta-val">${rateValueText}</span>
+          </div>
+          <div class="zal-meta-row">
+            <span class="zal-meta-label">${svgIcon('user', 14)} 연락처</span>
+            <span class="zal-meta-val">${p.phone || '-'}</span>
+          </div>
+          <div class="zal-meta-row">
+            <span class="zal-meta-label">${svgIcon('file', 14)} 이메일</span>
+            <span class="zal-meta-val">${p.email || '-'}</span>
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:center;" onclick="event.stopPropagation();">
+          <button type="button" class="zal-card-more-btn" onclick="toggleProfileCardMore(this, '${p.id}')">
+            더보기
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
         </div>
       </div>
 
-      ${p.rating !== null ? `
-        <div class="zal-request-banner" style="background:#f8fafc; border-color:#e2e8f0; color:#0f172a;">
-          <div>
-            <div style="display:inline-flex; align-items:center; gap:6px;">${svgIcon('star', 14)} 내부 평점 <strong>${p.rating > 0 ? `${p.rating} / 5.0` : '평가전'}</strong> · ${svgIcon('dollar', 14)} ${p.is_internal ? `기준단가 ${p.contract_rate}만` : `희망 ${p.desired_rate || '-'}만`}</div>
-            <div style="font-size:11.5px; color:#64748b; font-weight:500; margin-top:2px;">${p.review_summary || '-'}</div>
+      <div class="zal-card-footer" style="margin-top:auto;">
+        <div class="zal-reaction-group" style="width:100%; justify-content:space-between;">
+          <div style="display:inline-flex; align-items:center; gap:6px; flex-wrap:wrap;">
+            <span class="zal-reaction-pill">${svgIcon('folder', 13)} 수행이력 ${p.career_history.length}건</span>
+            ${hasRating ? `
+              <span class="zal-reaction-pill">
+                <span style="color:#f59e0b; font-size:12px; line-height:1;">★</span> ${Number(p.rating).toFixed(1)}
+              </span>
+            ` : ''}
           </div>
+          <button type="button" class="zal-reaction-pill" onclick="event.stopPropagation(); openProfileTargetSourcingModal('${p.id}')">
+            ${svgIcon('target', 13)} 타겟 소싱 발송
+          </button>
         </div>
-      ` : `
-        <div class="zal-request-banner locked">
-          <span>${p.review_summary}</span>
-        </div>
-      `}
-
-      <div class="zal-card-footer">
-        <div class="zal-reaction-group">
-          <span class="zal-reaction-pill">${svgIcon('folder', 13)} 수행이력 ${p.career_history.length}건</span>
-          ${canEdit ? `<button type="button" class="zal-reaction-pill" onclick="event.stopPropagation(); openEditProfileModal('${p.id}')">${svgIcon('edit', 13)} 프로필·가용일 수정</button>` : ''}
-        </div>
-        <span style="font-size:11.5px; color:#94a3b8; font-weight:600;">상세·평가 보기 ›</span>
       </div>
     </article>
   `;
@@ -1078,6 +1326,13 @@ function renderProfileCard(p, permissions, currentUser) {
 
 function updateProfileFilter(key, val) {
   state.profileFilters[key] = val;
+  if (key === 'keyword') {
+    const grid = document.getElementById('profileCardsGrid');
+    if (grid) {
+      grid.innerHTML = renderProfileCardsHtml();
+      return;
+    }
+  }
   renderProfilesTab();
 }
 
@@ -1174,7 +1429,7 @@ function escAttr(v) {
 function renderStdCompanyRow(item = {}) {
   return `
     <tr class="std-comp-row">
-      <td><input class="std-cell-input" name="comp_name" value="${escAttr(item.company)}" /></td>
+      <td><input class="std-cell-input center" name="comp_name" value="${escAttr(item.company)}" /></td>
       <td><input class="std-cell-input center" name="comp_period" value="${escAttr(item.period)}" /></td>
       <td><input class="std-cell-input center" name="comp_pos" value="${escAttr(item.position)}" /></td>
       <td><input class="std-cell-input center" name="comp_duty" value="${escAttr(item.duty)}" /></td>
@@ -1196,7 +1451,7 @@ function renderStdCertRow(item = {}) {
 function renderTalentCareerRow(idx, item = {}) {
   return `
     <tr class="talent-career-row">
-      <td><input class="std-cell-input" name="career_project" value="${escAttr(item.project)}" /></td>
+      <td><input class="std-cell-input center" name="career_project" value="${escAttr(item.project)}" /></td>
       <td><input class="std-cell-input center" name="career_period" value="${escAttr(item.period)}" /></td>
       <td><input class="std-cell-input center" name="career_role" value="${escAttr(item.role)}" /></td>
       <td><input class="std-cell-input center" name="career_client" value="${escAttr(item.client)}" /></td>
@@ -1241,7 +1496,7 @@ function renderStandardProfileFormBody(p = {}) {
     : (Array.isArray(p.certifications) && p.certifications.length > 0
       ? p.certifications.map(c => ({ name: c, date: '' }))
       : [{}, {}, {}, {}]);
-  while (certList.length < 4) certList.push({});
+  while (certList.length < Math.max(4, compList.length)) certList.push({});
   const careerList = Array.isArray(p.career_history) && p.career_history.length > 0
     ? p.career_history
     : [{}, {}, {}, {}, {}];
@@ -1436,7 +1691,7 @@ function populateStandardProfileForm(form, p = {}) {
       : (Array.isArray(p.certifications) && p.certifications.length > 0
         ? p.certifications.map(c => ({ name: c, date: '' }))
         : []);
-    while (certList.length < 4) certList.push({});
+    while (certList.length < Math.max(4, compList.length)) certList.push({});
     certBody.innerHTML = certList.map(item => renderStdCertRow(item)).join('');
   }
 
@@ -1780,6 +2035,62 @@ function setProjectGroupFilter(groupKey) {
   renderProjectsTab();
 }
 
+function updateProjectKeyword(val) {
+  state.projectKeyword = val;
+  const container = document.getElementById('projectCardsContainer');
+  if (container) {
+    container.innerHTML = renderProjectCardsHtml();
+    return;
+  }
+  renderProjectsTab();
+}
+
+function renderProjectCardsHtml() {
+  const { projects } = state.data;
+  const kw = String(state.projectKeyword || '').trim().toLowerCase();
+  const matchPrj = (p) => {
+    if (!kw) return true;
+    const slotSkills = (p.to_slots || []).flatMap(s => [s.role_name || '', ...(s.required_skills || [])]).join(' ');
+    const hay = `${p.name || ''} ${p.client || ''} ${p.domain || ''} ${p.category || ''} ${p.description || ''} ${slotSkills}`.toLowerCase();
+    return hay.includes(kw);
+  };
+
+  const plannedProjects = projects.filter(p => (p.project_group || 'PLANNED') === 'PLANNED' && matchPrj(p));
+  const ongoingProjects = projects.filter(p => p.project_group === 'ONGOING' && matchPrj(p));
+  const completedProjects = projects.filter(p => p.project_group === 'COMPLETED' && matchPrj(p));
+
+  const activeGroup = state.selectedProjectFilter || 'PLANNED';
+
+  const sections = [
+    { key: 'PLANNED', title: '예정(입찰) 프로젝트', badgeClass: 'purple', items: plannedProjects },
+    { key: 'ONGOING', title: '진행중인 프로젝트', badgeClass: 'amber', items: ongoingProjects },
+    { key: 'COMPLETED', title: '완료된 프로젝트', badgeClass: 'green', items: completedProjects }
+  ].filter(sec => activeGroup === 'ALL' || activeGroup === sec.key);
+
+  const totalMatched = sections.reduce((sum, sec) => sum + sec.items.length, 0);
+  if (totalMatched === 0) {
+    return `
+      <div class="card" style="text-align:center; padding:40px;">
+        조건에 부합하는 프로젝트가 없습니다.
+      </div>
+    `;
+  }
+
+  return sections.map((sec, secIdx) => `
+    <section>
+      ${secIdx > 0 ? `
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+          <h3 style="font-size:16.5px; font-weight:600; color:#0f172a; margin:0;">${sec.title}</h3>
+          <span class="zal-status-pill ${sec.badgeClass}">${sec.items.length}건</span>
+        </div>
+      ` : ''}
+      <div style="display:flex; flex-direction:column; gap:12px;">
+        ${sec.items.map(prj => renderProjectSummaryCard(prj)).join('')}
+      </div>
+    </section>
+  `).join('');
+}
+
 function renderProjectsTab() {
   const { projects, postings, interviews, templates, permissions, currentUser } = state.data;
   const el = document.getElementById('tab-projects');
@@ -1801,46 +2112,31 @@ function renderProjectsTab() {
 
   const activeGroup = state.selectedProjectFilter || 'PLANNED';
 
-  const sections = [
-    { key: 'PLANNED', title: '예정(입찰) 프로젝트', badgeClass: 'purple', items: plannedProjects },
-    { key: 'ONGOING', title: '진행중인 프로젝트', badgeClass: 'amber', items: ongoingProjects },
-    { key: 'COMPLETED', title: '완료된 프로젝트', badgeClass: 'green', items: completedProjects }
-  ].filter(sec => activeGroup === 'ALL' || activeGroup === sec.key);
-
   // Otherwise, render the Project List View with 3 grouped sections and basic info cards
   el.innerHTML = `
-    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:20px;">
-      <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-        <button type="button" class="zal-chip-btn ${activeGroup === 'ALL' ? 'active' : ''}" onclick="setProjectGroupFilter('ALL')">
-          전체 (${projects.length})
-        </button>
-        <button type="button" class="zal-chip-btn ${activeGroup === 'PLANNED' ? 'active' : ''}" onclick="setProjectGroupFilter('PLANNED')">
-          예정(입찰) 프로젝트 (${plannedProjects.length})
-        </button>
-        <button type="button" class="zal-chip-btn ${activeGroup === 'ONGOING' ? 'active' : ''}" onclick="setProjectGroupFilter('ONGOING')">
-          진행중인 프로젝트 (${ongoingProjects.length})
-        </button>
-        <button type="button" class="zal-chip-btn ${activeGroup === 'COMPLETED' ? 'active' : ''}" onclick="setProjectGroupFilter('COMPLETED')">
-          완료된 프로젝트 (${completedProjects.length})
-        </button>
-      </div>
+    <div class="filter-bar">
+      <button type="button" class="zal-chip-btn ${activeGroup === 'ALL' ? 'active' : ''}" onclick="setProjectGroupFilter('ALL')">
+        전체 (${projects.length})
+      </button>
+      <button type="button" class="zal-chip-btn ${activeGroup === 'PLANNED' ? 'active' : ''}" onclick="setProjectGroupFilter('PLANNED')">
+        예정(입찰) 프로젝트 (${plannedProjects.length})
+      </button>
+      <button type="button" class="zal-chip-btn ${activeGroup === 'ONGOING' ? 'active' : ''}" onclick="setProjectGroupFilter('ONGOING')">
+        진행중인 프로젝트 (${ongoingProjects.length})
+      </button>
+      <button type="button" class="zal-chip-btn ${activeGroup === 'COMPLETED' ? 'active' : ''}" onclick="setProjectGroupFilter('COMPLETED')">
+        완료된 프로젝트 (${completedProjects.length})
+      </button>
+      ${renderChipSearchBox('projectSearchInput', state.projectKeyword || '', '프로젝트명, 고객사, 도메인, 스킬 검색...', 'projects')}
       ${['MASTER', 'MANAGER'].includes(currentUser?.role_group) ? `
-        <button class="btn btn-primary btn-sm" onclick="openNewProjectModal()">+ 신규 프로젝트 및 TO 등록</button>
+        <button type="button" class="btn btn-primary" style="width:170px; height:42px; padding:0 14px; font-size:14.5px; font-weight:700; box-sizing:border-box; display:inline-flex; align-items:center; justify-content:center; gap:6px; margin-left:auto;" onclick="openNewProjectModal()">
+          ${svgIcon('file', 15)} 프로젝트 등록하기
+        </button>
       ` : ''}
     </div>
 
-    <div style="display:flex; flex-direction:column; gap:28px;">
-      ${sections.map(sec => `
-        <section>
-          <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
-            <h3 style="font-size:16.5px; font-weight:600; color:#0f172a; margin:0;">${sec.title}</h3>
-            <span class="zal-status-pill ${sec.badgeClass}">${sec.items.length}건</span>
-          </div>
-          <div style="display:flex; flex-direction:column; gap:12px;">
-            ${sec.items.map(prj => renderProjectSummaryCard(prj)).join('')}
-          </div>
-        </section>
-      `).join('')}
+    <div id="projectCardsContainer" style="display:flex; flex-direction:column; gap:28px;">
+      ${renderProjectCardsHtml()}
     </div>
   `;
 }
@@ -2376,11 +2672,13 @@ function getProfileEvaluations(person) {
 
 function renderSegmentedEvalBar(score = 5.0) {
   const filledSegments = Math.max(1, Math.min(5, Math.round(score)));
-  const segs = [];
+  const rects = [];
   for (let i = 1; i <= 5; i++) {
-    segs.push(`<span class="eval-bar-seg ${i <= filledSegments ? 'filled' : ''}"></span>`);
+    const x = (i - 1) * 22;
+    const fill = i <= filledSegments ? '#eab308' : '#e2e8f0';
+    rects.push(`<rect x="${x}" y="0" width="20" height="6" rx="2" ry="2" fill="${fill}" />`);
   }
-  return `<span class="eval-seg-bar">${segs.join('')}</span>`;
+  return `<span class="eval-seg-bar"><svg width="108" height="6" viewBox="0 0 108 6" preserveAspectRatio="none" style="display:block; width:100%; height:6px;">${rects.join('')}</svg></span>`;
 }
 
 function renderStarIcons(score = 5.0) {
@@ -2393,39 +2691,41 @@ function renderStarIcons(score = 5.0) {
 }
 
 function renderProfileIdentityHeader(person) {
-  const primaryRole = (person.domains && person.domains[0]) ? `${person.domains[0]} · ${person.tech_grade}` : (person.tech_grade || '전문가');
-  const empCategory = person.employment_type || (person.is_internal ? '사내 정규직' : '외주 프리랜서(개인)');
-  const locationText = person.is_internal ? '서울특별시 영등포구(여의도)' : '서울특별시 동작구 · 을지로';
-  const workPref = person.is_internal ? '본사·상주 프로젝트 선호' : '외주, 기간제(상주) 선호';
+  const empCategory = person.employment_type || (person.is_internal ? '정규직' : '프리랜서');
+  const emailText = person.email || 'unee@daum.net';
+  const phoneText = person.phone || '010-8748-6503';
+  const locationText = person.location || (person.is_internal ? '서울특별시 동작구' : '서울특별시 동작구 · 을지로');
+  const workPref = person.work_preference || (person.is_internal ? '여의도 프로젝트 선호' : '외주, 기간제(상주) 선호');
   const isAvailable = (person.availability_status || '즉시투입가능').includes('가능');
+  const careerCount = Array.isArray(person.career_history) ? person.career_history.length : 0;
+  const hasRating = person.rating !== null && person.rating !== undefined && Number(person.rating) > 0;
 
   return `
     <div class="profile-identity-header">
       <div class="profile-identity-avatar">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 12c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm0 2c-3.33 0-10 1.67-10 5v3h20v-3c0-3.33-6.67-5-10-5z"/>
-        </svg>
+        <img src="${getAvatarForId(person.id || person.name)}" alt="${person.name}" />
       </div>
       <div class="profile-identity-body">
         <div class="profile-identity-top">
           <span class="profile-identity-name">${person.name}</span>
-          <span class="profile-badge-verified">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-            신원 인증
+          <span class="profile-badge-emp">${empCategory}</span>
+          <span class="profile-badge-emp">
+            ${svgIcon('folder', 12)} 수행이력 ${careerCount}건
           </span>
-          <span class="profile-badge-active">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="16 9 10.5 14.5 8 12"/></svg>
-            ${isAvailable ? '활동 가능' : (person.availability_status || '활동 가능')}
-          </span>
+          ${hasRating ? `
+            <span class="profile-badge-emp">
+              <span style="color:#f59e0b; font-size:12px; line-height:1;">★</span> ${Number(person.rating).toFixed(1)}
+            </span>
+          ` : ''}
         </div>
         <div class="profile-identity-meta">
-          <span class="profile-meta-item">${svgIcon('file', 13)} ${primaryRole}</span>
+          <span class="profile-meta-item">${svgIcon('mail', 13)} ${emailText}</span>
           <span class="profile-meta-sep">|</span>
-          <span class="profile-meta-item">${svgIcon('user', 13)} ${empCategory}</span>
+          <span class="profile-meta-item">${svgIcon('phone', 13)} ${phoneText}</span>
           <span class="profile-meta-sep">|</span>
           <span class="profile-meta-item">${svgIcon('pin', 13)} ${locationText}</span>
           <span class="profile-meta-sep">|</span>
-          <span class="profile-meta-item">${workPref}</span>
+          <span class="profile-meta-item">${svgIcon('briefcase', 13)} ${workPref}</span>
         </div>
       </div>
     </div>
@@ -2537,7 +2837,6 @@ function renderProfileEvaluationSection(person) {
           <h4 class="profile-eval-title">프로젝트 수행 다면 평가 (${evaluations.length}건 · 평균 ★ ${avgTotal})</h4>
           <span style="font-size:12px; color:#64748b;">당사 프로젝트 수행 인력 대상 — 사내 임원 · PM · PL · 동료 팀원 및 고객사 평가</span>
         </div>
-        <span class="profile-eval-more">${evaluations.length}개 모두 보기 ›</span>
       </div>
       ${evaluations.map(ev => {
         const badgeMeta = getEvaluatorBadgeMeta(ev.evaluatorType);
@@ -2617,87 +2916,841 @@ function renderProfileEvaluationSection(person) {
   `;
 }
 
-function openProfileDetailModal(profileId) {
-  const { profiles, permissions, currentUser } = state.data || {};
-  const p = (profiles || []).find(x => x.id === profileId);
-  if (!p) return;
-  const isOwn = currentUser && currentUser.linked_profile_id === p.id;
-  const canEdit = permissions?.can_view_all_profiles || isOwn;
-  const careerHistory = p.career_history || [];
-  const workedBefore = hasWorkedWithCompany(p);
+function switchProfileDetailModalTab(tabKey, btnEl) {
+  const container = btnEl?.closest('.profile-detail-tabs-root') || document.getElementById('tab-profiles') || document.getElementById('modalBody') || document;
+  container.querySelectorAll('[data-pdetail-tab]').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-pdetail-tab') === tabKey);
+  });
+  container.querySelectorAll('[data-pdetail-panel]').forEach(panel => {
+    panel.style.display = panel.getAttribute('data-pdetail-panel') === tabKey ? 'block' : 'none';
+  });
+  container.querySelectorAll('[data-pdetail-actions]').forEach(act => {
+    act.style.display = act.getAttribute('data-pdetail-actions') === tabKey ? 'inline-flex' : 'none';
+  });
+}
 
-  openModal(`인재 상세 프로필 — ${p.name} (${p.tech_grade})`, `
-    <div style="display:flex; flex-direction:column; gap:18px;">
-      <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
-        ${renderProfileIdentityHeader(p)}
-        <div style="display:flex; align-items:center; gap:8px;">
-          <span class="zal-status-pill ${workedBefore ? 'green' : 'gray'}">
-            ${workedBefore ? (p.is_internal ? '사내 재직 인력' : `당사 수행이력 보유 (재소싱 ${p.resourced_count}회)`) : '당사 프로젝트 수행이력 없음'}
-          </span>
-          ${canEdit ? `
-            <button type="button" class="btn btn-outline btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="openEditProfileModal('${p.id}')">
-              ${svgIcon('edit', 13)} 프로필·가용일 수정
-            </button>
-          ` : ''}
+function buildProfileTabExportHtml(p, tabKey, containerEl) {
+  const panel = containerEl?.querySelector(`[data-pdetail-panel="${tabKey}"]`);
+  const contentHtml = panel ? panel.innerHTML : '';
+  const docTitle = tabKey === 'profile'
+    ? `I. 인력프로필 — ${p.name} (${p.tech_grade || ''})`
+    : `프로젝트 수행 다면평가 리포트 — ${p.name} (${p.tech_grade || ''})`;
+  return `<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>${docTitle}</title>
+  <link rel="stylesheet" href="${window.location.origin}/styles.css" />
+  <style>
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    body { font-family: 'Pretendard', 'Malgun Gothic', sans-serif; color: #0f172a; background: #ffffff; padding: 28px; margin: 0; }
+    .export-doc-title { font-size: 20px; font-weight: 800; color: #0f172a; margin: 0 0 18px 0; padding-bottom: 10px; border-bottom: 2px solid #0f172a; }
+    .eval-metrics-grid { grid-template-columns: repeat(3, 1fr) !important; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+    th, td { border: 1px solid #cbd5e1; padding: 7px 10px; font-size: 12.5px; }
+    th { background: #f8fafc; font-weight: 700; text-align: center; }
+    .no-print, button { display: none !important; }
+  </style>
+</head>
+<body>
+  <h2 class="export-doc-title">${docTitle}</h2>
+  ${contentHtml}
+</body>
+</html>`;
+}
+
+function printProfileTabSection(profileId, tabKey, btnEl) {
+  const { profiles = [] } = state.data || {};
+  const p = profiles.find(x => x.id === profileId) || { id: profileId, name: '인재', tech_grade: '' };
+  const container = btnEl?.closest('.profile-detail-tabs-root') || document.getElementById('tab-profiles') || document;
+  const html = buildProfileTabExportHtml(p, tabKey, container);
+  const win = window.open('', '_blank', 'width=960,height=800');
+  if (!win) {
+    window.print();
+    return;
+  }
+  win.document.open();
+  win.document.write(html);
+  win.document.close();
+  setTimeout(() => {
+    win.focus();
+    win.print();
+  }, 350);
+}
+
+async function downloadProfileTabFile(profileId, tabKey) {
+  const { profiles = [], interviews = [] } = state.data || {};
+  const p = profiles.find(x => x.id === profileId);
+  if (!p) return;
+
+  if (typeof window.PptxGenJS !== 'function') {
+    showToast('PPT 생성 라이브러리를 불러오는 중입니다. 잠시 후 다시 시도해주세요.');
+    return;
+  }
+
+  const pptx = new window.PptxGenJS();
+  pptx.defineLayout({ name: 'A4_PORTRAIT', width: 8.27, height: 11.69 });
+  pptx.layout = 'A4_PORTRAIT';
+
+  const borderOpt = { pt: 0.75, color: 'CBD5E1' };
+  const headFill = { color: 'F1F5F9' };
+  const baseFont = 'Malgun Gothic';
+
+  if (tabKey === 'profile') {
+    const eduTokens = String(p.education || '').trim().split(/\s+/).filter(Boolean);
+    const schoolName = p.school_name || eduTokens[0] || '';
+    const degree = p.degree || (eduTokens.find(t => /학사|석사|박사|전문학사/.test(t)) || '');
+    const major = p.major || eduTokens.slice(1).filter(t => t !== degree && t !== '졸업').join(' ') || '';
+
+    const slide1 = pptx.addSlide();
+    slide1.addText('I. 인력프로필', { x: 0.45, y: 0.35, w: 7.37, h: 0.4, fontSize: 16, bold: true, color: '0F172A', fontFace: baseFont });
+
+    // 1. 신상기록
+    slide1.addText('1. 신상기록', { x: 0.45, y: 0.82, w: 7.37, h: 0.28, fontSize: 11, bold: true, color: '0F172A', fontFace: baseFont });
+    const personalRows = [
+      [
+        { text: '성명', options: { fill: headFill, bold: true, align: 'center' } },
+        { text: p.name || '', options: { align: 'center', bold: true } },
+        { text: '주민번호', options: { fill: headFill, bold: true, align: 'center' } },
+        { text: p.ssn_masked || '', options: { colspan: 2, align: 'center' } },
+        { text: '성별', options: { fill: headFill, bold: true, align: 'center' } },
+        { text: p.gender_age || '', options: { colspan: 2, align: 'center' } }
+      ],
+      [
+        { text: '소속회사', options: { fill: headFill, bold: true, align: 'center' } },
+        { text: p.company_name || p.employment_type || '', options: { align: 'center' } },
+        { text: '직위', options: { fill: headFill, bold: true, align: 'center' } },
+        { text: p.job_title || '', options: { colspan: 2, align: 'center' } },
+        { text: '투입일자', options: { fill: headFill, bold: true, align: 'center' } },
+        { text: p.available_date_display !== undefined ? p.available_date_display : (p.available_date || ''), options: { colspan: 2, align: 'center' } }
+      ],
+      [
+        { text: '최종학교', options: { fill: headFill, bold: true, align: 'center' } },
+        { text: schoolName, options: { align: 'center' } },
+        { text: '졸업년월', options: { fill: headFill, bold: true, align: 'center' } },
+        { text: p.grad_ym || '', options: { align: 'center' } },
+        { text: '전공', options: { fill: headFill, bold: true, align: 'center' } },
+        { text: major, options: { align: 'center' } },
+        { text: '학위', options: { fill: headFill, bold: true, align: 'center' } },
+        { text: degree, options: { align: 'center' } }
+      ],
+      [
+        { text: '해당분야근무경력', options: { fill: headFill, bold: true, align: 'center' } },
+        { text: p.career_ym_text || `${p.experience_years || 0}년`, options: { align: 'center' } },
+        { text: '등급', options: { fill: headFill, bold: true, align: 'center' } },
+        { text: p.tech_grade || '', options: { align: 'center', bold: true } },
+        { text: '주전문기술', options: { fill: headFill, bold: true, align: 'center' } },
+        { text: p.main_skill || (p.skills || [])[0] || '', options: { align: 'center' } },
+        { text: '참여여부', options: { fill: headFill, bold: true, align: 'center' } },
+        { text: p.participation_yn || '', options: { align: 'center' } }
+      ]
+    ];
+    slide1.addTable(personalRows, {
+      x: 0.45, y: 1.12, w: 7.37,
+      colW: [1.05, 1.35, 0.85, 1.1, 0.85, 0.97, 0.6, 0.6],
+      border: borderOpt, fontFace: baseFont, fontSize: 8.5, valign: 'middle', rowH: 0.28
+    });
+
+    // 2. 경력 & 3. 자격증
+    const compList = (Array.isArray(p.company_history) && p.company_history.length > 0) ? p.company_history.slice() : [{}, {}, {}, {}];
+    while (compList.length < 4) compList.push({});
+    const certList = (Array.isArray(p.cert_details) && p.cert_details.length > 0)
+      ? p.cert_details.slice()
+      : (Array.isArray(p.certifications) ? p.certifications.map(c => ({ name: c, date: '' })) : []);
+    while (certList.length < compList.length) certList.push({});
+
+    slide1.addText('2. 경력', { x: 0.45, y: 2.38, w: 4.5, h: 0.26, fontSize: 11, bold: true, color: '0F172A', fontFace: baseFont });
+    slide1.addText('3. 자격증', { x: 5.1, y: 2.38, w: 2.72, h: 0.26, fontSize: 11, bold: true, color: '0F172A', fontFace: baseFont });
+
+    const compRows = [
+      [
+        { text: '회사명', options: { fill: headFill, bold: true, align: 'center' } },
+        { text: '기간', options: { fill: headFill, bold: true, align: 'center' } },
+        { text: '직위', options: { fill: headFill, bold: true, align: 'center' } },
+        { text: '담당업무', options: { fill: headFill, bold: true, align: 'center' } }
+      ],
+      ...compList.map(c => [
+        { text: c.company || '', options: { align: 'center' } },
+        { text: c.period || '', options: { align: 'center' } },
+        { text: c.position || '', options: { align: 'center' } },
+        { text: c.duty || '', options: { align: 'center' } }
+      ])
+    ];
+    slide1.addTable(compRows, {
+      x: 0.45, y: 2.66, w: 4.5,
+      colW: [1.35, 1.45, 0.8, 0.9],
+      border: borderOpt, fontFace: baseFont, fontSize: 8.5, valign: 'middle', rowH: 0.25
+    });
+
+    const certRows = [
+      [
+        { text: '자격증명', options: { fill: headFill, bold: true, align: 'center' } },
+        { text: '취득일', options: { fill: headFill, bold: true, align: 'center' } }
+      ],
+      ...certList.map(c => [
+        { text: c.name || '', options: { align: 'center' } },
+        { text: c.date || '', options: { align: 'center' } }
+      ])
+    ];
+    slide1.addTable(certRows, {
+      x: 5.1, y: 2.66, w: 2.72,
+      colW: [1.72, 1.0],
+      border: borderOpt, fontFace: baseFont, fontSize: 8.5, valign: 'middle', rowH: 0.25
+    });
+
+    // 4. 개인이력 (Slide 1 + Paginated Slides)
+    const careerList = (Array.isArray(p.career_history) && p.career_history.length > 0) ? p.career_history.slice() : [{}, {}, {}, {}, {}];
+    const compTableBottomY = 2.66 + (compRows.length * 0.26) + 0.18;
+    slide1.addText('4. 개인이력', { x: 0.45, y: compTableBottomY, w: 7.37, h: 0.26, fontSize: 11, bold: true, color: '0F172A', fontFace: baseFont });
+
+    const firstSlideCount = 15;
+    const nextSlideCount = 30;
+    const careerHeadRow = [
+      { text: '프로젝트명', options: { fill: headFill, bold: true, align: 'center' } },
+      { text: '참여기간', options: { fill: headFill, bold: true, align: 'center' } },
+      { text: '담당업무', options: { fill: headFill, bold: true, align: 'center' } },
+      { text: '고객사', options: { fill: headFill, bold: true, align: 'center' } }
+    ];
+
+    const slice1 = careerList.slice(0, firstSlideCount);
+    slide1.addTable([
+      careerHeadRow,
+      ...slice1.map(item => [
+        { text: item.project || '', options: { align: 'center' } },
+        { text: item.period || '', options: { align: 'center' } },
+        { text: item.role || '', options: { align: 'center' } },
+        { text: item.client || '', options: { align: 'center' } }
+      ])
+    ], {
+      x: 0.45, y: compTableBottomY + 0.28, w: 7.37,
+      colW: [3.25, 1.32, 1.62, 1.18],
+      border: borderOpt, fontFace: baseFont, fontSize: 8.5, valign: 'middle', rowH: 0.25
+    });
+
+    for (let idx = firstSlideCount; idx < careerList.length; idx += nextSlideCount) {
+      const chunk = careerList.slice(idx, idx + nextSlideCount);
+      const slideN = pptx.addSlide();
+      slideN.addText('I. 인력프로필 (계속)', { x: 0.45, y: 0.35, w: 7.37, h: 0.35, fontSize: 14, bold: true, color: '0F172A', fontFace: baseFont });
+      slideN.addTable([
+        careerHeadRow,
+        ...chunk.map(item => [
+          { text: item.project || '', options: { align: 'center' } },
+          { text: item.period || '', options: { align: 'center' } },
+          { text: item.role || '', options: { align: 'center' } },
+          { text: item.client || '', options: { align: 'center' } }
+        ])
+      ], {
+        x: 0.45, y: 0.8, w: 7.37,
+        colW: [3.25, 1.32, 1.62, 1.18],
+        border: borderOpt, fontFace: baseFont, fontSize: 8.5, valign: 'middle', rowH: 0.25
+      });
+    }
+
+    await pptx.writeFile({ fileName: `인력프로필_${p.name}_${p.tech_grade || '프로필'}.pptx` });
+    showToast('프로필 PPT(.pptx) 파일이 다운로드되었습니다.');
+  } else {
+    const slide = pptx.addSlide();
+    slide.addText(`프로젝트 수행 다면평가 리포트 — ${p.name} (${p.tech_grade || ''})`, {
+      x: 0.45, y: 0.35, w: 7.37, h: 0.4, fontSize: 15, bold: true, color: '0F172A', fontFace: baseFont
+    });
+
+    const evaluations = getProfileEvaluations(p) || [];
+    const inv = interviews.find(i => i.candidate_profile_id === p.id || i.candidate_name === p.name);
+    let curY = 0.9;
+
+    if (inv) {
+      slide.addText(`인터뷰 검증 평가 (★ ${Number(inv.total_score || 0).toFixed(1)}점)`, {
+        x: 0.45, y: curY, w: 7.37, h: 0.28, fontSize: 11, bold: true, color: '0F172A', fontFace: baseFont
+      });
+      slide.addTable([
+        [
+          { text: '면접관', options: { fill: headFill, bold: true, align: 'center' } },
+          { text: inv.interviewer_name || '조성현 상무', options: { align: 'center' } },
+          { text: '면접일시', options: { fill: headFill, bold: true, align: 'center' } },
+          { text: `${inv.interview_date || '-'} (${inv.interview_method || '화상'})`, options: { align: 'center' } },
+          { text: '검증점수', options: { fill: headFill, bold: true, align: 'center' } },
+          { text: `${Number(inv.total_score || 0).toFixed(2)} / 5.00`, options: { align: 'center', bold: true } }
+        ],
+        [
+          { text: '면접 총평', options: { fill: headFill, bold: true, align: 'center' } },
+          { text: inv.interviewer_opinion || inv.resume_summary || '-', options: { colspan: 5, align: 'left' } }
+        ]
+      ], {
+        x: 0.45, y: curY + 0.3, w: 7.37,
+        colW: [1.0, 1.4, 1.0, 1.6, 1.0, 1.37],
+        border: borderOpt, fontFace: baseFont, fontSize: 8.5, valign: 'middle', rowH: 0.32
+      });
+      curY += 1.25;
+    }
+
+    slide.addText(`프로젝트 수행 다면 평가 (${evaluations.length}건)`, {
+      x: 0.45, y: curY, w: 7.37, h: 0.28, fontSize: 11, bold: true, color: '0F172A', fontFace: baseFont
+    });
+
+    const fmtBar = (val = 5) => {
+      const filled = Math.max(1, Math.min(5, Math.round(val)));
+      return '■'.repeat(filled) + '□'.repeat(5 - filled) + ` ${Number(val).toFixed(2)}`;
+    };
+
+    const evalRows = [
+      [
+        { text: '평가구분', options: { fill: headFill, bold: true, align: 'center' } },
+        { text: '평가자 / 소속', options: { fill: headFill, bold: true, align: 'center' } },
+        { text: '수행 프로젝트', options: { fill: headFill, bold: true, align: 'center' } },
+        { text: '항목별 평가 그래프', options: { fill: headFill, bold: true, align: 'center' } },
+        { text: '함께 일한 소감', options: { fill: headFill, bold: true, align: 'center' } }
+      ],
+      ...evaluations.map(ev => {
+        const m = ev.metrics || { expertise: 5, satisfaction: 5, communication: 5, schedule: 5, proactivity: 5 };
+        const metricsText = [
+          `전문성 ${fmtBar(m.expertise)}`,
+          `만족도 ${fmtBar(m.satisfaction)}`,
+          `의사소통 ${fmtBar(m.communication)}`,
+          `일정준수 ${fmtBar(m.schedule)}`,
+          `적극성 ${fmtBar(m.proactivity)}`
+        ].join('\n');
+        return [
+          { text: `${ev.evaluatorType} 평가\n(★ ${Number(ev.overallScore || 5).toFixed(2)})`, options: { align: 'center', bold: true } },
+          { text: `${ev.evaluatorName}\n(${ev.evaluatorOrg})`, options: { align: 'center' } },
+          { text: `${ev.projectTitle}\n(${ev.durationDays})`, options: { align: 'left' } },
+          { text: metricsText, options: { align: 'left', color: 'B45309', fontSize: 7.8 } },
+          { text: ev.comment || '', options: { align: 'left' } }
+        ];
+      })
+    ];
+
+    slide.addTable(evalRows, {
+      x: 0.45, y: curY + 0.3, w: 7.37,
+      colW: [0.85, 1.15, 1.55, 1.55, 2.27],
+      border: borderOpt, fontFace: baseFont, fontSize: 8.2, valign: 'middle', rowH: 0.85
+    });
+
+    await pptx.writeFile({ fileName: `다면평가리포트_${p.name}_${p.tech_grade || '프로필'}.pptx` });
+    showToast('다면평가 PPT(.pptx) 파일이 다운로드되었습니다.');
+  }
+}
+
+function renderProfileDetailTabsSection(p, interviewOverride = null, isPageView = false) {
+  const eduTokens = String(p.education || '').trim().split(/\s+/).filter(Boolean);
+  const schoolName = p.school_name || eduTokens[0] || '';
+  const degree = p.degree || (eduTokens.find(t => /학사|석사|박사|전문학사/.test(t)) || '');
+  const major = p.major || eduTokens.slice(1).filter(t => t !== degree && t !== '졸업').join(' ') || '';
+
+  const compList = Array.isArray(p.company_history) && p.company_history.length > 0
+    ? p.company_history.slice()
+    : [];
+  while (compList.length < 4) compList.push({});
+
+  const certList = Array.isArray(p.cert_details) && p.cert_details.length > 0
+    ? p.cert_details.slice()
+    : (Array.isArray(p.certifications) && p.certifications.length > 0
+      ? p.certifications.map(c => ({ name: c, date: '' }))
+      : []);
+  while (certList.length < Math.max(4, compList.length)) certList.push({});
+
+  const careerList = Array.isArray(p.career_history) && p.career_history.length > 0
+    ? p.career_history.slice()
+    : [];
+  while (careerList.length < 5) careerList.push({});
+
+  const interviewEvalHtml = renderInterviewEvaluationSection(p, interviewOverride);
+  const multiEvalHtml = renderProfileEvaluationSection(p);
+  const hasAnyEval = Boolean(interviewEvalHtml.trim() || multiEvalHtml.trim());
+
+  const stickyTopStyle = isPageView
+    ? 'position:sticky; top:55px; z-index:35; background:#ffffff; margin:-4px -22px 18px -22px; padding:20px 22px 0 22px;'
+    : 'position:sticky; top:-22px; z-index:35; background:#ffffff; margin:-8px -24px 18px -24px; padding:20px 24px 0 24px;';
+
+  return `
+    <div class="profile-detail-tabs-root">
+      <div class="profile-line-tabs-bar" style="${stickyTopStyle}">
+        <button type="button" class="profile-line-tab-btn active" data-pdetail-tab="profile" onclick="switchProfileDetailModalTab('profile', this)">
+          프로필
+        </button>
+        <button type="button" class="profile-line-tab-btn" data-pdetail-tab="evaluations" onclick="switchProfileDetailModalTab('evaluations', this)">
+          다면평가
+        </button>
+        <div data-pdetail-actions="profile" style="margin-left:auto; padding-bottom:7px; display:inline-flex; align-items:center; gap:8px;">
+          <button type="button" class="btn btn-outline btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="printProfileTabSection('${p.id}', 'profile', this)">
+            ${svgIcon('printer', 13)} 인쇄
+          </button>
+          <button type="button" class="btn btn-outline btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="downloadProfileTabFile('${p.id}', 'profile', this)">
+            ${svgIcon('download', 13)} 파일 다운로드
+          </button>
+        </div>
+        <div data-pdetail-actions="evaluations" style="margin-left:auto; padding-bottom:7px; display:none; align-items:center; gap:8px;">
+          <button type="button" class="btn btn-outline btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="printProfileTabSection('${p.id}', 'evaluations', this)">
+            ${svgIcon('printer', 13)} 인쇄
+          </button>
+          <button type="button" class="btn btn-outline btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="downloadProfileTabFile('${p.id}', 'evaluations', this)">
+            ${svgIcon('download', 13)} 파일 다운로드
+          </button>
         </div>
       </div>
 
-      <div class="form-grid" style="margin-bottom:0;">
-        <div style="padding:12px 14px; border:1px solid #e2e8f0; border-radius:12px;">
-          <div style="font-size:12px; color:#64748b; margin-bottom:4px;">최종 학력 · 보유 자격증 (${p.experience_years}년차)</div>
-          <div style="font-size:14px; font-weight:600; color:#0f172a;">${p.education}</div>
-          <div style="font-size:12.5px; color:#475569; margin-top:2px;">자격증: ${(p.certifications || []).join(', ') || '-'}</div>
-        </div>
-        <div style="padding:12px 14px; border:1px solid #e2e8f0; border-radius:12px;">
-          <div style="font-size:12px; color:#64748b; margin-bottom:4px;">투입 가용일 · 기준/희망 단가</div>
-          <div style="font-size:14px; font-weight:600; color:#059669;">${p.availability_status} (가용일: ${p.available_date})</div>
-          <div style="font-size:12.5px; color:#0f172a; margin-top:2px;">
-            ${p.is_internal ? `기준 단가: 월 ${(p.contract_rate || 0).toLocaleString()}만원` : `희망 단가: 월 ${(p.desired_rate || 0).toLocaleString()}만원`} · 연락처: ${p.phone || '-'}
+      <!-- TAB 1: 프로필 (1. 신상기록, 2. 경력, 3. 자격증, 4. 개인이력) -->
+      <div data-pdetail-panel="profile" style="display:block;">
+        <div class="std-profile-sheet">
+          <!-- 1. 신상기록 -->
+          <div class="std-section-block">
+            <div class="std-section-head-row">
+              <span class="std-section-title">1. 신상기록</span>
+            </div>
+            <div class="std-table-wrap">
+              <table class="std-form-table std-personal-table">
+                <colgroup>
+                  <col style="width:13%;" />
+                  <col style="width:20%;" />
+                  <col style="width:11%;" />
+                  <col style="width:16%;" />
+                  <col style="width:11%;" />
+                  <col style="width:13%;" />
+                  <col style="width:8%;" />
+                  <col style="width:8%;" />
+                </colgroup>
+                <tbody>
+                  <tr>
+                    <th>성명</th>
+                    <td style="text-align:center; padding:8px 10px; font-size:13px; color:#0f172a; font-weight:600;">${p.name || ''}</td>
+                    <th>주민번호</th>
+                    <td colspan="2" style="text-align:center; padding:8px 10px; font-size:13px; color:#0f172a;">${p.ssn_masked || ''}</td>
+                    <th>성별</th>
+                    <td colspan="2" style="text-align:center; padding:8px 10px; font-size:13px; color:#0f172a;">${p.gender_age || ''}</td>
+                  </tr>
+                  <tr>
+                    <th>소속회사</th>
+                    <td style="text-align:center; padding:8px 10px; font-size:13px; color:#0f172a;">${p.company_name || p.employment_type || ''}</td>
+                    <th>직위</th>
+                    <td colspan="2" style="text-align:center; padding:8px 10px; font-size:13px; color:#0f172a;">${p.job_title || ''}</td>
+                    <th>투입일자</th>
+                    <td colspan="2" style="text-align:center; padding:8px 10px; font-size:13px; color:#0f172a;">${p.available_date_display !== undefined ? p.available_date_display : (p.available_date || '')}</td>
+                  </tr>
+                  <tr>
+                    <th>최종학교</th>
+                    <td style="text-align:center; padding:8px 10px; font-size:13px; color:#0f172a;">${schoolName}</td>
+                    <th>졸업년월</th>
+                    <td style="text-align:center; padding:8px 10px; font-size:13px; color:#0f172a;">${p.grad_ym || ''}</td>
+                    <th>전공</th>
+                    <td style="text-align:center; padding:8px 10px; font-size:13px; color:#0f172a;">${major}</td>
+                    <th>학위</th>
+                    <td style="text-align:center; padding:8px 10px; font-size:13px; color:#0f172a;">${degree}</td>
+                  </tr>
+                  <tr>
+                    <th>해당분야근무경력</th>
+                    <td style="text-align:center; padding:8px 10px; font-size:13px; color:#0f172a;">${p.career_ym_text || (p.experience_years ? `${p.experience_years}년` : '')}</td>
+                    <th>등급</th>
+                    <td style="text-align:center; padding:8px 10px; font-size:13px; color:#0f172a; font-weight:600;">${p.tech_grade || ''}</td>
+                    <th>주전문기술</th>
+                    <td style="text-align:center; padding:8px 10px; font-size:13px; color:#0f172a;">${p.main_skill || (Array.isArray(p.skills) ? p.skills.slice(0, 2).join(', ') : '')}</td>
+                    <th>참여여부</th>
+                    <td style="text-align:center; padding:8px 10px; font-size:13px; color:#0f172a;">${p.participation_yn || ''}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- 2. 경력 & 3. 자격증 -->
+          <div class="std-two-col-row">
+            <div class="std-section-block">
+              <div class="std-section-head-row">
+                <span class="std-section-title">2. 경력</span>
+              </div>
+              <div class="std-table-wrap">
+                <table class="std-form-table std-blue-head">
+                  <colgroup>
+                    <col style="width:30%;" />
+                    <col style="width:32%;" />
+                    <col style="width:18%;" />
+                    <col style="width:20%;" />
+                  </colgroup>
+                  <thead>
+                    <tr>
+                      <th>회사명</th>
+                      <th>기간</th>
+                      <th>직위</th>
+                      <th>담당업무</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${compList.map(item => `
+                      <tr>
+                        <td style="text-align:center; padding:8px 10px; font-size:13px; color:#0f172a; height:35px;">${item.company || ''}</td>
+                        <td style="text-align:center; padding:8px 10px; font-size:13px; color:#0f172a; height:35px;">${item.period || ''}</td>
+                        <td style="text-align:center; padding:8px 10px; font-size:13px; color:#0f172a; height:35px;">${item.position || ''}</td>
+                        <td style="text-align:center; padding:8px 10px; font-size:13px; color:#0f172a; height:35px;">${item.duty || ''}</td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="std-section-block">
+              <div class="std-section-head-row">
+                <span class="std-section-title">3. 자격증</span>
+              </div>
+              <div class="std-table-wrap">
+                <table class="std-form-table std-blue-head">
+                  <colgroup>
+                    <col style="width:62%;" />
+                    <col style="width:38%;" />
+                  </colgroup>
+                  <thead>
+                    <tr>
+                      <th>자격증명</th>
+                      <th>취득일</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${certList.map(item => `
+                      <tr>
+                        <td style="text-align:center; padding:8px 10px; font-size:13px; color:#0f172a; height:35px;">${item.name || ''}</td>
+                        <td style="text-align:center; padding:8px 10px; font-size:13px; color:#0f172a; height:35px;">${item.date || ''}</td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- 4. 개인이력 -->
+          <div class="std-section-block">
+            <div class="std-section-head-row">
+              <span class="std-section-title">4. 개인이력</span>
+            </div>
+            <div class="std-table-wrap">
+              <table class="std-form-table std-blue-head">
+                <colgroup>
+                  <col style="width:44%;" />
+                  <col style="width:18%;" />
+                  <col style="width:22%;" />
+                  <col style="width:16%;" />
+                </colgroup>
+                <thead>
+                  <tr>
+                    <th>프로젝트명</th>
+                    <th>참여기간</th>
+                    <th>담당업무</th>
+                    <th>고객사</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${careerList.map(item => `
+                    <tr>
+                      <td style="text-align:center; padding:8px 12px; font-size:13px; color:#0f172a; font-weight:500; height:36px;">${item.project || ''}</td>
+                      <td style="text-align:center; padding:8px 10px; font-size:13px; color:#0f172a; height:36px;">${item.period || ''}</td>
+                      <td style="text-align:center; padding:8px 10px; font-size:13px; color:#0f172a; height:36px;">${item.role || ''}</td>
+                      <td style="text-align:center; padding:8px 10px; font-size:13px; color:#0f172a; height:36px;">${item.client || ''}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
 
-      <div style="padding:14px 16px; border:1px solid #e2e8f0; border-radius:12px;">
-        <div style="font-size:13px; font-weight:600; color:#0f172a; margin-bottom:6px;">전문 도메인 및 핵심 기술 스택</div>
-        <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px;">
-          ${(p.domains || []).map(d => `<span class="badge badge-domain">${d}</span>`).join('')}
-          ${(p.skills || []).map(s => `<span class="badge badge-skill">${s}</span>`).join('')}
-        </div>
-        <div style="font-size:13.5px; color:#334155; line-height:1.55;">
-          ${p.review_summary || '-'}
+      <!-- TAB 2: 다면평가 -->
+      <div data-pdetail-panel="evaluations" style="display:none;">
+        <div style="display:flex; flex-direction:column; gap:18px;">
+          ${hasAnyEval ? `${interviewEvalHtml}${multiEvalHtml}` : `
+            <div style="padding:36px 20px; text-align:center; color:#64748b; background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px; font-size:13.5px;">
+              등록된 인터뷰 평가 및 프로젝트 수행 다면 평가 내역이 없습니다.
+            </div>
+          `}
         </div>
       </div>
-
-      <div>
-        <div style="font-size:13.5px; font-weight:600; color:#0f172a; margin-bottom:8px;">주요 프로젝트 수행 이력 (${careerHistory.length}건)</div>
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>프로젝트명</th>
-              <th>고객사</th>
-              <th>수행기간</th>
-              <th>담당역할</th>
-              <th>적용기술</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${careerHistory.map(ch => `
-              <tr>
-                <td style="font-weight:600;">${ch.project}</td>
-                <td>${ch.client}</td>
-                <td>${ch.period}</td>
-                <td>${ch.role}</td>
-                <td>${ch.tech}</td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      </div>
-
-      ${renderInterviewEvaluationSection(p)}
-      ${renderProfileEvaluationSection(p)}
     </div>
+  `;
+}
+
+function openProfileDetailModal(profileId, options = {}) {
+  const { profiles } = state.data || {};
+  const p = (profiles || []).find(x => x.id === profileId);
+  if (!p) return;
+
+  const backdrop = document.getElementById('modalBackdrop');
+  if (backdrop && !backdrop.classList.contains('hidden')) {
+    closeModal();
+  }
+
+  state.selectedProfileId = profileId;
+  if (state.activeTab !== 'profiles') {
+    state.activeTab = 'profiles';
+    applyTabDomState('profiles');
+  }
+  if (!options.fromPopState) {
+    pushNavigationState(Boolean(options.replaceHistory));
+  }
+  renderProfilesTab();
+  const scrollArea = document.getElementById('mainScrollArea');
+  if (scrollArea) scrollArea.scrollTo({ top: 0, behavior: 'smooth' });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function closeProfileDetailPage(options = {}) {
+  if (!options.fromPopState && window.history.state && window.history.state.profileId) {
+    window.history.back();
+    return;
+  }
+  state.selectedProfileId = null;
+  if (!options.fromPopState) {
+    pushNavigationState(Boolean(options.replaceHistory));
+  }
+  renderProfilesTab();
+}
+
+function renderProfileDetailPageView(el, p, permissions, currentUser) {
+  const isOwn = currentUser && currentUser.linked_profile_id === p.id;
+  const canEdit = permissions?.can_view_all_profiles || isOwn;
+  const workedBefore = hasWorkedWithCompany(p);
+
+  const eduTokens = String(p.education || '').trim().split(/\s+/).filter(Boolean);
+  const degreeLabel = p.degree || eduTokens.find(t => /박사|석사|학사|전문학사/.test(t)) || '학사';
+  const schoolAndMajor = (p.school_name || p.major)
+    ? [p.school_name, p.major].filter(Boolean).join(' ')
+    : eduTokens.filter(t => t !== degreeLabel && t !== '졸업').join(' ') || p.education || '-';
+  const mainDomainSkill = p.main_skill || (p.domains && p.domains[0]) || (p.skills && p.skills[0]) || 'UI/UX';
+  const certItems = (Array.isArray(p.certifications) && p.certifications.length > 0)
+    ? p.certifications.filter(Boolean)
+    : (Array.isArray(p.cert_details) ? p.cert_details.map(c => c.name).filter(Boolean) : []);
+  const certCount = certItems.length;
+
+  el.innerHTML = `
+    <div class="zal-tab-top-bar">
+      <button type="button" class="btn btn-outline" style="padding:8px 11px; border-radius:10px;" onclick="closeProfileDetailPage()" title="목록으로 돌아가기">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+      </button>
+      <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+        <button type="button" class="btn btn-primary" style="width:170px; height:42px; padding:0 14px; font-size:14.5px; font-weight:700; box-sizing:border-box; display:inline-flex; align-items:center; justify-content:center; gap:6px;" onclick="openProfileTargetSourcingModal('${p.id}')">
+          ${svgIcon('target', 15)} 타겟 소싱 발송
+        </button>
+      </div>
+    </div>
+
+    <div class="zal-feed-card" style="margin-bottom:28px; gap:20px;">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
+        ${renderProfileIdentityHeader(p)}
+      </div>
+
+      <div style="display:grid; grid-template-columns:${certCount > 0 ? 'repeat(5, minmax(0, 1fr))' : 'repeat(4, minmax(0, 1fr))'}; gap:14px; margin-bottom:0;">
+        <div style="position:relative; padding:16px 18px; border:1px solid #e2e8f0; border-radius:14px; background:#ffffff; display:flex; flex-direction:column; gap:4px;">
+          <button type="button" class="profile-card-gear-btn" onclick="openEditProfileSummaryCardModal('${p.id}', 'education')" title="최종 학력 변경">${svgIcon('settings', 15)}</button>
+          <div style="font-size:13px; font-weight:500; color:#64748b;">최종 학력</div>
+          <div style="font-size:21px; font-weight:800; color:#0f172a; line-height:1.25;">${degreeLabel}</div>
+          <div style="font-size:13px; color:#475569; margin-top:1px;">${schoolAndMajor}</div>
+        </div>
+        <div style="position:relative; padding:16px 18px; border:1px solid #e2e8f0; border-radius:14px; background:#ffffff; display:flex; flex-direction:column; gap:4px;">
+          <button type="button" class="profile-card-gear-btn" onclick="openEditProfileSummaryCardModal('${p.id}', 'grade')" title="기술등급 변경">${svgIcon('settings', 15)}</button>
+          <div style="font-size:13px; font-weight:500; color:#64748b;">기술등급</div>
+          <div style="font-size:21px; font-weight:800; color:#0f172a; line-height:1.25;">${p.tech_grade || '고급'} (${p.experience_years || 0}년)</div>
+        </div>
+        ${certCount > 0 ? `
+        <div style="position:relative; padding:16px 18px; border:1px solid #e2e8f0; border-radius:14px; background:#ffffff; display:flex; flex-direction:column; gap:4px;">
+          <button type="button" class="profile-card-gear-btn" onclick="openEditProfileSummaryCardModal('${p.id}', 'cert')" title="자격증 변경">${svgIcon('settings', 15)}</button>
+          <div style="font-size:13px; font-weight:500; color:#64748b;">자격증</div>
+          <div style="font-size:21px; font-weight:800; color:#0f172a; line-height:1.25;">${certCount}</div>
+          <div style="font-size:13px; color:#475569; margin-top:1px;">${certItems.join(' · ')}</div>
+        </div>
+        ` : ''}
+        <div style="position:relative; padding:16px 18px; border:1px solid #e2e8f0; border-radius:14px; background:#ffffff; display:flex; flex-direction:column; gap:4px;">
+          <button type="button" class="profile-card-gear-btn" onclick="openEditProfileSummaryCardModal('${p.id}', 'availability')" title="투입 가용일 변경">${svgIcon('settings', 15)}</button>
+          <div style="font-size:13px; font-weight:500; color:#64748b;">투입 가용일</div>
+          <div style="font-size:21px; font-weight:800; color:#0f172a; line-height:1.25;">${p.available_date || p.availability_status}</div>
+          <div style="font-size:13px; color:#475569; margin-top:1px;">${p.availability_status}</div>
+        </div>
+        <div style="position:relative; padding:16px 18px; border:1px solid #e2e8f0; border-radius:14px; background:#ffffff; display:flex; flex-direction:column; gap:4px;">
+          <button type="button" class="profile-card-gear-btn" onclick="openEditProfileSummaryCardModal('${p.id}', 'rate')" title="기준 단가 변경">${svgIcon('settings', 15)}</button>
+          <div style="font-size:13px; font-weight:500; color:#64748b;">기준 단가</div>
+          <div style="font-size:21px; font-weight:800; color:#0f172a; line-height:1.25;">월 ${Number(p.is_internal ? (p.contract_rate || p.desired_rate || 0) : (p.desired_rate || p.contract_rate || 0)).toLocaleString()}만원</div>
+        </div>
+      </div>
+
+      <div style="position:relative; padding:14px 42px 14px 18px; border:1px solid #e2e8f0; border-radius:14px; background:#f8fafc; display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+        <button type="button" class="profile-card-gear-btn" style="top:50%; transform:translateY(-50%); right:12px;" onclick="openEditProfileSummaryCardModal('${p.id}', 'domain_skills')" title="전문 도메인 및 핵심 기술 스택 변경">${svgIcon('settings', 15)}</button>
+        <div style="display:inline-flex; align-items:center; gap:10px; padding-right:16px; border-right:1px solid #cbd5e1; flex-shrink:0;">
+          <span style="font-size:13px; font-weight:600; color:#475569;">전문 도메인 및 핵심 기술 스택</span>
+          <span style="padding:4px 11px; border-radius:8px; background:#0f172a; color:#ffffff; font-size:13.5px; font-weight:700;">${mainDomainSkill}</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:7px; flex-wrap:wrap;">
+          ${(p.domains || []).map(d => `<span style="padding:4px 11px; border-radius:999px; background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; font-size:13px; font-weight:600;">${d}</span>`).join('')}
+          ${(p.skills || []).map(s => `<span style="padding:4px 11px; border-radius:999px; background:#ffffff; color:#334155; border:1px solid #cbd5e1; font-size:13px; font-weight:600;">${s}</span>`).join('')}
+        </div>
+      </div>
+
+      ${renderProfileDetailTabsSection(p, null, true)}
+    </div>
+  `;
+}
+
+function openEditProfileSummaryCardModal(profileId, cardType) {
+  const { profiles = [] } = state.data || {};
+  const p = profiles.find(x => x.id === profileId);
+  if (!p) return;
+
+  const eduTokens = String(p.education || '').trim().split(/\s+/).filter(Boolean);
+  const degreeVal = p.degree || eduTokens.find(t => /박사|석사|학사|전문학사/.test(t)) || '학사';
+  const schoolVal = p.school_name || eduTokens[0] || '';
+  const majorVal = p.major || eduTokens.slice(1).filter(t => t !== degreeVal && t !== '졸업').join(' ') || '';
+
+  let title = `프로필 항목 변경 — ${p.name}`;
+  let fieldsHtml = '';
+
+  if (cardType === 'education') {
+    title = `최종 학력 변경 — ${p.name}`;
+    fieldsHtml = `
+      <div class="form-grid" style="margin-bottom:14px;">
+        <div class="form-field">
+          <label>학위</label>
+          <select class="select" name="degree">
+            ${['박사', '석사', '학사', '전문학사'].map(d => `<option value="${d}" ${degreeVal === d ? 'selected' : ''}>${d}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-field">
+          <label>학교명</label>
+          <input class="input" name="school_name" value="${schoolVal}" required />
+        </div>
+        <div class="form-field">
+          <label>전공</label>
+          <input class="input" name="major" value="${majorVal}" required />
+        </div>
+      </div>
+    `;
+  } else if (cardType === 'grade') {
+    title = `기술등급 변경 — ${p.name}`;
+    fieldsHtml = `
+      <div class="form-grid" style="margin-bottom:14px;">
+        <div class="form-field">
+          <label>SW 기술등급</label>
+          <select class="select" name="tech_grade">
+            ${['특급', '고급', '중급', '초급'].map(g => `<option value="${g}" ${p.tech_grade === g ? 'selected' : ''}>${g}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-field">
+          <label>경력 연차 (년)</label>
+          <input type="number" class="input" name="experience_years" value="${p.experience_years || 0}" min="0" required />
+        </div>
+      </div>
+    `;
+  } else if (cardType === 'cert') {
+    title = `보유 자격증 변경 — ${p.name}`;
+    const certStr = (Array.isArray(p.certifications) && p.certifications.length > 0)
+      ? p.certifications.join(', ')
+      : (Array.isArray(p.cert_details) ? p.cert_details.map(c => c.name).filter(Boolean).join(', ') : '');
+    fieldsHtml = `
+      <div class="form-field" style="margin-bottom:14px;">
+        <label>보유 자격증 (쉼표 구분, 비우면 숨김 처리)</label>
+        <input class="input" name="certifications" value="${certStr}" placeholder="예: 정보처리기사, SQLD" />
+      </div>
+    `;
+  } else if (cardType === 'availability') {
+    title = `투입 가용일 변경 — ${p.name}`;
+    fieldsHtml = `
+      <div class="form-grid" style="margin-bottom:14px;">
+        <div class="form-field">
+          <label>차기 투입 가능일</label>
+          <input type="date" class="input" name="available_date" value="${p.available_date || ''}" required />
+        </div>
+        <div class="form-field">
+          <label>가용 상태</label>
+          <select class="select" name="availability_status">
+            ${['즉시투입가능', '투입중(철수예정)', '투입중'].map(st => `<option value="${st}" ${p.availability_status === st ? 'selected' : ''}>${st}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+    `;
+  } else if (cardType === 'rate') {
+    title = `기준 단가 변경 — ${p.name}`;
+    const currentRate = Number(p.is_internal ? (p.contract_rate || p.desired_rate || 0) : (p.desired_rate || p.contract_rate || 0));
+    fieldsHtml = `
+      <div class="form-field" style="margin-bottom:14px;">
+        <label>기준 단가 (만원/월)</label>
+        <input type="number" class="input" name="rate_value" value="${currentRate}" min="0" required />
+      </div>
+    `;
+  } else if (cardType === 'domain_skills') {
+    title = `전문 도메인 및 핵심 기술 스택 변경 — ${p.name}`;
+    const mainDomainSkill = p.main_skill || (p.domains && p.domains[0]) || (p.skills && p.skills[0]) || 'UI/UX';
+    fieldsHtml = `
+      <div style="display:flex; flex-direction:column; gap:12px; margin-bottom:14px;">
+        <div class="form-field">
+          <label>대표 주특기 분야</label>
+          <input class="input" name="main_skill" value="${mainDomainSkill}" required />
+        </div>
+        <div class="form-field">
+          <label>전문 도메인 (쉼표 구분)</label>
+          <input class="input" name="domains" value="${(p.domains || []).join(', ')}" placeholder="예: 퇴직연금, 마이데이터, 채널계" />
+        </div>
+        <div class="form-field">
+          <label>핵심 기술 스택 (쉼표 구분)</label>
+          <input class="input" name="skills" value="${(p.skills || []).join(', ')}" placeholder="예: UI/UX, UI/UX 기획 PL, UI/UX 디자인, 퍼블리싱" />
+        </div>
+      </div>
+    `;
+  }
+
+  openModal(title, `
+    <form onsubmit="submitEditProfileSummaryCard(event, '${p.id}', '${cardType}')">
+      ${fieldsHtml}
+      <div style="display:flex; justify-content:flex-end; gap:10px;">
+        <button type="button" class="btn btn-outline" onclick="closeModal()">취소</button>
+        <button type="submit" class="btn btn-primary">저장하기</button>
+      </div>
+    </form>
   `);
+}
+
+async function submitEditProfileSummaryCard(e, profileId, cardType) {
+  e.preventDefault();
+  const { profiles = [] } = state.data || {};
+  const p = profiles.find(x => x.id === profileId);
+  if (!p) return;
+
+  const fd = new FormData(e.target);
+  const payload = { id: profileId };
+
+  if (cardType === 'education') {
+    const degree = fd.get('degree') || '학사';
+    const school_name = (fd.get('school_name') || '').trim();
+    const major = (fd.get('major') || '').trim();
+    payload.degree = degree;
+    payload.school_name = school_name;
+    payload.major = major;
+    payload.education = [school_name, major, degree].filter(Boolean).join(' ');
+  } else if (cardType === 'grade') {
+    const years = Number(fd.get('experience_years') || 0);
+    payload.tech_grade = fd.get('tech_grade') || '고급';
+    payload.experience_years = years;
+    payload.career_ym_text = `${years} 년 0 개월`;
+  } else if (cardType === 'cert') {
+    const certs = String(fd.get('certifications') || '').split(',').map(s => s.trim()).filter(Boolean);
+    payload.certifications = certs;
+    payload.cert_details = certs.map(c => ({ name: c, date: '' }));
+  } else if (cardType === 'availability') {
+    payload.available_date = fd.get('available_date') || '';
+    payload.availability_status = fd.get('availability_status') || '즉시투입가능';
+  } else if (cardType === 'rate') {
+    const rateVal = Number(fd.get('rate_value') || 0);
+    if (p.is_internal) {
+      payload.contract_rate = rateVal;
+    } else {
+      payload.desired_rate = rateVal;
+    }
+  } else if (cardType === 'domain_skills') {
+    payload.main_skill = (fd.get('main_skill') || '').trim();
+    payload.domains = String(fd.get('domains') || '').split(',').map(s => s.trim()).filter(Boolean);
+    payload.skills = String(fd.get('skills') || '').split(',').map(s => s.trim()).filter(Boolean);
+  }
+
+  await apiCall('/api/profiles', 'POST', payload);
+  closeModal();
+  showToast('프로필 정보가 변경되었습니다.');
+  await loadState();
 }
 
 function openCandidateResumeModalWithData(inv, prof) {
@@ -2719,6 +3772,10 @@ function openCandidateResumeModalWithData(inv, prof) {
     name: inv.candidate_name,
     employment_type: inv.candidate_type,
     tech_grade: inv.tech_grade,
+    experience_years: experienceYears,
+    education,
+    certifications: String(certifications || '').split(',').map(s => s.trim()).filter(Boolean),
+    available_date: inv.available_from,
     domains: inv.domains || ['퇴직연금'],
     skills: inv.skills || ['Java', 'Oracle'],
     availability_status: '즉시투입가능',
@@ -2770,34 +3827,7 @@ function openCandidateResumeModalWithData(inv, prof) {
         </div>
       </div>
 
-      <div>
-        <div style="font-size:13.5px; font-weight:600; color:#0f172a; margin-bottom:8px;">주요 프로젝트 수행 이력 (${careerHistory.length}건)</div>
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>프로젝트명</th>
-              <th>고객사</th>
-              <th>수행기간</th>
-              <th>담당역할</th>
-              <th>적용기술</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${careerHistory.map(ch => `
-              <tr>
-                <td style="font-weight:600;">${ch.project}</td>
-                <td>${ch.client}</td>
-                <td>${ch.period}</td>
-                <td>${ch.role}</td>
-                <td>${ch.tech}</td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      </div>
-
-      ${hasInterviewRecord ? renderInterviewEvaluationSection(personObj, inv) : renderInterviewEvaluationSection(personObj)}
-      ${renderProfileEvaluationSection(personObj)}
+      ${renderProfileDetailTabsSection(personObj, hasInterviewRecord ? inv : null)}
     </div>
   `);
 }
@@ -2946,7 +3976,7 @@ function renderProjectDetailView(el, prj, postings, interviews, templates, permi
   const periodText = prj.period_label || `${prj.start_date} ~ ${prj.end_date}`;
 
   el.innerHTML = `
-    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:16px;">
+    <div class="zal-tab-top-bar">
       <button type="button" class="btn btn-outline" style="padding:8px 11px; border-radius:10px;" onclick="closeProjectDetail()" title="목록으로 돌아가기">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <line x1="19" y1="12" x2="5" y2="12"></line>
@@ -3043,7 +4073,7 @@ function renderProjectDetailView(el, prj, postings, interviews, templates, permi
               <th>요구 등급</th>
               <th>도메인 · 핵심 스킬</th>
               <th>배정 인력</th>
-              <th style="width:264px; text-align:center;">상태</th>
+              <th style="width:268px; text-align:center;">상태</th>
             </tr>
           </thead>
           <tbody>
@@ -3062,19 +4092,45 @@ function renderProjectDetailView(el, prj, postings, interviews, templates, permi
                 </td>
                 <td style="text-align:center;">
                   <div class="wbs-action-group">
-                    <span class="zal-status-pill wbs-status-pill ${slot.assigned_profile_id ? 'green' : 'amber'}">${slot.assigned_profile_id ? '확정' : '구인중'}</span>
-                    ${!slot.assigned_profile_id ? `
-                      <button class="btn btn-outline btn-sm wbs-action-btn-sub" onclick="openSlotToJobBoard('${prj.id}', '${slot.slot_id}')">
-                        ${svgIcon('megaphone', 13)} 공고오픈
-                      </button>
-                    ` : `
-                      <button class="btn btn-outline btn-sm wbs-action-btn-sub" onclick="assignProfileToSlot('${prj.id}', '${slot.slot_id}', null)">
-                        취소
+                    ${prj.project_group === 'COMPLETED' ? (
+                      slot.assigned_profile_id ? `
+                        <button type="button" class="btn btn-outline btn-sm wbs-action-btn-sub" onclick="openProjectPerformanceEvalModal('${prj.id}', '${slot.slot_id}', '${slot.assigned_profile_id}')">
+                          <span style="color:#f59e0b; font-size:12.5px; line-height:1;">★</span> 평가
+                        </button>
+                      ` : `<span style="color:#94a3b8; font-size:12.5px;">수행종료</span>`
+                    ) : prj.project_group === 'ONGOING' ? (
+                      slot.assigned_profile_id ? `
+                        <button type="button" class="btn btn-outline btn-sm wbs-action-btn-sub" onclick="openProjectPerformanceEvalModal('${prj.id}', '${slot.slot_id}', '${slot.assigned_profile_id}')">
+                          <span style="color:#f59e0b; font-size:12.5px; line-height:1;">★</span> 평가
+                        </button>
+                        <span class="zal-status-pill wbs-status-pill green">확정</span>
+                        <button class="btn btn-outline btn-sm wbs-action-btn-sub" onclick="assignProfileToSlot('${prj.id}', '${slot.slot_id}', null)">
+                          취소
+                        </button>
+                      ` : `
+                        <span class="zal-status-pill wbs-status-pill amber">구인중</span>
+                        <button class="btn btn-outline btn-sm wbs-action-btn-sub" onclick="openSlotToJobBoard('${prj.id}', '${slot.slot_id}')">
+                          ${svgIcon('megaphone', 13)} 공고오픈
+                        </button>
+                        <button class="btn btn-primary btn-sm wbs-action-btn-main" onclick="openRfpMatchModal('${prj.id}', '${slot.slot_id}')">
+                          ${svgIcon('search', 13)} 검색
+                        </button>
+                      `
+                    ) : `
+                      <span class="zal-status-pill wbs-status-pill ${slot.assigned_profile_id ? 'green' : 'amber'}">${slot.assigned_profile_id ? '확정' : '구인중'}</span>
+                      ${!slot.assigned_profile_id ? `
+                        <button class="btn btn-outline btn-sm wbs-action-btn-sub" onclick="openSlotToJobBoard('${prj.id}', '${slot.slot_id}')">
+                          ${svgIcon('megaphone', 13)} 공고오픈
+                        </button>
+                      ` : `
+                        <button class="btn btn-outline btn-sm wbs-action-btn-sub" onclick="assignProfileToSlot('${prj.id}', '${slot.slot_id}', null)">
+                          취소
+                        </button>
+                      `}
+                      <button class="btn btn-primary btn-sm wbs-action-btn-main" onclick="openRfpMatchModal('${prj.id}', '${slot.slot_id}')">
+                        ${svgIcon('search', 13)} 검색
                       </button>
                     `}
-                    <button class="btn btn-primary btn-sm wbs-action-btn-main" onclick="openRfpMatchModal('${prj.id}', '${slot.slot_id}')">
-                      ${svgIcon('search', 13)} 검색
-                    </button>
                   </div>
                 </td>
               </tr>
@@ -3157,6 +4213,138 @@ function renderProjectDetailView(el, prj, postings, interviews, templates, permi
       `}
     </div>
   `;
+}
+
+function openProjectPerformanceEvalModal(projectId, slotId, profileId) {
+  const { projects = [], profiles = [], currentUser } = state.data || {};
+  const prj = projects.find(p => p.id === projectId);
+  const slot = prj?.to_slots?.find(s => s.slot_id === slotId);
+  const prof = profiles.find(p => p.id === profileId);
+  if (!prj || !prof) return;
+
+  const defaultEvalType = currentUser?.role_group === 'MASTER'
+    ? '임원'
+    : currentUser?.role_group === 'MANAGER'
+      ? 'PM'
+      : 'PL';
+  const defaultEvalName = currentUser?.name || '조성현 상무';
+  const defaultEvalOrg = currentUser ? `${currentUser.department || '금융IT사업본부'} (${currentUser.title || '평가자'})` : '사내 금융IT사업본부';
+
+  const metricRows = [
+    { key: 'expertise', label: '전문성', desc: '도메인 업무 지식 및 요구 기술스택 숙련도', def: '5.0' },
+    { key: 'satisfaction', label: '만족도', desc: '산출물 품질 및 담당 모듈 과업 완성도', def: '5.0' },
+    { key: 'communication', label: '의사소통', desc: '현업 고객사 및 동료 팀원과의 협업 소통', def: '4.8' },
+    { key: 'schedule', label: '일정 준수', desc: 'WBS 마일스톤 및 오픈 납기 준수율', def: '5.0' },
+    { key: 'proactivity', label: '적극성', desc: '이슈 선제 대응 및 문제 해결 주도성', def: '4.9' }
+  ];
+
+  openModal(`프로젝트 수행 다면 평가 등록 — ${prof.name} (${prof.tech_grade})`, `
+    <form onsubmit="submitProjectPerformanceEval(event, '${prj.id}', '${slot?.slot_id || ''}', '${prof.id}')">
+      <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:12px 16px; border-radius:12px; margin-bottom:16px;">
+        <div style="font-size:14px; font-weight:700; color:#0f172a; margin-bottom:4px;">
+          [${prj.client}] ${prj.name}
+        </div>
+        <div style="font-size:12.5px; color:#475569;">
+          수행 인력: <strong>${prof.name}</strong> (${prof.employment_type} · ${prof.tech_grade}) · 담당 역할: <strong>${slot?.role_name || '핵심 수행인력'}</strong>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-field">
+          <label>평가자 구분</label>
+          <select class="select" name="evaluatorType">
+            ${['임원', 'PM', 'PL', '팀원', '고객사'].map(t => `<option value="${t}" ${t === defaultEvalType ? 'selected' : ''}>${t} 평가</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-field">
+          <label>평가자 성명</label>
+          <input class="input" name="evaluatorName" value="${defaultEvalName}" required />
+        </div>
+        <div class="form-field" style="grid-column: 1 / -1;">
+          <label>평가자 소속 · 역할</label>
+          <input class="input" name="evaluatorOrg" value="${defaultEvalOrg}" required />
+        </div>
+      </div>
+
+      <div style="border:1px solid #e2e8f0; border-radius:12px; padding:14px 16px; margin-bottom:16px;">
+        <div style="font-size:13px; font-weight:700; color:#0f172a; margin-bottom:10px;">항목별 수행 역량 평가 (5점 만점)</div>
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          ${metricRows.map(m => `
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; padding-bottom:8px; border-bottom:1px solid #f1f5f9;">
+              <div>
+                <strong style="font-size:13px; color:#0f172a;">${m.label}</strong>
+                <span style="font-size:12px; color:#64748b; margin-left:6px;">${m.desc}</span>
+              </div>
+              <select class="select" name="metric_${m.key}" style="width:120px; font-weight:700;">
+                ${['5.0', '4.8', '4.5', '4.0', '3.5', '3.0'].map(sc => `<option value="${sc}" ${sc === m.def ? 'selected' : ''}>★ ${sc}점</option>`).join('')}
+              </select>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <div class="form-field" style="margin-bottom:16px;">
+        <label>함께 일한 소감 및 프로젝트 수행 총평</label>
+        <textarea class="textarea" name="comment" required>${prj.name} 프로젝트에서 ${slot?.role_name || '핵심 모듈'} 과업을 높은 전문성과 책임감으로 완수하였으며, 현업 및 동료 팀원들과의 협업 만족도가 매우 우수합니다.</textarea>
+      </div>
+
+      <div style="display:flex; justify-content:flex-end; gap:10px;">
+        <button type="button" class="btn btn-outline" onclick="closeModal()">취소</button>
+        <button type="submit" class="btn btn-primary">✓ 수행 평가 등록</button>
+      </div>
+    </form>
+  `);
+}
+
+async function submitProjectPerformanceEval(e, projectId, slotId, profileId) {
+  e.preventDefault();
+  const { projects = [], profiles = [] } = state.data || {};
+  const prj = projects.find(p => p.id === projectId);
+  const slot = prj?.to_slots?.find(s => s.slot_id === slotId);
+  const prof = profiles.find(p => p.id === profileId);
+  if (!prj || !prof) return;
+
+  const fd = new FormData(e.target);
+  const metrics = {
+    expertise: Number(fd.get('metric_expertise') || 5.0),
+    satisfaction: Number(fd.get('metric_satisfaction') || 5.0),
+    communication: Number(fd.get('metric_communication') || 4.8),
+    schedule: Number(fd.get('metric_schedule') || 5.0),
+    proactivity: Number(fd.get('metric_proactivity') || 4.9)
+  };
+  const overallScore = Number(((metrics.expertise + metrics.satisfaction + metrics.communication + metrics.schedule + metrics.proactivity) / 5).toFixed(2));
+  const comment = String(fd.get('comment') || '').trim();
+
+  const existingList = getProfileEvaluations(prof).slice();
+  const newEvalItem = {
+    evaluatorType: fd.get('evaluatorType') || 'PL',
+    evaluatorName: fd.get('evaluatorName') || '조성현 상무',
+    evaluatorOrg: fd.get('evaluatorOrg') || '사내 금융IT사업본부',
+    overallScore,
+    metrics,
+    projectTitle: prj.name,
+    contractTags: [prj.location || '상주 수행', slot?.role_name || '수행인력', prj.domain || '금융SI'],
+    contractAmount: prof.is_internal ? `월 ${(prof.contract_rate || 1050).toLocaleString()}만원 (사내기준)` : `월 ${(prof.desired_rate || 980).toLocaleString()}만원`,
+    durationDays: prj.period_label || `${prj.start_date} ~ ${prj.end_date}`,
+    contractDate: (prj.start_date || '2026-08-01').replace(/-/g, '.'),
+    reviewDate: '2026.11.17.',
+    comment
+  };
+  PROFILE_EVALUATIONS_MAP[prof.id] = [newEvalItem, ...existingList];
+
+  const allScores = PROFILE_EVALUATIONS_MAP[prof.id].map(ev => Number(ev.overallScore || 5));
+  const avgRating = Number((allScores.reduce((a, b) => a + b, 0) / allScores.length).toFixed(1));
+
+  await apiCall('/api/profiles', 'POST', {
+    id: prof.id,
+    rating: avgRating,
+    verified: 1,
+    review_summary: comment
+  });
+
+  closeModal();
+  showToast(`✨ ${prof.name}님의 '${prj.name}' 수행 평가(★ ${overallScore.toFixed(1)})가 등록되었습니다!`);
+  await loadState();
 }
 
 function computeMatchScore(profile, slot, projectStartDate) {
@@ -3654,61 +4842,186 @@ async function submitNewProject(e) {
 /* =========================================================================
    TAB 4: EXTERNAL JOB BOARD & TARGET SOURCING
    ========================================================================= */
+function updateSourcingFilter(key, val) {
+  state.sourcingFilters[key] = val;
+  if (key === 'keyword') {
+    const grid = document.getElementById('sourcingCardsGrid');
+    if (grid) {
+      grid.innerHTML = renderSourcingCardsHtml();
+      return;
+    }
+  }
+  renderSourcingTab();
+}
+
+function openNewPostingModal() {
+  const { projects = [] } = state.data || {};
+  const plannedOrOngoing = projects.filter(p => p.project_group !== 'COMPLETED');
+  const unfilledOptions = [];
+  plannedOrOngoing.forEach(prj => {
+    (prj.to_slots || []).forEach(slot => {
+      if (!slot.assigned_profile_id) {
+        unfilledOptions.push({ prj, slot });
+      }
+    });
+  });
+
+  openModal('오픈 구인 포지션 등록', `
+    <form onsubmit="submitNewPostingFromModal(event)">
+      <div class="form-field" style="margin-bottom:14px;">
+        <label>대상 프로젝트 미충원 TO 포지션 선택</label>
+        <select class="select" name="project_slot" required style="width:100%;">
+          ${unfilledOptions.length > 0 ? unfilledOptions.map(({ prj, slot }) => `
+            <option value="${prj.id}::${slot.slot_id}">[${prj.client}] ${prj.name} — ${slot.role_name} (${slot.required_grade} · ${slot.required_domain})</option>
+          `).join('') : `
+            <option value="${plannedOrOngoing[0]?.id || 'prj_1'}::${plannedOrOngoing[0]?.to_slots?.[0]?.slot_id || 's1'}">[${plannedOrOngoing[0]?.client || '미래에셋증권'}] ${plannedOrOngoing[0]?.name || '퇴직연금 차세대 구축'} — 신규 오픈 구인</option>
+          `}
+        </select>
+      </div>
+      <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:12px 14px; font-size:13px; color:#475569; margin-bottom:16px;">
+        선택한 프로젝트의 미충원 TO 포지션이 외부 오픈 구인 보드에 즉시 게시되며, 웹 공유 링크 생성 및 타겟 소싱 발송이 활성화됩니다.
+      </div>
+      <div style="display:flex; justify-content:flex-end; gap:10px;">
+        <button type="button" class="btn btn-outline" onclick="closeModal()">취소</button>
+        <button type="submit" class="btn btn-primary">구인 공고 게시하기</button>
+      </div>
+    </form>
+  `);
+}
+
+async function submitNewPostingFromModal(e) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const [project_id, slot_id] = String(fd.get('project_slot') || '').split('::');
+  if (!project_id || !slot_id) return;
+  await apiCall('/api/postings/open-from-slot', 'POST', { project_id, slot_id });
+  closeModal();
+  showToast('신규 오픈 구인 포지션이 등록되었습니다!');
+  await loadState();
+}
+
+function renderSourcingCardsHtml() {
+  const { postings, permissions, currentUser } = state.data;
+  const sf = state.sourcingFilters || { status: 'ALL', grade: 'ALL', domain: 'ALL', keyword: '' };
+
+  const filteredPostings = postings.filter(post => {
+    if (sf.status !== 'ALL' && post.status !== sf.status) return false;
+    if (sf.grade !== 'ALL' && post.required_grade !== sf.grade) return false;
+    if (sf.domain !== 'ALL' && post.required_domain !== sf.domain) return false;
+    if (sf.keyword) {
+      const kw = sf.keyword.toLowerCase();
+      const hay = `${post.title} ${post.role_name} ${post.required_domain} ${(post.required_skills || []).join(' ')} ${post.work_location || ''}`.toLowerCase();
+      if (!hay.includes(kw)) return false;
+    }
+    return true;
+  });
+
+  return filteredPostings.map(post => `
+    <article class="zal-feed-card" style="cursor:pointer;" onclick="openPostingDetailModal('${post.id}')">
+      <div class="zal-card-header">
+        <div class="zal-author-box">
+          <div>
+            <span class="zal-author-name">${post.role_name}</span>
+            <span class="zal-author-role">${post.required_grade} · ${post.required_domain}</span>
+            <div class="zal-card-time">${svgIcon('clock', 12)} 등록 ${post.created_at} | 타겟소싱 ${post.sourcing_sent_count}건</div>
+          </div>
+        </div>
+        <span class="zal-status-pill ${post.status === 'OPEN' ? 'green' : 'gray'}">${post.status === 'OPEN' ? '모집중' : '마감됨'}</span>
+      </div>
+
+      <div class="zal-card-title">${post.title}</div>
+
+      <div class="zal-meta-list">
+        <div class="zal-meta-row"><span class="zal-meta-label">${svgIcon('calendar', 14)} 기간</span><span class="zal-meta-val">${post.period} (${post.work_location})</span></div>
+        <div class="zal-meta-row"><span class="zal-meta-label">${svgIcon('dollar', 14)} 단가</span><span class="zal-meta-val">${post.rate_guide}</span></div>
+        <div class="zal-meta-row"><span class="zal-meta-label">${svgIcon('code', 14)} 스킬</span><span class="zal-meta-val">${post.required_skills.join(', ')}</span></div>
+      </div>
+
+      <div class="zal-card-footer">
+        <div class="zal-reaction-group" style="flex-wrap:wrap;">
+          <button type="button" class="btn btn-outline btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="event.stopPropagation(); copyPostingWebLink('${post.id}')">
+            ${svgIcon('link', 13)} 오픈 구인 웹 링크 복사하기
+          </button>
+          ${post.status === 'OPEN' && currentUser?.role_group !== 'MASTER' ? `
+            <button type="button" class="btn btn-primary btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="event.stopPropagation(); openEasyApplyModal('${post.id}')">
+              ${svgIcon('edit', 13)} ${currentUser?.role_group === 'INTERNAL' ? '사내 지인 추천' : '간편 지원하기'}
+            </button>
+          ` : ''}
+          ${permissions.can_manage_postings ? `
+            <button type="button" class="btn btn-outline btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="event.stopPropagation(); openTargetSourcingModal('${post.id}')">${svgIcon('target', 13)} 타겟 소싱 발송</button>
+          ` : ''}
+        </div>
+      </div>
+
+      <div class="posting-bottom-row">
+        ${renderPostingApplicantBox(post)}
+        ${permissions.can_manage_postings ? `
+          <button type="button" class="btn btn-primary btn-sm" style="margin-left:auto; align-self:flex-end;" onclick="event.stopPropagation(); togglePostingStatus('${post.id}')">${post.status === 'OPEN' ? '채용마감' : '재오픈'}</button>
+        ` : ''}
+      </div>
+    </article>
+  `).join('') || `
+    <div class="card" style="grid-column: 1 / -1; text-align:center; padding:40px;">
+      조건에 부합하는 오픈 구인 포지션이 없습니다.
+    </div>
+  `;
+}
+
 function renderSourcingTab() {
   const { postings, permissions, currentUser } = state.data;
   const el = document.getElementById('tab-sourcing');
 
+  if (state.selectedPostingId) {
+    const selectedPosting = (postings || []).find(p => p.id === state.selectedPostingId);
+    if (selectedPosting) {
+      renderPostingDetailPageView(el, selectedPosting, permissions, currentUser);
+      return;
+    }
+    state.selectedPostingId = null;
+  }
+
+  const sf = state.sourcingFilters || { status: 'ALL', grade: 'ALL', domain: 'ALL', keyword: '' };
+
+  const openPostingsCount = postings.filter(p => p.status === 'OPEN').length;
+  const closedPostingsCount = postings.filter(p => p.status !== 'OPEN').length;
+
   el.innerHTML = `
-    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:18px;">
-      <h3 style="font-size:17px; font-weight:600; display:inline-flex; align-items:center; gap:7px;">오픈 구인 포지션 (${postings.length}건)</h3>
+    <div class="filter-bar">
+      <button type="button" class="zal-chip-btn ${sf.status === 'ALL' ? 'active' : ''}" onclick="updateSourcingFilter('status', 'ALL')">
+        전체 (${postings.length})
+      </button>
+      <button type="button" class="zal-chip-btn ${sf.status === 'OPEN' ? 'active' : ''}" onclick="updateSourcingFilter('status', 'OPEN')">
+        모집중 (${openPostingsCount})
+      </button>
+      <button type="button" class="zal-chip-btn ${sf.status === 'CLOSED' ? 'active' : ''}" onclick="updateSourcingFilter('status', 'CLOSED')">
+        마감됨 (${closedPostingsCount})
+      </button>
+      <select class="zal-chip-select ${sf.grade !== 'ALL' ? 'active' : ''}" onchange="updateSourcingFilter('grade', this.value)">
+        <option value="ALL" ${sf.grade === 'ALL' ? 'selected' : ''}>전체 등급</option>
+        <option value="특급" ${sf.grade === '특급' ? 'selected' : ''}>특급</option>
+        <option value="고급" ${sf.grade === '고급' ? 'selected' : ''}>고급</option>
+        <option value="중급" ${sf.grade === '중급' ? 'selected' : ''}>중급</option>
+      </select>
+      <select class="zal-chip-select ${sf.domain !== 'ALL' ? 'active' : ''}" onchange="updateSourcingFilter('domain', this.value)">
+        <option value="ALL" ${sf.domain === 'ALL' ? 'selected' : ''}>전체 도메인</option>
+        <option value="퇴직연금" ${sf.domain === '퇴직연금' ? 'selected' : ''}>퇴직연금</option>
+        <option value="펀드" ${sf.domain === '펀드' ? 'selected' : ''}>펀드</option>
+        <option value="채권" ${sf.domain === '채권' ? 'selected' : ''}>채권</option>
+        <option value="계정계 코어" ${sf.domain === '계정계 코어' ? 'selected' : ''}>계정계 코어</option>
+        <option value="마이데이터" ${sf.domain === '마이데이터' ? 'selected' : ''}>마이데이터</option>
+        <option value="채널계" ${sf.domain === '채널계' ? 'selected' : ''}>채널계</option>
+        <option value="정보계/DW" ${sf.domain === '정보계/DW' ? 'selected' : ''}>정보계/DW</option>
+      </select>
+      ${renderChipSearchBox('sourcingSearchInput', sf.keyword, '포지션명, 프로젝트 공고명, 스킬(Java, ProFrame, React) 검색...', 'sourcing')}
+      ${permissions.can_manage_postings ? `
+        <button type="button" class="btn btn-primary" style="width:170px; height:42px; padding:0 14px; font-size:14.5px; font-weight:700; box-sizing:border-box; display:inline-flex; align-items:center; justify-content:center; gap:6px; margin-left:auto;" onclick="openNewPostingModal()">
+          ${svgIcon('briefcase', 15)} 구인 등록하기
+        </button>
+      ` : ''}
     </div>
 
-    <div class="dashboard-feed-masonry">
-      ${postings.map(post => `
-        <article class="zal-feed-card" style="cursor:pointer;" onclick="openPostingDetailModal('${post.id}')">
-          <div class="zal-card-header">
-            <div class="zal-author-box">
-              <div>
-                <span class="zal-author-name">${post.role_name}</span>
-                <span class="zal-author-role">${post.required_grade} · ${post.required_domain}</span>
-                <div class="zal-card-time">${svgIcon('clock', 12)} 등록 ${post.created_at} | 타겟소싱 ${post.sourcing_sent_count}건</div>
-              </div>
-            </div>
-            <span class="zal-status-pill ${post.status === 'OPEN' ? 'green' : 'gray'}">${post.status === 'OPEN' ? '모집중' : '마감됨'}</span>
-          </div>
-
-          <div class="zal-card-title">${post.title}</div>
-
-          <div class="zal-meta-list">
-            <div class="zal-meta-row"><span class="zal-meta-label">${svgIcon('calendar', 14)} 기간</span><span class="zal-meta-val">${post.period} (${post.work_location})</span></div>
-            <div class="zal-meta-row"><span class="zal-meta-label">${svgIcon('dollar', 14)} 단가</span><span class="zal-meta-val">${post.rate_guide}</span></div>
-            <div class="zal-meta-row"><span class="zal-meta-label">${svgIcon('code', 14)} 스킬</span><span class="zal-meta-val">${post.required_skills.join(', ')}</span></div>
-          </div>
-
-          <div class="zal-card-footer">
-            <div class="zal-reaction-group" style="flex-wrap:wrap;">
-              <button type="button" class="btn btn-outline btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="event.stopPropagation(); copyPostingWebLink('${post.id}')">
-                ${svgIcon('link', 13)} 오픈 구인 웹 링크 복사하기
-              </button>
-              ${post.status === 'OPEN' && currentUser?.role_group !== 'MASTER' ? `
-                <button type="button" class="btn btn-primary btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="event.stopPropagation(); openEasyApplyModal('${post.id}')">
-                  ${svgIcon('edit', 13)} ${currentUser?.role_group === 'INTERNAL' ? '사내 지인 추천' : '간편 지원하기'}
-                </button>
-              ` : ''}
-              ${permissions.can_manage_postings ? `
-                <button type="button" class="btn btn-outline btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="event.stopPropagation(); openTargetSourcingModal('${post.id}')">${svgIcon('target', 13)} 타겟 소싱 발송</button>
-              ` : ''}
-            </div>
-          </div>
-
-          <div class="posting-bottom-row">
-            ${renderPostingApplicantBox(post)}
-            ${permissions.can_manage_postings ? `
-              <button type="button" class="btn btn-primary btn-sm" style="margin-left:auto; align-self:flex-end;" onclick="event.stopPropagation(); togglePostingStatus('${post.id}')">${post.status === 'OPEN' ? '채용마감' : '재오픈'}</button>
-            ` : ''}
-          </div>
-        </article>
-      `).join('')}
+    <div id="sourcingCardsGrid" class="dashboard-feed-masonry">
+      ${renderSourcingCardsHtml()}
     </div>
   `;
 }
@@ -3722,23 +5035,84 @@ function copyPostingWebLink(postingId) {
   showToast(`오픈 구인 웹 링크가 클립보드에 복사되었습니다! (${post ? post.role_name : postingId})`);
 }
 
-function openPostingDetailModal(postingId) {
-  const { postings, projects, permissions, currentUser } = state.data;
+function openPostingDetailModal(postingId, options = {}) {
+  const { postings } = state.data || {};
   const post = (postings || []).find(p => p.id === postingId);
   if (!post) return;
+
+  const backdrop = document.getElementById('modalBackdrop');
+  if (backdrop && !backdrop.classList.contains('hidden')) {
+    closeModal();
+  }
+
+  state.selectedPostingId = postingId;
+  if (state.activeTab !== 'sourcing') {
+    state.activeTab = 'sourcing';
+    applyTabDomState('sourcing');
+  }
+  if (!options.fromPopState) {
+    pushNavigationState(Boolean(options.replaceHistory));
+  }
+  renderSourcingTab();
+  const scrollArea = document.getElementById('mainScrollArea');
+  if (scrollArea) scrollArea.scrollTo({ top: 0, behavior: 'smooth' });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function closePostingDetailPage(options = {}) {
+  if (!options.fromPopState && window.history.state && window.history.state.postingId) {
+    window.history.back();
+    return;
+  }
+  state.selectedPostingId = null;
+  if (!options.fromPopState) {
+    pushNavigationState(Boolean(options.replaceHistory));
+  }
+  renderSourcingTab();
+}
+
+function renderPostingDetailPageView(el, post, permissions, currentUser) {
+  const { projects } = state.data || {};
   const prj = (projects || []).find(p => p.id === post.project_id);
 
-  openModal(`오픈 구인 포지션 상세 공고 — ${post.role_name}`, `
-    <div style="display:flex; flex-direction:column; gap:16px;">
-      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:14px; flex-wrap:wrap; padding:16px 18px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px;">
+  el.innerHTML = `
+    <div class="zal-tab-top-bar">
+      <button type="button" class="btn btn-outline" style="padding:8px 11px; border-radius:10px;" onclick="closePostingDetailPage()" title="목록으로 돌아가기">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+      </button>
+      <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+        <button type="button" class="btn btn-outline" style="height:42px; padding:0 16px; font-size:14px; font-weight:600; display:inline-flex; align-items:center; gap:6px;" onclick="copyPostingWebLink('${post.id}')">
+          ${svgIcon('link', 14)} 오픈 구인 웹 링크 복사하기
+        </button>
+        ${post.status === 'OPEN' && currentUser?.role_group !== 'MASTER' ? `
+          <button type="button" class="btn btn-primary" style="height:42px; padding:0 16px; font-size:14px; font-weight:700; display:inline-flex; align-items:center; gap:6px;" onclick="openEasyApplyModal('${post.id}')">
+            ${svgIcon('edit', 14)} ${currentUser?.role_group === 'INTERNAL' ? '사내 지인 추천' : '간편 지원하기'}
+          </button>
+        ` : ''}
+        ${permissions.can_manage_postings ? `
+          <button type="button" class="btn btn-outline" style="height:42px; padding:0 16px; font-size:14px; font-weight:600; display:inline-flex; align-items:center; gap:6px;" onclick="openTargetSourcingModal('${post.id}')">
+            ${svgIcon('target', 14)} 타겟 소싱 발송
+          </button>
+          <button type="button" class="btn btn-primary" style="width:140px; height:42px; padding:0 14px; font-size:14.5px; font-weight:700; box-sizing:border-box; display:inline-flex; align-items:center; justify-content:center; gap:6px;" onclick="togglePostingStatus('${post.id}', false)">
+            ${post.status === 'OPEN' ? '채용마감' : '재오픈'}
+          </button>
+        ` : ''}
+      </div>
+    </div>
+
+    <div class="zal-feed-card" style="margin-bottom:28px; gap:20px;">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:14px; flex-wrap:wrap; padding:18px 20px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px;">
         <div style="flex:1; min-width:240px;">
-          <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
             <span class="zal-status-pill ${post.status === 'OPEN' ? 'green' : 'gray'}">${post.status === 'OPEN' ? '모집중' : '마감됨'}</span>
             <span class="zal-status-pill blue">${post.required_domain}</span>
             <span class="badge badge-grade">${post.required_grade}</span>
           </div>
-          <div style="font-size:18px; font-weight:600; color:#0f172a; line-height:1.4;">${post.title}</div>
-          <div style="font-size:13px; color:#64748b; margin-top:6px;">
+          <div style="font-size:20px; font-weight:700; color:#0f172a; line-height:1.4;">${post.title}</div>
+          <div style="font-size:13.5px; color:#64748b; margin-top:6px;">
             등록일: ${post.created_at} · 타겟 소싱 발송: ${post.sourcing_sent_count}건
           </div>
         </div>
@@ -3746,54 +5120,31 @@ function openPostingDetailModal(postingId) {
       </div>
 
       <div class="form-grid" style="margin-bottom:0;">
-        <div style="padding:12px 14px; border:1px solid #e2e8f0; border-radius:12px;">
-          <div style="font-size:12px; color:#64748b; margin-bottom:4px;">수행 기간 · 근무지</div>
-          <div style="font-size:14px; font-weight:600; color:#0f172a;">${post.period}</div>
-          <div style="font-size:13px; color:#475569; margin-top:2px;">근무지: ${post.work_location}</div>
+        <div style="padding:16px 18px; border:1px solid #e2e8f0; border-radius:14px;">
+          <div style="font-size:13px; color:#64748b; margin-bottom:6px;">수행 기간 · 근무지</div>
+          <div style="font-size:16px; font-weight:700; color:#0f172a;">${post.period}</div>
+          <div style="font-size:13.5px; color:#475569; margin-top:4px;">근무지: ${post.work_location}</div>
         </div>
-        <div style="padding:12px 14px; border:1px solid #e2e8f0; border-radius:12px;">
-          <div style="font-size:12px; color:#64748b; margin-bottom:4px;">단가 가이드 · 계약 형태</div>
-          <div style="font-size:14px; font-weight:600; color:#2563eb;">${post.rate_guide}</div>
-          <div style="font-size:13px; color:#475569; margin-top:2px;">발주 고객사: ${prj ? prj.client : '금융권 고객사'} (${prj?.contract_type || '일괄도급'})</div>
+        <div style="padding:16px 18px; border:1px solid #e2e8f0; border-radius:14px;">
+          <div style="font-size:13px; color:#64748b; margin-bottom:6px;">단가 가이드 · 계약 형태</div>
+          <div style="font-size:16px; font-weight:700; color:#2563eb;">${post.rate_guide}</div>
+          <div style="font-size:13.5px; color:#475569; margin-top:4px;">발주 고객사: ${prj ? prj.client : '금융권 고객사'} (${prj?.contract_type || '일괄도급'})</div>
         </div>
       </div>
 
-      <div style="padding:14px 16px; border:1px solid #e2e8f0; border-radius:12px;">
-        <div style="font-size:13.5px; font-weight:600; color:#0f172a; margin-bottom:8px;">요구 기술 스택 및 자격 요건</div>
-        <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px;">
+      <div style="padding:18px 20px; border:1px solid #e2e8f0; border-radius:14px;">
+        <div style="font-size:15px; font-weight:700; color:#0f172a; margin-bottom:10px;">요구 기술 스택 및 자격 요건</div>
+        <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;">
           ${(post.required_skills || []).map(sk => `<span class="badge badge-skill">${sk}</span>`).join('')}
         </div>
-        <ul style="margin:0; padding-left:18px; font-size:13.5px; color:#334155; line-height:1.65;">
+        <ul style="margin:0; padding-left:18px; font-size:14px; color:#334155; line-height:1.7;">
           <li><strong>담당 역할:</strong> ${post.role_name} (${post.required_grade} 기술자)</li>
           <li><strong>필수 도메인 경험:</strong> ${post.required_domain} 시스템 설계·개발 및 운영/고도화 실무 유경험자</li>
           <li><strong>핵심 수행 과업:</strong> ${prj?.description || `${post.required_domain} 핵심 코어 모듈 설계, 대용량 데이터 처리 및 대외 인터페이스 개발`}</li>
         </ul>
       </div>
-
-      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; padding-top:8px; border-top:1px solid #f1f5f9;">
-        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-          <button type="button" class="btn btn-outline btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="copyPostingWebLink('${post.id}')">
-            ${svgIcon('link', 13)} 오픈 구인 웹 링크 복사하기
-          </button>
-          ${post.status === 'OPEN' && currentUser?.role_group !== 'MASTER' ? `
-            <button type="button" class="btn btn-primary btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="openEasyApplyModal('${post.id}')">
-              ${svgIcon('edit', 13)} ${currentUser?.role_group === 'INTERNAL' ? '사내 지인 추천' : '간편 지원하기'}
-            </button>
-          ` : ''}
-          ${permissions.can_manage_postings ? `
-            <button type="button" class="btn btn-outline btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="openTargetSourcingModal('${post.id}')">
-              ${svgIcon('target', 13)} 타겟 소싱 발송
-            </button>
-          ` : ''}
-        </div>
-        ${permissions.can_manage_postings ? `
-          <button type="button" class="btn btn-primary btn-sm" style="margin-left:auto;" onclick="togglePostingStatus('${post.id}', true)">
-            ${post.status === 'OPEN' ? '채용마감' : '재오픈'}
-          </button>
-        ` : ''}
-      </div>
     </div>
-  `);
+  `;
 }
 
 async function togglePostingStatus(postingId, fromModal = false) {
@@ -3947,20 +5298,80 @@ async function submitEasyApply(e, postingId) {
 /* =========================================================================
    TAB 5: STANDARD INTERVIEW & MANDATORY CHECKLIST VERIFICATION
    ========================================================================= */
+function updateInterviewFilter(key, val) {
+  state.interviewFilters[key] = val;
+  if (key === 'keyword') {
+    const grid = document.getElementById('interviewCardsGrid');
+    if (grid) {
+      grid.innerHTML = renderInterviewCardsHtml();
+      return;
+    }
+  }
+  renderInterviewsTab();
+}
+
+function renderInterviewCardsHtml() {
+  const { interviews, permissions, currentUser } = state.data;
+  const ivf = state.interviewFilters || { status: 'ALL', grade: 'ALL', keyword: '' };
+
+  const filteredInterviews = interviews.filter(inv => {
+    if (ivf.status !== 'ALL' && inv.status !== ivf.status) return false;
+    if (ivf.grade !== 'ALL' && inv.tech_grade !== ivf.grade) return false;
+    if (ivf.keyword) {
+      const kw = ivf.keyword.toLowerCase();
+      const hay = `${inv.candidate_name} ${inv.candidate_type || ''} ${inv.interviewer_name || ''} ${inv.status || ''}`.toLowerCase();
+      if (!hay.includes(kw)) return false;
+    }
+    return true;
+  });
+
+  return filteredInterviews.map((inv, idx) => renderInterviewVerticalCard(inv, idx, permissions, currentUser)).join('') || `
+    <div class="card" style="grid-column: 1 / -1; text-align:center; padding:40px;">
+      조건에 부합하는 지원자 인터뷰 내역이 없습니다.
+    </div>
+  `;
+}
+
 function renderInterviewsTab() {
-  const { interviews, templates, permissions, currentUser } = state.data;
+  const { interviews, permissions } = state.data;
   const el = document.getElementById('tab-interviews');
+  const ivf = state.interviewFilters || { status: 'ALL', grade: 'ALL', keyword: '' };
+
+  const countByStatus = (st) => interviews.filter(i => i.status === st).length;
 
   el.innerHTML = `
-    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:18px;">
-      <h3 style="font-size:17px; font-weight:600; display:inline-flex; align-items:center; gap:7px;">지원자 인터뷰</h3>
+    <div class="filter-bar">
+      <button type="button" class="zal-chip-btn ${ivf.status === 'ALL' ? 'active' : ''}" onclick="updateInterviewFilter('status', 'ALL')">
+        전체 (${interviews.length})
+      </button>
+      <button type="button" class="zal-chip-btn ${ivf.status === '서류검토중' ? 'active' : ''}" onclick="updateInterviewFilter('status', '서류검토중')">
+        서류검토중 (${countByStatus('서류검토중')})
+      </button>
+      <button type="button" class="zal-chip-btn ${ivf.status === '인터뷰통보완료' ? 'active' : ''}" onclick="updateInterviewFilter('status', '인터뷰통보완료')">
+        인터뷰통보완료 (${countByStatus('인터뷰통보완료')})
+      </button>
+      <button type="button" class="zal-chip-btn ${ivf.status === '면접진행완료' ? 'active' : ''}" onclick="updateInterviewFilter('status', '면접진행완료')">
+        면접진행완료 (${countByStatus('면접진행완료')})
+      </button>
+      <button type="button" class="zal-chip-btn ${ivf.status === '최종선정' ? 'active' : ''}" onclick="updateInterviewFilter('status', '최종선정')">
+        최종선정 (${countByStatus('최종선정')})
+      </button>
+      <select class="zal-chip-select ${ivf.grade !== 'ALL' ? 'active' : ''}" onchange="updateInterviewFilter('grade', this.value)">
+        <option value="ALL" ${ivf.grade === 'ALL' ? 'selected' : ''}>전체 등급</option>
+        <option value="특급" ${ivf.grade === '특급' ? 'selected' : ''}>특급</option>
+        <option value="고급" ${ivf.grade === '고급' ? 'selected' : ''}>고급</option>
+        <option value="중급" ${ivf.grade === '중급' ? 'selected' : ''}>중급</option>
+      </select>
+      ${renderChipSearchBox('interviewSearchInput', ivf.keyword, '지원자명, 소속유형, 담당 면접관 검색...', 'interviews')}
       ${permissions.can_evaluate_interviews || permissions.can_schedule_interviews ? `
-        <button class="btn btn-outline btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="openQuestionTemplatesModal()">${svgIcon('file', 14)} 직무별 필수 질문 리스트(${templates.length}종) 관리</button>
+        <button type="button" class="btn btn-primary" style="width:170px; height:42px; padding:0 14px; font-size:14.5px; font-weight:700; box-sizing:border-box; display:inline-flex; align-items:center; justify-content:center; gap:6px; margin-left:auto;" onclick="openQuestionTemplatesModal()">
+          ${svgIcon('file', 15)} 질문 리스트 관리
+        </button>
       ` : ''}
     </div>
 
-    <div class="inv-vertical-grid">
-      ${interviews.map((inv, idx) => renderInterviewVerticalCard(inv, idx, permissions, currentUser)).join('')}
+    <div id="interviewCardsGrid" class="inv-vertical-grid">
+      ${renderInterviewCardsHtml()}
     </div>
   `;
 }
@@ -4408,22 +5819,47 @@ document.addEventListener('DOMContentLoaded', () => {
   // Initialize browser History API state so Back button returns to previous view inside SPA
   const urlParams = new URLSearchParams(window.location.search);
   const initialProjectId = urlParams.get('project') || null;
-  const initialTab = urlParams.get('tab') || (initialProjectId ? 'projects' : 'dashboard');
+  const initialProfileId = urlParams.get('profile') || null;
+  const initialPostingId = urlParams.get('posting') || null;
+  const initialTab = urlParams.get('tab') || (initialProjectId ? 'projects' : initialProfileId ? 'profiles' : initialPostingId ? 'sourcing' : 'dashboard');
   state.activeTab = initialTab;
   state.selectedProjectId = initialProjectId;
+  state.selectedProfileId = initialProfileId;
+  state.selectedPostingId = initialPostingId;
   applyTabDomState(state.activeTab);
 
   if (initialProjectId) {
-    // Ensure a base list entry exists below the detail entry even on direct reload
     window.history.replaceState(
-      { tab: 'projects', projectId: null },
+      { tab: 'projects', projectId: null, profileId: null, postingId: null },
       '',
-      buildNavigationUrl('projects', null)
+      buildNavigationUrl('projects', null, null, null)
     );
     window.history.pushState(
-      { tab: 'projects', projectId: initialProjectId },
+      { tab: 'projects', projectId: initialProjectId, profileId: null, postingId: null },
       '',
-      buildNavigationUrl('projects', initialProjectId)
+      buildNavigationUrl('projects', initialProjectId, null, null)
+    );
+  } else if (initialProfileId) {
+    window.history.replaceState(
+      { tab: 'profiles', projectId: null, profileId: null, postingId: null },
+      '',
+      buildNavigationUrl('profiles', null, null, null)
+    );
+    window.history.pushState(
+      { tab: 'profiles', projectId: null, profileId: initialProfileId, postingId: null },
+      '',
+      buildNavigationUrl('profiles', null, initialProfileId, null)
+    );
+  } else if (initialPostingId) {
+    window.history.replaceState(
+      { tab: 'sourcing', projectId: null, profileId: null, postingId: null },
+      '',
+      buildNavigationUrl('sourcing', null, null, null)
+    );
+    window.history.pushState(
+      { tab: 'sourcing', projectId: null, profileId: null, postingId: initialPostingId },
+      '',
+      buildNavigationUrl('sourcing', null, null, initialPostingId)
     );
   } else {
     pushNavigationState(true);
@@ -4438,15 +5874,104 @@ document.addEventListener('DOMContentLoaded', () => {
     if (histState && histState.tab) {
       state.activeTab = histState.tab;
       state.selectedProjectId = histState.projectId || null;
+      state.selectedProfileId = histState.profileId || null;
+      state.selectedPostingId = histState.postingId || null;
     } else {
       const params = new URLSearchParams(window.location.search);
       const prjParam = params.get('project') || null;
-      state.activeTab = params.get('tab') || (prjParam ? 'projects' : 'dashboard');
+      const profParam = params.get('profile') || null;
+      const postParam = params.get('posting') || null;
+      state.activeTab = params.get('tab') || (prjParam ? 'projects' : profParam ? 'profiles' : postParam ? 'sourcing' : 'dashboard');
       state.selectedProjectId = prjParam;
+      state.selectedProfileId = profParam;
+      state.selectedPostingId = postParam;
     }
     applyTabDomState(state.activeTab);
     renderActiveTab();
   });
 
   loadState();
+  initCustomSelectDropdowns();
 });
+
+let activeCustomSelectEl = null;
+
+function closeCustomSelectMenu() {
+  const existing = document.getElementById('zalCustomSelectMenu');
+  if (existing) existing.remove();
+  activeCustomSelectEl = null;
+}
+
+function openCustomSelectMenu(selectEl) {
+  if (activeCustomSelectEl === selectEl) {
+    closeCustomSelectMenu();
+    return;
+  }
+  closeCustomSelectMenu();
+  activeCustomSelectEl = selectEl;
+
+  const rect = selectEl.getBoundingClientRect();
+  const menu = document.createElement('div');
+  menu.id = 'zalCustomSelectMenu';
+  menu.className = 'zal-custom-select-menu';
+  menu.style.minWidth = `${Math.max(140, rect.width)}px`;
+
+  Array.from(selectEl.options).forEach(opt => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    const isSelected = selectEl.value === opt.value;
+    btn.className = `zal-custom-select-option${isSelected ? ' selected' : ''}`;
+    btn.innerHTML = `
+      <span>${opt.textContent}</span>
+      ${isSelected ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>` : ''}
+    `;
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const prevVal = selectEl.value;
+      selectEl.value = opt.value;
+      closeCustomSelectMenu();
+      if (prevVal !== opt.value) {
+        selectEl.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    });
+    menu.appendChild(btn);
+  });
+
+  document.body.appendChild(menu);
+
+  const menuRect = menu.getBoundingClientRect();
+  let left = rect.left;
+  if (left + menuRect.width > window.innerWidth - 12) {
+    left = Math.max(12, window.innerWidth - menuRect.width - 12);
+  }
+  let top = rect.bottom + 6;
+  if (top + menuRect.height > window.innerHeight - 12 && rect.top > menuRect.height + 12) {
+    top = rect.top - menuRect.height - 6;
+  }
+  menu.style.left = `${left}px`;
+  menu.style.top = `${top}px`;
+}
+
+function initCustomSelectDropdowns() {
+  document.addEventListener('mousedown', e => {
+    const menu = document.getElementById('zalCustomSelectMenu');
+    if (menu && menu.contains(e.target)) {
+      return;
+    }
+    const selectEl = e.target.closest('select.zal-chip-select, select.zal-clean-select, select.select');
+    if (selectEl) {
+      e.preventDefault();
+      openCustomSelectMenu(selectEl);
+      return;
+    }
+    if (menu) {
+      closeCustomSelectMenu();
+    }
+  }, true);
+
+  window.addEventListener('scroll', closeCustomSelectMenu, true);
+  window.addEventListener('resize', closeCustomSelectMenu);
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeCustomSelectMenu();
+  });
+}

@@ -3,31 +3,138 @@ const path = require('node:path');
 const os = require('node:os');
 const zlib = require('node:zlib');
 
-const TMP_STORE_PATH = path.join(os.tmpdir(), 'zalwill-vercel-store-v16.json');
+const TMP_STORE_PATH = path.join(os.tmpdir(), 'zalwill-vercel-store-v21.json');
 
 function getInitialStore() {
   return {
     users: [
       { id: 'u_master', name: '조성현 상무', title: '금융사업본부장 (임원/부서장)', department: '금융IT사업본부', role_group: 'MASTER', linked_profile_id: null, perm_all_profiles: 1, perm_pm_pl: 1, perm_interviewer: 1, perm_sensitive_info: 1 },
       { id: 'u_manager', name: '김지영 이사', title: '제안PM / 인력소싱 관리자', department: '전략제안·소싱팀', role_group: 'MANAGER', linked_profile_id: null, perm_all_profiles: 1, perm_pm_pl: 1, perm_interviewer: 1, perm_sensitive_info: 1 },
-      { id: 'u_internal_pl', name: '정윤희 부장', title: '정규직 (퇴직연금 PL)', department: '연금신탁개발팀', role_group: 'INTERNAL', linked_profile_id: 'p_1', perm_all_profiles: 1, perm_pm_pl: 1, perm_interviewer: 1, perm_sensitive_info: 0 },
+      { id: 'u_internal_pl', name: '정윤희 부장', title: '정규직 (UI/UX 기획 PL)', department: 'UI/UX전략팀', role_group: 'INTERNAL', linked_profile_id: 'p_1', perm_all_profiles: 1, perm_pm_pl: 1, perm_interviewer: 1, perm_sensitive_info: 0 },
       { id: 'u_internal_dev', name: '신은숙 부장', title: '전문계약직 (백엔드 개발)', department: '코어뱅킹팀', role_group: 'INTERNAL', linked_profile_id: 'p_3', perm_all_profiles: 0, perm_pm_pl: 0, perm_interviewer: 0, perm_sensitive_info: 0 },
       { id: 'u_external', name: '양동근 과장', title: '프리랜서 (계정계)', department: '외부 인재풀', role_group: 'EXTERNAL', linked_profile_id: 'p_5', perm_all_profiles: 0, perm_pm_pl: 0, perm_interviewer: 0, perm_sensitive_info: 0 }
     ],
     profiles: [
       {
-        id: 'p_1', name: '정윤희', employment_type: '정규직', is_internal: 1, tech_grade: '특급', experience_years: 15, birth_year: 1986,
-        phone: '010-3421-8890', email: 'yh.jung@zalwill.co.kr', education: '한양대학교 컴퓨터전공 학사',
-        certifications: ['정보처리기사', 'PMP', 'SQLP'],
-        skills: ['Java', 'Spring Boot', 'Oracle', 'ProFrame', 'MSA', '대용량배치'],
-        domains: ['퇴직연금', '신탁/수탁', '계정계 코어'],
-        availability_status: '즉시투입가능', available_date: '2026-11-18', current_end_date: '2026-11-16',
-        desired_rate: 0, contract_rate: 1250, rating: 4.9,
-        review_summary: '메이저 은행 퇴직연금 차세대 PL 3회 수행. DB/DC/IRP 정산 및 상품운용 아키텍처 최고 전문가.',
-        verified: 1, resourced_count: 4, parse_seconds: 65,
+        id: 'p_1',
+        name: '정윤희',
+        ssn_masked: '750204 - 2******',
+        gender_age: '여 [51 세 ]',
+        company_name: '다음정보시스템즈',
+        job_title: '부장',
+        available_date_display: '',
+        school_name: '이화여대 대학원',
+        grad_ym: '2000.08',
+        major: '제품디자인',
+        degree: '석사',
+        career_ym_text: '24 년 0 개월',
+        main_skill: 'UI/UX',
+        participation_yn: '',
+        employment_type: '정규직',
+        is_internal: 1,
+        tech_grade: '특급',
+        experience_years: 24,
+        birth_year: 1975,
+        phone: '010-8748-6503',
+        email: 'unee@daum.net',
+        location: '서울특별시 동작구',
+        work_preference: '여의도 프로젝트 선호',
+        education: '이화여대 대학원 제품디자인 석사',
+        certifications: [],
+        cert_details: [],
+        company_history: [
+          { company: '다음정보시스템즈', period: '2026.04 ~ 현 재', position: '부장', duty: 'UI/UX' },
+          { company: '프리랜서', period: '2009.02 ~ 2025.09', position: '부장', duty: 'UI/UX' },
+          { company: '갤럭시아컴즈', period: '2005.10 ~ 2008.03', position: '과장', duty: 'UI/UX' },
+          { company: '이너큐브', period: '2003.11 ~ 2005.07', position: '과장', duty: 'UI/UX' },
+          { company: '프리랜서', period: '2001.04 ~ 2003.11', position: '대리', duty: 'UI/UX' },
+          { company: '인터넷프라자시티', period: '2000.09 ~ 2001.03', position: '사원', duty: 'UI/UX' }
+        ],
+        skills: ['UI/UX', 'UI/UX 기획 PL', 'UI/UX 디자인', '퍼블리싱'],
+        domains: ['퇴직연금', '마이데이터', '채널계'],
+        availability_status: '즉시투입가능',
+        available_date: '2026-11-18',
+        current_end_date: '2026-11-16',
+        desired_rate: 0,
+        contract_rate: 1250,
+        rating: 4.9,
+        review_summary: '금융·공공·엔터프라이즈 UI/UX 기획 PL 및 디자인·퍼블리싱 24년 경력 특급 전문가.',
+        verified: 1,
+        resourced_count: 4,
+        parse_seconds: 65,
         career_history: [
-          { project: '신한은행 퇴직연금 차세대 구축', client: '신한은행', period: '2024.03 ~ 2026.10', role: '연금정산 PL', tech: 'Java, Spring Batch, Oracle' },
-          { project: 'KB국민은행 신탁/퇴직연금 고도화', client: 'KB국민은행', period: '2022.01 ~ 2024.01', role: '설계/개발 리더', tech: 'ProFrame, Oracle, C' }
+          { project: '정부디지털지갑', period: '24.06~25.09', role: 'UI/UX, 기획 PL', client: '행정안전부', tech: 'UI/UX, 기획 PL' },
+          { project: 'LG 전자 대표사이트 (lge.co.kr)', period: '24.01~24.05', role: 'UI/UX, 기획 PL', client: '엘지전자', tech: 'UI/UX, 기획 PL' },
+          { project: 'LH 공사 ( 업무지원 챗봇 / 검색 )', period: '23.08~23.10', role: 'UI/UX, 기획 PL', client: 'LH 공사', tech: 'UI/UX, 기획 PL' },
+          { project: '산업은행 ( 퇴직연금 )', period: '23.03~23.07', role: 'UI/UX, 기획 PL', client: '산업은행', tech: 'UI/UX, 기획 PL' },
+          { project: '대신증권 (MTS)', period: '22.08~23.02', role: 'UI/UX, 기획', client: '대신증권', tech: 'UI/UX, 기획' },
+          { project: 'LG CNS ( 하루조각 - 마이데이터 )', period: '22.05~22.07', role: 'UI/UX, 기획', client: 'LG CNS', tech: 'UI/UX, 기획' },
+          { project: 'LG U+ ( 외국인 고객 경험 개선 )', period: '21.11~22.04', role: 'UI/UX, 기획', client: 'LG U+', tech: 'UI/UX, 기획' },
+          { project: '제주항공 ( 차세대 여객시스템 JLINK)', period: '21.08~21.10', role: 'UI/UX 디자인 / 퍼블리싱', client: '제주항공', tech: 'UI/UX 디자인 / 퍼블리싱' },
+          { project: 'CJ PLM (PC 웹사이트 )', period: '21.05~21.07', role: 'UI/UX, 기획', client: 'CJ', tech: 'UI/UX, 기획' },
+          { project: '인천도시공사 ( 스마트시티 )', period: '21.02~21.05', role: 'UI/UX, 기획 PL', client: '인천도시공사', tech: 'UI/UX, 기획 PL' },
+          { project: 'LG U+ ( 유플러스 웹사이트 )', period: '20.12~21.02', role: 'UI/UX, 기획', client: 'LG U+', tech: 'UI/UX, 기획' },
+          { project: 'NH 농협은행 ( 스마트고지서 )', period: '20.09~20.12', role: 'UI/UX, 기획 PL', client: '농협은행', tech: 'UI/UX, 기획 PL' },
+          { project: '삼성건설 ( 헤스티아 )', period: '20.05~20.08', role: 'UI/UX, 기획 / 디자인', client: '삼성건설', tech: 'UI/UX, 기획 / 디자인' },
+          { project: 'SAP (HANA DB 모니터링 툴 )', period: '20.04~20.04', role: 'UI/UX, 기획 / 디자인', client: 'SAP', tech: 'UI/UX, 기획 / 디자인' },
+          { project: '현대자동차 ( 스마트세일즈케어 )', period: '20.02~20.03', role: 'UI/UX, 기획', client: '현대자동차', tech: 'UI/UX, 기획' },
+          { project: '수협 ( 바다로 )', period: '19.11~20.01', role: 'UI/UX, 기획', client: '수협중앙회', tech: 'UI/UX, 기획' },
+          { project: '서울시 민원분석시스템 ( 웹 어플리케이션 )', period: '19.08~19.10', role: 'UI/UX, 기획 PL', client: '서울시청', tech: 'UI/UX, 기획 PL' },
+          { project: '인공지능 챗봇 ( 웹 어플리케이션 )', period: '19.06~19.07', role: 'UI/UX, 기획 / 디자인', client: '한국서부발전', tech: 'UI/UX, 기획 / 디자인' },
+          { project: '직원우대 탑승 우선순위 관리시스템 ( 반응형 웹 )', period: '19.03~19.06', role: 'UI/UX, 디자인 / 퍼블리싱', client: '아시아나 항공', tech: 'UI/UX, 디자인 / 퍼블리싱' },
+          { project: 'LG U+( 스마트 가입 )', period: '18.08~19.02', role: 'UI/UX, 기획', client: 'LG U+', tech: 'UI/UX, 기획' },
+          { project: 'JT 저축은행 ( 원더풀론 )', period: '18.07~18.08', role: 'UI/UX, 기획', client: 'JT 저축은행', tech: 'UI/UX, 기획' },
+          { project: '미래엔 (EIS)', period: '18.03~18.06', role: 'UI/UX, 디자인 / 퍼블리싱', client: '미래엔', tech: 'UI/UX, 디자인 / 퍼블리싱' },
+          { project: '삼성전자 ( 마켓커뮤니케이션시스템 )', period: '17.11~18.02', role: 'UI/UX, 기획', client: '삼성전자', tech: 'UI/UX, 기획' },
+          { project: 'SKT TIO 포털 ( 지능형 초연결망 선도사업 )', period: '17.09~17.10', role: 'UI/UX, 기획', client: 'SKT', tech: 'UI/UX, 기획' },
+          { project: '코스콤 SignKorea ( 통합 인증 앱 )', period: '17.06~17.08', role: 'UI/UX, 디자인 / 퍼블리싱', client: '코스콤', tech: 'UI/UX, 디자인 / 퍼블리싱' },
+          { project: '오티스 엘레베이터 OKBS+', period: '17.04~17.05', role: 'UI/UX, 기획', client: '오티스엘레베이터', tech: 'UI/UX, 기획' },
+          { project: '정부 디렉토리 시스템', period: '16.11~17.02', role: 'UI/UX, 디자인 PL', client: '행자부', tech: 'UI/UX, 디자인 PL' },
+          { project: 'LG U+( 모바일 로밍 )', period: '16.08~16.10', role: 'UI/UX, 기획 / 디자인', client: 'LG U+', tech: 'UI/UX, 기획 / 디자인' },
+          { project: 'CJ FPMS', period: '16.06~16.07', role: 'UI/UX, 디자인 / 퍼블리싱', client: 'CJ', tech: 'UI/UX, 디자인 / 퍼블리싱' },
+          { project: 'KB Liiv Bank', period: '16.03~16.05', role: 'UI/UX, 디자인 PL', client: 'KB 국민은행', tech: 'UI/UX, 디자인 PL' },
+          { project: 'CellWe Collaboration(SNS 형 업무 협업 시스템 )', period: '15.10~16.02', role: 'UI/UX, 디자인 PL', client: '삼성 SDS', tech: 'UI/UX, 디자인 PL' },
+          { project: '삼성 SDS EHR 프로젝트', period: '15.04~15.09', role: 'UI/UX, 디자인', client: '삼성 SDS', tech: 'UI/UX, 디자인' },
+          { project: 'SAIGLE ( 반응형 웹 에너지 관리 시스템 )', period: '14.09~15.03', role: 'UI/UX 디자인 / 퍼블리싱', client: '에스아이티', tech: 'UI/UX 디자인 / 퍼블리싱' },
+          { project: '삼성전자 AMS 프로젝트', period: '14.08~14.09', role: 'UI/UX, 디자인', client: '삼성전자', tech: 'UI/UX, 디자인' },
+          { project: '삼성전자 EHS 프로젝트', period: '14.06~14.07', role: 'UI/UX, 디자인', client: '삼성전자', tech: 'UI/UX, 디자인' },
+          { project: '삼성 SDS Smart BMS( 빌딩매니지먼트솔루션 )', period: '12.03~14.03', role: 'UI/UX, 디자인 PL', client: '삼성 SDS', tech: 'UI/UX, 디자인 PL' },
+          { project: '삼성 GMES2.0', period: '11.07~12.02', role: 'UI/UX, 디자인', client: '삼성전자', tech: 'UI/UX, 디자인' },
+          { project: '삼성화재 ( 모바일 웹사이트 , 어플 )', period: '11.04~11.07', role: 'UI/UX, 디자인', client: '삼성화재', tech: 'UI/UX, 디자인' },
+          { project: 'ITMC ( 대시보드 , 웹포털 , 웹어플 )', period: '11.01~11.04', role: 'UI/UX, 디자인 / 퍼블리싱', client: '기아자동차', tech: 'UI/UX, 디자인 / 퍼블리싱' },
+          { project: 'KT 올레닷컴', period: '10.10~10.12', role: 'UI/UX, 디자인 PL', client: 'KT', tech: 'UI/UX, 디자인 PL' },
+          { project: 'KT 에코노베이션 , 올레스토어', period: '10.08~10.10', role: 'UI/UX , 디자인 PL', client: 'KT', tech: 'UI/UX , 디자인 PL' },
+          { project: "자산관리 서비스 '닥터 .S'", period: '10.05~10.08', role: 'UI/UX, 디자인', client: '신한투자금융', tech: 'UI/UX, 디자인' },
+          { project: 'LG CNS 협력사 포털', period: '09.03~10.05', role: 'UI/UX 기획 디자인 / 퍼블리싱', client: 'LG CNS (주)', tech: 'UI/UX 기획 디자인 / 퍼블리싱' },
+          { project: '8142 모바일 키워드검색', period: '09.10~10.03', role: 'UI/UX , 디자인', client: 'CG 네트워크스(주)', tech: 'UI/UX , 디자인' },
+          { project: '삼성 리모 SDK', period: '09.02~09.09', role: 'UI/UX , 디자인', client: '삼성전자', tech: 'UI/UX , 디자인' },
+          { project: 'MODION Editor', period: '07.06~08.01', role: 'UI/UX, 기획 / 디자인', client: 'SKT', tech: 'UI/UX, 기획 / 디자인' },
+          { project: 'STAR Personal multimedia station', period: '07.02~07.06', role: 'UI/UX, 기획 / 디자인', client: '갤럭시아컴즈(주)', tech: 'UI/UX, 기획 / 디자인' },
+          { project: 'MODION SKT 모바일용 인코딩 툴', period: '05.10-06.11', role: 'UI/UX 기획 / 디자인', client: 'SKT', tech: 'UI/UX 기획 / 디자인' },
+          { project: 'SK CMO 위원회', period: '05.08 – 05.10', role: 'UI/UX 디자인 / 퍼블리싱', client: 'SK (주)', tech: 'UI/UX 디자인 / 퍼블리싱' },
+          { project: 'MOZEN KTF & HMC 텔래매틱스 (WIPI, KUN)', period: '05.03 – 05.07', role: 'UI/UX 기획 디자인 / 퍼블리싱', client: 'KTF/ 현대자동차', tech: 'UI/UX 기획 디자인 / 퍼블리싱' },
+          { project: '이너큐브 2005 Ver', period: '05.05 – 05.06', role: 'UI/UX 기획 디자인 / 퍼블리싱', client: '이너큐브', tech: 'UI/UX 기획 디자인 / 퍼블리싱' },
+          { project: '원샷 ! 교통정보 KTF Magic® (WIPI)', period: '05.03 - 05.05', role: 'UI/UX 기획 / 디자인', client: 'KTF', tech: 'UI/UX 기획 / 디자인' },
+          { project: '용평모바일존 SKT(WAP)/KTF(KUN)/LGT', period: '05.01 - 05.01', role: 'UI/UX 기획 / 디자인', client: '이너큐브', tech: 'UI/UX 기획 / 디자인' },
+          { project: 'SK NATE 용평모빌 (SKVM)', period: '04.10 - 04.12', role: 'UI/UX 기획 / 디자인', client: 'SKT', tech: 'UI/UX 기획 / 디자인' },
+          { project: 'KTF Magic® M- 에버웨이 (BREW)', period: '04.07 - 04.09', role: 'UI/UX 기획 / 디자인', client: 'KTF', tech: 'UI/UX 기획 / 디자인' },
+          { project: 'KTF Magic® 차량제어서비스 (BREW)', period: '04.07 – 04.07', role: 'UI/UX 기획 / 디자인', client: 'KTF', tech: 'UI/UX 기획 / 디자인' },
+          { project: 'EVERWAYKTF&SMC 텔래매틱스 무선 웹 Ver2', period: '04.05 – 04.07', role: 'UI/UX 기획 / 디자인', client: 'KTF', tech: 'UI/UX 기획 / 디자인' },
+          { project: '아이비즈업', period: '04.03 - 04.05', role: 'UI/UX 기획 디자인 / 퍼블리싱', client: '이너큐브', tech: 'UI/UX 기획 디자인 / 퍼블리싱' },
+          { project: 'EVERWAY KTF&SMC 텔래매틱스', period: '04.01 – 04.02', role: 'UI/UX 기획 디자인 / 퍼블리싱', client: 'KTF', tech: 'UI/UX 기획 디자인 / 퍼블리싱' },
+          { project: '에듀 GPS', period: '04.01 – 04.01', role: 'UI/UX 디자인', client: '이너큐브', tech: 'UI/UX 디자인' },
+          { project: '이너큐브 2004 Ver', period: '03.12 – 04.01', role: 'UI/UX 디자인 / 퍼블리싱', client: '이너큐브', tech: 'UI/UX 디자인 / 퍼블리싱' },
+          { project: 'EVERWAY KTF&SICC 텔래매틱스 Ver1', period: '03.05 – 03.11', role: 'UI/UX 디자인 / 퍼블리싱', client: 'KTF/ 쌍용자동차', tech: 'UI/UX 디자인 / 퍼블리싱' },
+          { project: 'KT Neoss PDA UI', period: '03.05 - 03.05', role: 'UI/UX 디자인', client: 'KT', tech: 'UI/UX 디자인' },
+          { project: '민주당 국회의원 관련 웹사이트 디자인', period: '03.01 - 03.05', role: 'UI/UX 디자인 / 퍼블리싱', client: '민주당', tech: 'UI/UX 디자인 / 퍼블리싱' },
+          { project: '차세대웹단말시스템 ( 업무용 웹 어플리케이션 ) UI', period: '02.09 - 02.12', role: 'UI/UX 디자인 / 퍼블리싱', client: '외환카드', tech: 'UI/UX 디자인 / 퍼블리싱' },
+          { project: '경영관리시스템 內의 5 개 시스템 UI', period: '02.08 - 02.09', role: 'UI/UX 디자인 / 퍼블리싱', client: '산업은행', tech: 'UI/UX 디자인 / 퍼블리싱' },
+          { project: '이벤트 & 프로모션 관련 웹 디자인', period: '01.12 - 02.08', role: 'UI/UX 디자인 / 퍼블리싱', client: '현대캐피탈', tech: 'UI/UX 디자인 / 퍼블리싱' },
+          { project: '도그팅 / 헬로산타 인터넷쇼핑몰', period: '02.04 - 02.07', role: 'UI/UX 디자인 / 퍼블리싱', client: '드림소프트', tech: 'UI/UX 디자인 / 퍼블리싱' },
+          { project: 'Good Friends 웹마일리지 후원센터', period: '01.10 - 01.11', role: 'UI/UX 디자인 / 퍼블리싱', client: '인터파크구스닥', tech: 'UI/UX 디자인 / 퍼블리싱' },
+          { project: 'DAKS 2001 FW 웹 사이트', period: '01.08 - 01.09', role: 'UI/UX 디자인 / 퍼블리싱', client: '엘지패션', tech: 'UI/UX 디자인 / 퍼블리싱' },
+          { project: '장안동 현대홈타운 홈 오토메이션 시스템 UI', period: '01.04 - 01.08', role: 'UI/UX 디자인 / 퍼블리싱', client: '현대홈타운', tech: 'UI/UX 디자인 / 퍼블리싱' },
+          { project: '도메인 비즈니스 포탈사이트', period: '00.09 - 01.04', role: 'UI/UX 디자인 / 퍼블리싱', client: '인터넷프라자시티(주)', tech: 'UI/UX 디자인 / 퍼블리싱' }
         ],
         updated_at: '2026-11-12'
       },
@@ -1181,7 +1288,7 @@ function parseResumeWithAI(rawText = '', fileName = 'resume.pdf', fileBase64 = '
         continue;
       }
       if (nl === '자격증명' && nextNl === '취득일') {
-        currentMode = 'CERT';
+        if (currentMode !== 'COMP') currentMode = 'CERT';
         i += 1; // skip '자격증명', '취득일'
         continue;
       }
@@ -1618,6 +1725,14 @@ module.exports = async (req, res) => {
     return send(200, { parsed: parseRfpWithAI(body.rawText, body.fileName, body.fileBase64) });
   }
 
+  if (pathname === '/api/profiles/delete' && req.method === 'POST') {
+    if (body.id) {
+      store.profiles = store.profiles.filter(p => p.id !== body.id);
+      saveStore(store);
+    }
+    return send(200, { ok: true });
+  }
+
   if (pathname === '/api/profiles' && req.method === 'POST') {
     const now = new Date().toISOString().slice(0, 10);
     if (body.id) {
@@ -1633,6 +1748,17 @@ module.exports = async (req, res) => {
     store.profiles.unshift({
       id: newId,
       name: body.name || '신규인재',
+      ssn_masked: body.ssn_masked || '',
+      gender_age: body.gender_age || '',
+      company_name: body.company_name || '',
+      job_title: body.job_title || '',
+      school_name: body.school_name || '',
+      grad_ym: body.grad_ym || '',
+      major: body.major || '',
+      degree: body.degree || '',
+      career_ym_text: body.career_ym_text || '',
+      main_skill: body.main_skill || '',
+      participation_yn: body.participation_yn || '',
       employment_type: body.employment_type || '프리랜서',
       is_internal: isInternal ? 1 : 0,
       tech_grade: body.tech_grade || '고급',
@@ -1641,7 +1767,9 @@ module.exports = async (req, res) => {
       phone: body.phone || '010-0000-0000',
       email: body.email || 'talent@zalwill.co.kr',
       education: body.education || '학사 졸업',
-      certifications: body.certifications || ['정보처리기사'],
+      certifications: body.certifications || [],
+      cert_details: body.cert_details || [],
+      company_history: body.company_history || [],
       skills: body.skills || ['Java', 'Spring Boot'],
       domains: body.domains || ['퇴직연금'],
       availability_status: body.availability_status || '즉시투입가능',
