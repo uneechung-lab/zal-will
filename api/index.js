@@ -1554,75 +1554,163 @@ function parseResumeWithAI(rawText = '', fileName = 'resume.pdf', fileBase64 = '
   };
 }
 
-function parseRfpWithAI(rawText = '', fileName = 'rfp.pdf', fileBase64 = '') {
-  let cleanText = rawText || '';
-  if (fileBase64) {
-    try {
-      const buf = Buffer.from(fileBase64, 'base64');
-      cleanText = extractTextFromBuffer(buf, fileName) || cleanText;
-    } catch {}
-  }
-  if ((cleanText.match(/\uFFFD/g) || []).length > 5 || /^%PDF|^PK\x03\x04/.test(cleanText)) {
-    cleanText = '';
+function parseRfpWithAI(rawText = '', fileName = 'rfp.pdf', fileBase64 = '', files = []) {
+  const inputFiles = Array.isArray(files) && files.length > 0
+    ? files
+    : [{ fileName: fileName || 'rfp.pdf', rawText: rawText || '', fileBase64: fileBase64 || '' }];
+
+  const extractedTexts = [];
+  const fileNames = [];
+
+  for (const item of inputFiles) {
+    const fName = item.fileName || 'rfp.pdf';
+    fileNames.push(fName);
+    let fText = item.rawText || '';
+    if (item.fileBase64) {
+      try {
+        const buf = Buffer.from(item.fileBase64, 'base64');
+        fText = extractTextFromBuffer(buf, fName) || fText;
+      } catch {}
+    }
+    if ((fText.match(/\uFFFD/g) || []).length > 5 || /^%PDF|^PK\x03\x04/.test(fText)) {
+      fText = '';
+    }
+    if (fText) {
+      extractedTexts.push(fText);
+    }
   }
 
-  const baseName = path.basename(fileName, path.extname(fileName)).replace(/[_-]+/g, ' ').trim();
-  const combined = `${baseName}\n${cleanText}`;
+  const cleanText = extractedTexts.join('\n\n');
+  const primaryFileName = fileNames[0] || 'rfp.pdf';
+  const displayFileName = fileNames.length > 1
+    ? `${primaryFileName} 외 ${fileNames.length - 1}건`
+    : primaryFileName;
+  const allBaseNames = fileNames
+    .map(fn => path.basename(fn, path.extname(fn)).replace(/[_-]+/g, ' ').trim())
+    .join(' ');
+  const baseName = path.basename(primaryFileName, path.extname(primaryFileName)).replace(/[_-]+/g, ' ').trim();
+  const combined = `${allBaseNames}\n${cleanText}`;
+
+  const isGroupwareOrHr = /그룹웨어|전자결재|인사기록|인사관리|휴가관리|휴가원|결재양식|결재선|근태관리/.test(combined);
+  const isBondOrFund = !isGroupwareOrHr && /채권|펀드|외화|수탁|자산운용|트레이딩|집합투자/.test(combined);
+  const isConsulting = !isGroupwareOrHr && /ISP|PI|컨설팅|전략수립|목표모델/.test(combined);
+  const isMyData = !isGroupwareOrHr && /마이데이터|오픈뱅킹|자산관리\s*채널|비대면\s*채널/.test(combined);
+  const isCore = !isGroupwareOrHr && /계정계|원장|코어뱅킹/.test(combined);
+  const isPension = !isGroupwareOrHr && /퇴직연금|개인형\s*IRP|디폴트옵션|연금/.test(combined);
 
   const knownClients = ['미래에셋증권', '한국투자증권', 'NH투자증권', 'KB증권', '삼성증권', '신한투자증권', '하나증권', '대신증권', '키움증권', '메리츠증권', '신영증권', '교보증권', '우리은행', '신한은행', 'KB국민은행', '하나은행', 'IBK기업은행', '농협은행'];
-  const clientMatch = cleanText.match(/(?:발주기관|발주사|고객사|사업주체)\s*[:：]\s*([^\n\r,]+)/);
-  const detectedClient = (clientMatch && clientMatch[1].trim().slice(0, 20))
+  const clientMatch = cleanText.match(/(?:발주기관|발주사|발주처|고객사|사업주체|수요기관)\s*[:：|]\s*([^\n\r,|]+)/);
+  const deptMatch = cleanText.match(/(?:요청부서|주관부서|사업부서|담당부서)\s*[:：|]\s*([^\n\r,|]+)/);
+  const firstWord = baseName.split(' ')[0] || '';
+  const isGenericFirstWord = /^(RFP|제안요청서|과업지시서|입찰공고|그룹웨어|차세대|신규|통합|시스템|플랫폼|구축|고도화|웹|모바일)$/i.test(firstWord);
+
+  const detectedClient = (clientMatch && clientMatch[1].trim().slice(0, 24))
     || knownClients.find(c => combined.includes(c))
-    || (baseName.split(' ')[0] && /[가-힣A-Za-z]{2,}/.test(baseName.split(' ')[0]) ? baseName.split(' ')[0] : '한국투자증권');
+    || (deptMatch && deptMatch[1].trim().slice(0, 24))
+    || (!isGenericFirstWord && /[가-힣A-Za-z]{2,}/.test(firstWord) ? firstWord : (isGroupwareOrHr ? '관리부 (경영지원부)' : '한국투자증권'));
 
-  const isBondOrFund = /채권|펀드|외화|수탁|자산운용|트레이딩/.test(combined);
-  const isConsulting = /ISP|PI|컨설팅|전략|목표모델/.test(combined);
-  const isMyData = /마이데이터|채널|모바일|앱/.test(combined);
-  const isCore = /계정계|원장|코어/.test(combined);
+  const detectedDomain = isGroupwareOrHr
+    ? '그룹웨어·전자결재·인사(HR)'
+    : isBondOrFund
+      ? '채권'
+      : isMyData
+        ? '마이데이터'
+        : isCore
+          ? '계정계 코어'
+          : isPension
+            ? '퇴직연금'
+            : '퇴직연금';
 
-  const detectedDomain = isBondOrFund ? '채권' : isMyData ? '마이데이터' : isCore ? '계정계 코어' : '퇴직연금';
-  const detectedCategory = isBondOrFund ? 'INVESTMENT' : isConsulting ? 'CONSULTING' : 'PENSION';
+  const detectedCategory = isGroupwareOrHr
+    ? 'GROUPWARE'
+    : isBondOrFund
+      ? 'INVESTMENT'
+      : isConsulting
+        ? 'CONSULTING'
+        : 'PENSION';
 
-  const titleMatch = cleanText.match(/(?:사\s*업\s*명|프로젝트명|과\s*업\s*명|공\s*고\s*명)\s*[:：]\s*([^\n\r]+)/);
-  const rawTitleFromBase = baseName.replace(/^(RFP|제안요청서|과업지시서|입찰공고)\s*/i, '').trim();
-  const detectedName = (titleMatch && titleMatch[1].trim())
-    || (rawTitleFromBase.length >= 4 ? (rawTitleFromBase.includes(detectedClient) ? rawTitleFromBase : `${detectedClient} ${rawTitleFromBase}`) : `${detectedClient} ${detectedDomain} 차세대 시스템 구축`);
+  const titleInlineMatch = cleanText.match(/(?:1\.1\s*)?(?:사\s*업\s*명|프로젝트명|과\s*업\s*명|공\s*고\s*명)\s*[:：|]\s*([^\n\r|]+)/);
+  const titleNextLineMatch = cleanText.match(/(?:1\.1\s*)?(?:사\s*업\s*명|프로젝트명|과\s*업\s*명|공\s*고\s*명)\s*\r?\n\s*([^\n\r|]+)/);
+  const rawTitleFromBase = baseName
+    .replace(/^(RFP|제안요청서|과업지시서|입찰공고)\s*/i, '')
+    .replace(/\s*(RFP|제안요청서)\s*v?\d+(\.\d+)?$/i, '')
+    .trim();
 
-  const readableSentences = cleanText
-    .split(/[\r\n]+/)
-    .map(l => l.trim())
-    .filter(l => l.length >= 10 && /[가-힣]{4,}/.test(l) && !/[\uFFFD]/.test(l))
-    .slice(0, 4)
-    .join(' ');
+  const detectedName = (titleInlineMatch && titleInlineMatch[1].trim())
+    || (titleNextLineMatch && titleNextLineMatch[1].trim())
+    || (isGroupwareOrHr
+      ? '그룹웨어 신규 구축 (웹·모바일 통합 / 전자결재 · 인사관리 · 휴가관리)'
+      : (rawTitleFromBase.length >= 4
+        ? (rawTitleFromBase.includes(detectedClient) ? rawTitleFromBase : `${detectedClient} ${rawTitleFromBase}`)
+        : `${detectedClient} ${detectedDomain} 차세대 시스템 구축`));
 
-  const description = readableSentences
-    ? `[AI RFP 핵심 요약 — ${fileName}]\n${readableSentences.slice(0, 320)}`
-    : `[AI RFP 핵심 요약 — ${fileName}]\n${detectedClient}의 ${detectedDomain} 핵심 코어 아키텍처 고도화, 대용량 정산·배치 성능 개선 및 비대면 채널 서비스 구축을 위한 제안요청서(RFP) 자동 분석 프로젝트입니다.`;
+  let description = '';
+  if (isGroupwareOrHr) {
+    description = `[AI RFP 핵심 요약 — ${displayFileName}]\nPC 웹·모바일 통합 자체 그룹웨어 신규 구축 사업(임직원 약 400명 규모, 법인별 분리 운영)입니다. 0단계 기반 플랫폼(시스템·사용자·조직·권한·보안·알림) 선행 구축 후, 1순위 전자결재(관리자 양식 편집기, 기안 시 결재선 변경, 현장–본사 순차 결재, 인사발령·휴가원 연동), 2순위 인사기록관리(갑·을·병지 13개 영역 인사기록카드, 이력 추적, 4단계 권한 체계), 3순위 휴가관리 및 기존 임대 시스템·엑셀 데이터 이관을 단계별로 구축합니다.`;
+  } else {
+    const readableSentences = cleanText
+      .split(/[\r\n]+/)
+      .map(l => l.trim())
+      .filter(l => l.length >= 14 && /[가-힣]{4,}/.test(l) && !/[\uFFFD]/.test(l) && !/^(목\s*차|버전\s*\||요청부서\s*\||작성일\s*\|)/.test(l))
+      .slice(0, 4)
+      .join(' ');
+    description = readableSentences
+      ? `[AI RFP 핵심 요약 — ${displayFileName}]\n${readableSentences.slice(0, 320)}`
+      : `[AI RFP 핵심 요약 — ${displayFileName}]\n${detectedClient}의 ${detectedDomain} 핵심 코어 아키텍처 고도화, 대용량 정산·배치 성능 개선 및 비대면 채널 서비스 구축을 위한 제안요청서(RFP) 자동 분석 프로젝트입니다.`;
+  }
 
-  const to_slots = isBondOrFund
-    ? [
-        { role_name: '채권/외화펀드 수탁 아키텍트 (PL)', required_grade: '특급', required_skills: 'Java, Spring Cloud, Kafka, Oracle' },
-        { role_name: '채권 시가평가 및 결제 엔진 개발', required_grade: '고급', required_skills: 'Java, Spring Boot, Oracle, 펀드회계' },
-        { role_name: '대외 예탁결제 전문 연동 개발', required_grade: '중급', required_skills: 'Java, Spring Boot, PostgreSQL' }
-      ]
-    : [
-        { role_name: `${detectedDomain} 정산/코어 아키텍트 (PL)`, required_grade: '특급', required_skills: 'Java, Spring Batch, Oracle, ProFrame' },
-        { role_name: `${detectedDomain} 데이터 모델러 및 배치튜닝 (DA)`, required_grade: '고급', required_skills: 'Oracle, SQL튜닝, DW/DM' },
-        { role_name: '비대면 모바일 채널 프론트/백엔드 개발', required_grade: '고급', required_skills: 'React, WebSquare, Spring Boot' }
-      ];
+  let to_slots = [];
+  if (isGroupwareOrHr) {
+    to_slots = [
+      {
+        role_name: '그룹웨어 기반플랫폼·전자결재 아키텍트 (PM/PL)',
+        required_grade: '특급',
+        required_skills: 'Java, Spring Boot, 전자결재/워크플로우, 권한·조직도 설계, Oracle'
+      },
+      {
+        role_name: '인사기록관리(HRM)·휴가관리 및 데이터 이관 백엔드 개발',
+        required_grade: '고급',
+        required_skills: 'Java, Spring Boot, MyBatis, PostgreSQL, 데이터이관/엑셀연동'
+      },
+      {
+        role_name: '웹·모바일 통합(반응형 웹앱/PWA) 프론트엔드 개발',
+        required_grade: '고급',
+        required_skills: 'React, TypeScript, Next.js, 반응형 웹/PWA, 모바일푸시'
+      },
+      {
+        role_name: 'PC·모바일 그룹웨어 UI/UX 화면설계 및 퍼블리싱',
+        required_grade: '고급',
+        required_skills: 'UI/UX 기획 PL, UI/UX 디자인, 퍼블리싱, 화면설계'
+      }
+    ];
+  } else if (isBondOrFund) {
+    to_slots = [
+      { role_name: '채권/외화펀드 수탁 아키텍트 (PL)', required_grade: '특급', required_skills: 'Java, Spring Cloud, Kafka, Oracle' },
+      { role_name: '채권 시가평가 및 결제 엔진 개발', required_grade: '고급', required_skills: 'Java, Spring Boot, Oracle, 펀드회계' },
+      { role_name: '대외 예탁결제 전문 연동 개발', required_grade: '중급', required_skills: 'Java, Spring Boot, PostgreSQL' }
+    ];
+  } else {
+    to_slots = [
+      { role_name: `${detectedDomain} 정산/코어 아키텍트 (PL)`, required_grade: '특급', required_skills: 'Java, Spring Batch, Oracle, ProFrame' },
+      { role_name: `${detectedDomain} 데이터 모델러 및 배치튜닝 (DA)`, required_grade: '고급', required_skills: 'Oracle, SQL튜닝, DW/DM' },
+      { role_name: '비대면 모바일 채널 프론트/백엔드 개발', required_grade: '고급', required_skills: 'React, WebSquare, Spring Boot' }
+    ];
+  }
 
   return {
-    fileName,
+    fileName: displayFileName,
+    fileNames,
+    fileCount: fileNames.length,
     project_group: 'PLANNED',
     category: detectedCategory,
     name: detectedName,
     client: detectedClient,
     domain: detectedDomain,
-    location: /서초|강남/.test(combined) ? '서울 서초 (상주)' : /을지로|명동|종로/.test(combined) ? '서울 을지로 (상주)' : '서울 여의도 (상주)',
-    start_date: combined.match(/202[6-8]-[01]\d-[0-3]\d/)?.[0] || '2026-12-15',
-    end_date: '2027-10-31',
+    location: /서초|강남/.test(combined) ? '서울 서초 (상주)' : /을지로|명동|종로/.test(combined) ? '서울 을지로 (상주)' : (isGroupwareOrHr ? '서울 본사 (상주/협업)' : '서울 여의도 (상주)'),
+    start_date: combined.match(/202[6-8]-[01]\d-[0-3]\d/)?.[0] || (isGroupwareOrHr ? '2026-12-01' : '2026-12-15'),
+    end_date: isGroupwareOrHr ? '2027-05-31' : '2027-10-31',
     staffing_deadline: '2026-11-30',
-    budget_rate_info: '특급 1,200만 / 고급 1,020만 / 중급 860만',
+    budget_rate_info: isGroupwareOrHr ? '특급 1,150만 / 고급 980만 / 중급 830만' : '특급 1,200만 / 고급 1,020만 / 중급 860만',
     description,
     to_slots
   };
@@ -1722,7 +1810,7 @@ module.exports = async (req, res) => {
   }
 
   if (pathname === '/api/ai/parse-rfp' && req.method === 'POST') {
-    return send(200, { parsed: parseRfpWithAI(body.rawText, body.fileName, body.fileBase64) });
+    return send(200, { parsed: parseRfpWithAI(body.rawText, body.fileName, body.fileBase64, body.files) });
   }
 
   if (pathname === '/api/profiles/delete' && req.method === 'POST') {

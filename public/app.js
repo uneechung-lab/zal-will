@@ -8,8 +8,11 @@ const state = {
   selectedProjectFilter: 'PLANNED',
   projectKeyword: '',
   calTab: 'ALL',
+  calYear: 2026,
+  calMonth: 11,
   calExpanded: false,
   calSelectedDay: null,
+  analyticsSection: 'UTILIZATION',
   data: null,
   profileFilters: {
     empType: 'ALL',
@@ -134,12 +137,20 @@ function showToast(msg) {
 }
 
 function openModal(title, htmlContent) {
+  const dialog = document.getElementById('modalDialog');
+  const header = dialog?.querySelector('.modal-header');
+  if (dialog) dialog.classList.remove('util-exec-modal-dialog');
+  if (header) header.style.display = 'flex';
   document.getElementById('modalTitle').textContent = title;
   document.getElementById('modalBody').innerHTML = htmlContent;
   document.getElementById('modalBackdrop').classList.remove('hidden');
 }
 
 function closeModal() {
+  const dialog = document.getElementById('modalDialog');
+  const header = dialog?.querySelector('.modal-header');
+  if (dialog) dialog.classList.remove('util-exec-modal-dialog');
+  if (header) header.style.display = 'flex';
   document.getElementById('modalBackdrop').classList.add('hidden');
 }
 
@@ -324,6 +335,7 @@ function renderActiveTab() {
     case 'projects': renderProjectsTab(); break;
     case 'sourcing': renderSourcingTab(); break;
     case 'interviews': renderInterviewsTab(); break;
+    case 'analytics': renderAnalyticsTab(); break;
     case 'permissions': renderPermissionsTab(); break;
   }
 }
@@ -331,6 +343,993 @@ function renderActiveTab() {
 /* =========================================================================
    TAB 1: EXECUTIVE (MASTER) 1-PAGE GOLDEN RATIO DASHBOARD
    ========================================================================= */
+const INTERNAL_UTIL_MODAL_STATE = {
+  barMode: 'ROLE',
+  activeMonthIdx: 3,
+  matchPopoverOpen: false
+};
+
+const INTERNAL_UTIL_DONUT_SEGMENTS = [
+  { key: 'billable', label: '유상 수행', shortLabel: '유상 수행', count: 33, pct: '82.5', color: '#111827', note: '고객사 현업 프로젝트 유상 투입 중' },
+  { key: 'rnd', label: '사내 R&D · 제안 지원', shortLabel: '사내 R&D·제안', count: 3, pct: '7.5', color: '#6366F1', note: '차세대 RFP 제안 및 사내 AI R&D' },
+  { key: 'confirmed', label: '차기 확정 대기', shortLabel: '차기 확정 대기', count: 3, pct: '7.5', color: '#10B981', note: '11/23 미래에셋 투입 예정 등' },
+  { key: 'unconfirmed', label: '미확정 대기 (집중관리)', shortLabel: '미확정 대기', count: 1, pct: '2.5', color: '#EF4444', note: '김민수 차장 (대기 8일차)' }
+];
+
+const INTERNAL_UTIL_BAR_DATA = {
+  ROLE: [
+    { name: 'PM / 서비스기획', total: 8, active: 7, confirmed: 1, unconfirmed: 0, rate: 88 },
+    { name: '프론트엔드 개발', total: 10, active: 9, confirmed: 1, unconfirmed: 0, rate: 90 },
+    { name: '백엔드 / 코어·계정계', total: 16, active: 14, confirmed: 1, unconfirmed: 1, rate: 88 },
+    { name: 'UI/UX · QA', total: 6, active: 6, confirmed: 0, unconfirmed: 0, rate: 100 }
+  ],
+  GRADE: [
+    { name: '특급 기술자', total: 12, active: 11, confirmed: 1, unconfirmed: 0, rate: 92 },
+    { name: '고급 기술자', total: 15, active: 13, confirmed: 1, unconfirmed: 1, rate: 87 },
+    { name: '중급 기술자', total: 9, active: 8, confirmed: 1, unconfirmed: 0, rate: 89 },
+    { name: '초급 기술자', total: 4, active: 4, confirmed: 0, unconfirmed: 0, rate: 100 }
+  ]
+};
+
+const INTERNAL_UTIL_TREND_MONTHS = [
+  {
+    label: '9월(실적)',
+    rate: 88,
+    deploy: 3,
+    rolloff: 1,
+    isForecast: false,
+    reason: '9월(실적): 하반기 증권사 퇴직연금 고도화 3명 신규 투입으로 손익분기 목표(85%) 상회 달성'
+  },
+  {
+    label: '10월(실적)',
+    rate: 92,
+    deploy: 2,
+    rolloff: 0,
+    isForecast: false,
+    reason: '10월(실적): 연금·외화펀드 수행 안정화 및 추가 투입(+2명)으로 하반기 최고 가동률(92%) 기록'
+  },
+  {
+    label: '11월(현재)',
+    rate: 90,
+    deploy: 4,
+    rolloff: 5,
+    isForecast: false,
+    reason: '11월(현재): 정규직 40명 중 36명 가동(유상 33 · 사내R&D/제안 3), 차기확정 3명 · 미확정 1명'
+  },
+  {
+    label: '12월(예상)',
+    rate: 82,
+    deploy: 4,
+    rolloff: 7,
+    isForecast: true,
+    reason: '11월 말 삼성증권(2명)·신영증권(2명)·하나증권(3명) 철수 도래 대비 신규 투입 4명으로 가동률 하락 예상'
+  },
+  {
+    label: '1월(예상)',
+    rate: 78,
+    deploy: 2,
+    rolloff: 4,
+    isForecast: true,
+    reason: '1월(예상): 연말 프로젝트 종료분 추가 철수(-4명) 대비 KB증권 채권 플랫폼(+2명) 투입 예정 — 선제 영업 필요'
+  }
+];
+
+function hoverInternalUtilDonut(idx) {
+  const rateEl = document.getElementById('iumDonutRate');
+  const subEl = document.getElementById('iumDonutSub');
+  const capEl = document.getElementById('iumDonutCap');
+  const arcs = document.querySelectorAll('.ium-donut-arc');
+  const legends = document.querySelectorAll('.ium-legend-item');
+
+  if (idx === null || idx === undefined || !INTERNAL_UTIL_DONUT_SEGMENTS[idx]) {
+    if (rateEl) {
+      rateEl.textContent = '90%';
+      rateEl.style.color = '#111827';
+    }
+    if (subEl) subEl.textContent = '36 / 40명 가동';
+    if (capEl) capEl.textContent = '유상 33 · 사내 3';
+    arcs.forEach(a => {
+      a.setAttribute('stroke-width', '24');
+      a.style.opacity = '1';
+    });
+    legends.forEach(l => l.classList.remove('active'));
+    return;
+  }
+
+  const seg = INTERNAL_UTIL_DONUT_SEGMENTS[idx];
+  if (rateEl) {
+    rateEl.textContent = `${seg.pct}%`;
+    rateEl.style.color = seg.color;
+  }
+  if (subEl) subEl.textContent = `${seg.count} / 40명`;
+  if (capEl) capEl.textContent = seg.shortLabel;
+
+  arcs.forEach((a, i) => {
+    a.setAttribute('stroke-width', i === idx ? '28' : '21');
+    a.style.opacity = i === idx ? '1' : '0.32';
+  });
+  legends.forEach((l, i) => l.classList.toggle('active', i === idx));
+}
+
+function renderInternalUtilBarListHtml(mode = 'ROLE') {
+  const rows = INTERNAL_UTIL_BAR_DATA[mode] || INTERNAL_UTIL_BAR_DATA.ROLE;
+  return rows.map(r => {
+    const activePct = Math.round((r.active / r.total) * 1000) / 10;
+    const confirmedPct = Math.round((r.confirmed / r.total) * 1000) / 10;
+    const unconfirmedPct = Math.round((r.unconfirmed / r.total) * 1000) / 10;
+    const isFull = r.rate === 100 && r.unconfirmed === 0;
+    const hasUnconfirmed = r.unconfirmed > 0;
+
+    return `
+      <div class="ium-bar-row">
+        <div class="ium-bar-top">
+          <div>
+            <span class="ium-bar-name">${r.name}</span>
+            <span class="ium-bar-total">(총 ${r.total}명 · 수행 ${r.active}${r.confirmed ? ` · 확정대기 ${r.confirmed}` : ''}${r.unconfirmed ? ` · 미확정 ${r.unconfirmed}` : ''})</span>
+          </div>
+          <div class="ium-bar-meta">
+            ${isFull ? `<span class="ium-mini-badge full">풀가동</span>` : ''}
+            ${hasUnconfirmed ? `<span class="ium-mini-badge alert">미확정 ${r.unconfirmed}명</span>` : ''}
+            <span class="ium-bar-rate">${r.rate}%</span>
+          </div>
+        </div>
+        <div class="ium-bar-track">
+          <div class="ium-bar-seg" style="width:${activePct}%; background:#111827;" title="수행 ${r.active}명"></div>
+          ${r.confirmed > 0 ? `<div class="ium-bar-seg" style="width:${confirmedPct}%; background:#10B981;" title="확정대기 ${r.confirmed}명"></div>` : ''}
+          ${r.unconfirmed > 0 ? `<div class="ium-bar-seg" style="width:${unconfirmedPct}%; background:#EF4444;" title="미확정대기 ${r.unconfirmed}명"></div>` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function switchInternalUtilBarMode(mode) {
+  INTERNAL_UTIL_MODAL_STATE.barMode = mode;
+  const listEl = document.getElementById('iumBarListContainer');
+  if (listEl) {
+    listEl.innerHTML = renderInternalUtilBarListHtml(mode);
+  }
+  document.querySelectorAll('.ium-pill-btn[data-bar-mode]').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.barMode === mode);
+  });
+}
+
+function selectInternalUtilMonth(idx) {
+  const item = INTERNAL_UTIL_TREND_MONTHS[idx];
+  if (!item) return;
+  INTERNAL_UTIL_MODAL_STATE.activeMonthIdx = idx;
+  const reasonEl = document.getElementById('iumComboReasonText');
+  if (reasonEl) {
+    reasonEl.textContent = item.reason;
+  }
+  document.querySelectorAll('.ium-month-hit-col').forEach((el, i) => {
+    el.setAttribute('fill', i === idx ? 'rgba(37, 99, 235, 0.06)' : 'transparent');
+  });
+  document.querySelectorAll('.ium-month-point-ring').forEach((el, i) => {
+    el.setAttribute('r', i === idx ? '6.5' : '4.5');
+    el.setAttribute('stroke-width', i === idx ? '3' : '2');
+  });
+  document.querySelectorAll('.ium-month-x-label').forEach((el, i) => {
+    el.setAttribute('font-weight', i === idx ? '800' : '600');
+    el.setAttribute('fill', i === idx ? '#111827' : '#6b7280');
+  });
+}
+
+function toggleInternalUtilMatchPopover(event) {
+  if (event) event.stopPropagation();
+  const pop = document.getElementById('iumMatchPopover');
+  if (!pop) return;
+  const isHidden = pop.style.display === 'none' || !pop.style.display;
+  pop.style.display = isHidden ? 'block' : 'none';
+}
+
+function quickProposeUnassignedToSlot(projectTitle, slotRole, fitPct, projectId, slotId) {
+  const pop = document.getElementById('iumMatchPopover');
+  if (pop) pop.style.display = 'none';
+  showToast(`✅ [AI 추천 가배정] 김민수 차장(고급·백엔드)을 '${projectTitle} (${slotRole} · 적합도 ${fitPct}%)' 후보로 제안 등록했습니다.`);
+  if (projectId && slotId) {
+    closeModal();
+    openRfpMatchModal(projectId, slotId);
+  }
+}
+
+function buildInternalUtilizationSectionHtml() {
+  const r = 69;
+  const C = 2 * Math.PI * r;
+  let cumLen = 0;
+  const donutArcsSvg = INTERNAL_UTIL_DONUT_SEGMENTS.map((seg, idx) => {
+    const segLen = (seg.count / 40) * C;
+    const drawLen = Math.max(2, segLen - 2);
+    const dashOffset = -cumLen;
+    cumLen += segLen;
+    return `
+      <circle
+        class="ium-donut-arc"
+        cx="88" cy="88" r="${r}"
+        fill="none"
+        stroke="${seg.color}"
+        stroke-width="24"
+        stroke-dasharray="${drawLen.toFixed(2)} ${C.toFixed(2)}"
+        stroke-dashoffset="${dashOffset.toFixed(2)}"
+        transform="rotate(-90 88 88)"
+        style="cursor:pointer; transition: stroke-width 0.18s ease, opacity 0.18s ease;"
+        onmouseenter="hoverInternalUtilDonut(${idx})"
+        onmouseleave="hoverInternalUtilDonut(null)"
+      />
+    `;
+  }).join('');
+
+  const xCoords = [175, 310, 445, 580, 715];
+  const yForRate = (rate) => Math.round(104 - ((rate - 70) / 30) * 76);
+  const points = INTERNAL_UTIL_TREND_MONTHS.map((m, i) => ({
+    ...m,
+    x: xCoords[i],
+    y: yForRate(m.rate)
+  }));
+  const yTarget85 = yForRate(85);
+  const solidPath = `M ${points[0].x} ${points[0].y} L ${points[1].x} ${points[1].y} L ${points[2].x} ${points[2].y}`;
+  const dashedPath = `M ${points[2].x} ${points[2].y} L ${points[3].x} ${points[3].y} L ${points[4].x} ${points[4].y}`;
+  const areaPath = `M ${points[0].x} 112 L ${points.map(p => `${p.x} ${p.y}`).join(' L ')} L ${points[4].x} 112 Z`;
+  const curBarMode = INTERNAL_UTIL_MODAL_STATE.barMode || 'ROLE';
+  const curMonthIdx = INTERNAL_UTIL_MODAL_STATE.activeMonthIdx ?? 3;
+
+  return `
+    <div class="ium-wrap" style="border:1px solid #e2e8f0; border-radius:18px; overflow:visible; box-shadow:0 2px 8px rgba(15,23,42,0.04);" onclick="const p=document.getElementById('iumMatchPopover'); if(p) p.style.display='none';">
+      <!-- [1] 섹션 헤더 -->
+      <header class="ium-header" style="border-radius:18px 18px 0 0; padding:18px 24px;">
+        <div class="ium-header-left">
+          <h3 class="ium-title">내부 인력 가동 현황 분석</h3>
+          <span class="ium-date-badge">2026.11.18 기준</span>
+          <span class="ium-sub-text">정규직 총원 40명</span>
+        </div>
+        <div class="ium-header-right">
+          <span class="ium-summary-chip dark">현재 가동률 90%</span>
+          <span class="ium-summary-chip slate">유상 가동률 82.5%</span>
+          <span class="ium-summary-chip warn">12월 예상 82% ▼8%p</span>
+        </div>
+      </header>
+
+      <!-- 본문 -->
+      <div class="ium-body" style="padding:20px 24px; gap:16px; border-radius:0 0 18px 18px;">
+        <!-- [2] 상단 2열 그리드 차트 영역 -->
+        <div class="ium-top-grid" style="gap:16px;">
+          <!-- 좌측 카드: 투입 성격별 구성 (Interactive SVG 도넛 차트) -->
+          <section class="ium-card" style="padding:18px 20px;">
+            <div class="ium-card-head">
+              <div>
+                <h4 class="ium-card-title">투입 성격별 구성</h4>
+                <span class="ium-card-subtitle">도넛 또는 범례에 마우스를 올리면 상세 비율이 표시됩니다</span>
+              </div>
+              <span style="font-size:11.5px; font-weight:700; color:#111827;">총 40명</span>
+            </div>
+
+            <div class="ium-donut-layout" style="gap:20px;">
+              <div class="ium-donut-box">
+                <svg width="176" height="176" viewBox="0 0 176 176">
+                  <circle cx="88" cy="88" r="${r}" fill="none" stroke="#f3f4f6" stroke-width="24" />
+                  ${donutArcsSvg}
+                </svg>
+                <div class="ium-donut-center">
+                  <span id="iumDonutRate" class="ium-donut-rate">90%</span>
+                  <span id="iumDonutSub" class="ium-donut-sub">36 / 40명 가동</span>
+                  <span id="iumDonutCap" class="ium-donut-caption">유상 33 · 사내 3</span>
+                </div>
+              </div>
+
+              <div class="ium-legend-list">
+                ${INTERNAL_UTIL_DONUT_SEGMENTS.map((seg, idx) => `
+                  <div class="ium-legend-item" onmouseenter="hoverInternalUtilDonut(${idx})" onmouseleave="hoverInternalUtilDonut(null)">
+                    <div class="ium-legend-left">
+                      <span class="ium-legend-dot" style="background:${seg.color};"></span>
+                      <div style="min-width:0;">
+                        <span class="ium-legend-label">${seg.label}</span>
+                        <span class="ium-legend-note">${seg.note}</span>
+                      </div>
+                    </div>
+                    <div class="ium-legend-val">
+                      ${seg.count}명<span class="ium-legend-pct">(${seg.pct}%)</span>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          </section>
+
+          <!-- 우측 카드: 직군·등급별 가동 편차 (가로 누적 바 차트 + 토글) -->
+          <section class="ium-card" style="padding:18px 20px; display:flex; flex-direction:column; justify-content:space-between;">
+            <div>
+              <div class="ium-card-head">
+                <div>
+                  <h4 class="ium-card-title">직군·등급별 가동 편차</h4>
+                </div>
+                <div class="ium-pill-toggle">
+                  <button type="button" class="ium-pill-btn ${curBarMode === 'ROLE' ? 'active' : ''}" data-bar-mode="ROLE" onclick="switchInternalUtilBarMode('ROLE')">직군별</button>
+                  <button type="button" class="ium-pill-btn ${curBarMode === 'GRADE' ? 'active' : ''}" data-bar-mode="GRADE" onclick="switchInternalUtilBarMode('GRADE')">등급별</button>
+                </div>
+              </div>
+
+              <div id="iumBarListContainer" class="ium-bar-list">
+                ${renderInternalUtilBarListHtml(curBarMode)}
+              </div>
+            </div>
+
+            <div style="display:flex; align-items:center; justify-content:center; gap:16px; margin-top:12px; padding-top:10px; border-top:1px solid #f3f4f6; font-size:11.5px; font-weight:600; color:#4b5563;">
+              <span style="display:inline-flex; align-items:center; gap:5px;"><span style="width:8px; height:8px; border-radius:50%; background:#111827; display:inline-block;"></span>수행</span>
+              <span style="display:inline-flex; align-items:center; gap:5px;"><span style="width:8px; height:8px; border-radius:50%; background:#10B981; display:inline-block;"></span>확정대기</span>
+              <span style="display:inline-flex; align-items:center; gap:5px;"><span style="width:8px; height:8px; border-radius:50%; background:#EF4444; display:inline-block;"></span>미확정</span>
+            </div>
+          </section>
+        </div>
+
+        <!-- [3] 중단 와이드 카드: 향후 3개월 가동률 추이 및 투입·철수 밸런스 -->
+        <section class="ium-card" style="padding:18px 20px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:8px;">
+            <h4 class="ium-card-title">향후 3개월 가동률 추이 및 투입·철수 밸런스</h4>
+            <div style="display:inline-flex; align-items:center; gap:12px; font-size:11px; color:#6b7280; font-weight:600; margin-left:auto;">
+              <span style="display:inline-flex; align-items:center; gap:4px;"><span style="width:12px; height:2.5px; background:#111827; display:inline-block;"></span>실적 가동률</span>
+              <span style="display:inline-flex; align-items:center; gap:4px;"><span style="width:12px; height:0; border-top:2.5px dashed #dc2626; display:inline-block;"></span>예측 가동률</span>
+              <span style="display:inline-flex; align-items:center; gap:4px;"><span style="width:8px; height:8px; border-radius:2px; background:#3b82f6; display:inline-block;"></span>투입(+인원)</span>
+              <span style="display:inline-flex; align-items:center; gap:4px;"><span style="width:8px; height:8px; border-radius:2px; background:#f59e0b; display:inline-block;"></span>철수(-인원)</span>
+            </div>
+          </div>
+          <div style="margin-bottom:10px;">
+            <div class="ium-combo-reason-box">
+              <span style="color:#d97706;">●</span>
+              <span id="iumComboReasonText">${INTERNAL_UTIL_TREND_MONTHS[curMonthIdx]?.reason || INTERNAL_UTIL_TREND_MONTHS[3].reason}</span>
+            </div>
+          </div>
+
+          <svg width="100%" height="196" viewBox="0 0 820 184" style="display:block; overflow:visible;">
+            <defs>
+              <linearGradient id="iumLineAreaGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#111827" stop-opacity="0.10" />
+                <stop offset="100%" stop-color="#111827" stop-opacity="0.0" />
+              </linearGradient>
+            </defs>
+
+            <line x1="122" y1="36" x2="788" y2="36" stroke="#f3f4f6" stroke-width="1" />
+            <line x1="122" y1="112" x2="788" y2="112" stroke="#e5e7eb" stroke-width="1" />
+            <line x1="122" y1="160" x2="788" y2="160" stroke="#f3f4f6" stroke-width="1" />
+
+            <rect x="6" y="${yTarget85 - 9}" width="112" height="18" rx="4" fill="#fffbeb" stroke="#fde68a" stroke-width="1" />
+            <text x="62" y="${yTarget85 + 3.5}" text-anchor="middle" font-size="10.5" font-weight="700" fill="#b45309">손익분기 목표선 (85%)</text>
+            <line x1="122" y1="${yTarget85}" x2="788" y2="${yTarget85}" stroke="#f59e0b" stroke-width="1.4" stroke-dasharray="4 4" />
+
+            <path d="${areaPath}" fill="url(#iumLineAreaGrad)" />
+            <path d="${solidPath}" fill="none" stroke="#111827" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="${dashedPath}" fill="none" stroke="#dc2626" stroke-width="2.6" stroke-dasharray="6 4" stroke-linecap="round" stroke-linejoin="round" />
+
+            ${points.map((p, idx) => {
+              const isSelected = idx === curMonthIdx;
+              const deployH = Math.max(3, p.deploy * 4.2);
+              const rolloffH = Math.max(2, p.rolloff * 4.2);
+              const baseBarY = 156;
+              const pointColor = p.isForecast ? '#dc2626' : '#111827';
+              return `
+                <g style="cursor:pointer;" onmouseenter="selectInternalUtilMonth(${idx})" onclick="selectInternalUtilMonth(${idx})">
+                  <rect class="ium-month-hit-col" x="${p.x - 62}" y="8" width="124" height="172" rx="8" fill="${isSelected ? 'rgba(37, 99, 235, 0.06)' : 'transparent'}" />
+                  <text x="${p.x}" y="${p.y - 11}" text-anchor="middle" font-size="12" font-weight="800" fill="${pointColor}">${p.rate}%</text>
+                  <circle class="ium-month-point-ring" cx="${p.x}" cy="${p.y}" r="${isSelected ? '6.5' : '4.5'}" fill="#ffffff" stroke="${pointColor}" stroke-width="${isSelected ? '3' : '2'}" />
+
+                  <rect x="${p.x - 22}" y="${baseBarY - deployH}" width="18" height="${deployH}" rx="3" fill="#3b82f6" />
+                  <text x="${p.x - 13}" y="${baseBarY - deployH - 4}" text-anchor="middle" font-size="10" font-weight="700" fill="#2563eb">+${p.deploy}</text>
+
+                  <rect x="${p.x + 4}" y="${baseBarY - rolloffH}" width="18" height="${rolloffH}" rx="3" fill="${p.rolloff >= 5 ? '#f59e0b' : '#10b981'}" />
+                  <text x="${p.x + 13}" y="${baseBarY - rolloffH - 4}" text-anchor="middle" font-size="10" font-weight="700" fill="${p.rolloff >= 5 ? '#d97706' : '#059669'}">${p.rolloff > 0 ? `-${p.rolloff}` : '0'}</text>
+
+                  <text class="ium-month-x-label" x="${p.x}" y="175" text-anchor="middle" font-size="11.5" font-weight="${isSelected ? '800' : '600'}" fill="${isSelected ? '#111827' : '#6b7280'}">${p.label}</text>
+                </g>
+              `;
+            }).join('')}
+          </svg>
+        </section>
+
+        <!-- [4] 하단 포커스 액션 배너 -->
+        <div class="ium-focus-banner" style="padding:12px 16px;">
+          <div class="ium-focus-left">
+            <span class="ium-focus-tag">집중 관리</span>
+            <span>
+              <strong>차기 미확정 대기 1명</strong> — <strong>김민수 차장</strong>
+              <span style="color:#4b5563; font-size:12px;">(고급 · 백엔드 · #퇴직연금 #계정계코어 · 대기 8일차)</span>
+            </span>
+          </div>
+
+          <div class="ium-focus-actions">
+            <button type="button" class="btn btn-primary btn-sm" style="background:#111827; border-color:#111827; height:34px; padding:0 14px; font-size:12.5px; font-weight:700;" onclick="toggleInternalUtilMatchPopover(event)">
+              ✨ AI 추천 TO 매칭
+            </button>
+            <button type="button" class="btn btn-outline btn-sm" style="background:#ffffff; height:34px; padding:0 12px; font-size:12.5px; font-weight:600;" onclick="filterProfilesFromDashboard('INTERNAL', 'ALL', 'ALL');">
+              인재 DB에서 전체보기 →
+            </button>
+          </div>
+
+          <div id="iumMatchPopover" class="ium-match-popover" style="display:none;" onclick="event.stopPropagation()">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; padding-bottom:6px; border-bottom:1px solid #f3f4f6;">
+              <strong style="font-size:12.5px; color:#111827;">🤖 김민수 차장 맞춤 미충원 TO 추천 (2건)</strong>
+              <button type="button" style="border:none; background:none; color:#9ca3af; cursor:pointer; font-size:16px; line-height:1;" onclick="toggleInternalUtilMatchPopover(event)">&times;</button>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 10px; background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px;">
+                <div style="min-width:0;">
+                  <div style="font-size:12px; font-weight:700; color:#111827;">미래에셋증권 퇴직연금 2석</div>
+                  <div style="font-size:11px; color:#6b7280;">연금 로보일임·수수료 배치 선임개발 · <strong style="color:#059669;">적합도 96%</strong></div>
+                </div>
+                <button type="button" class="btn btn-primary btn-sm" style="height:28px; padding:0 10px; font-size:11.5px; white-space:nowrap;" onclick="quickProposeUnassignedToSlot('미래에셋증권 퇴직연금', '배치 선임개발', 96, 'prj_1', 'slot_103')">가배정/제안</button>
+              </div>
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 10px; background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px;">
+                <div style="min-width:0;">
+                  <div style="font-size:12px; font-weight:700; color:#111827;">NH투자증권 연금채널 1석</div>
+                  <div style="font-size:11px; color:#6b7280;">연금 채널/마이데이터 목표모델 설계 · <strong style="color:#2563eb;">적합도 89%</strong></div>
+                </div>
+                <button type="button" class="btn btn-primary btn-sm" style="height:28px; padding:0 10px; font-size:11.5px; white-space:nowrap;" onclick="quickProposeUnassignedToSlot('NH투자증권 연금채널', '목표모델 설계', 89, 'prj_3', 'slot_302')">가배정/제안</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function openInternalUtilizationModal() {
+  openAnalyticsFromDashboard('UTILIZATION');
+}
+
+/* =========================================================================
+   DEPLOYED PERSONNEL STRUCTURE & PROJECT ALLOCATION MODAL (DeployedPersonnelModal)
+   ========================================================================= */
+const DEPLOYED_PERSONNEL_MODAL_STATE = {
+  barMode: 'EMP',
+  activeWeekIdx: 1,
+  retentionPopoverOpen: false
+};
+
+const DEPLOYED_DONUT_SEGMENTS = [
+  { key: 'regular', label: '정규직 (내부)', shortLabel: '정규직 (내부)', count: 36, pct: '75.0', color: '#111827', note: '고객사 유상 33명 · 사내 지원 3명' },
+  { key: 'freelancer', label: '프리랜서 (개인/반프리)', shortLabel: '프리랜서', count: 8, pct: '16.7', color: '#4F46E5', note: '기검증 금융 도메인 전문 프리랜서' },
+  { key: 'partner', label: '협력사 (도급/파견)', shortLabel: '협력사 인력', count: 4, pct: '8.3', color: '#0D9488', note: '전략 파트너사 전문 기술인력' }
+];
+
+const DEPLOYED_PROJECT_BARS = [
+  {
+    name: '삼성증권 연금 고객중심 서비스 개선',
+    total: 18,
+    badge: '11/18 일부철수(2명)',
+    badgeType: 'alert',
+    emp: [
+      { label: '정규직', count: 13, color: '#111827' },
+      { label: '프리랜서', count: 3, color: '#4F46E5' },
+      { label: '협력사', count: 2, color: '#0D9488' }
+    ],
+    grade: [
+      { label: '특급', count: 5, color: '#111827' },
+      { label: '고급', count: 8, color: '#4F46E5' },
+      { label: '중급', count: 4, color: '#0D9488' },
+      { label: '초급', count: 1, color: '#9CA3AF' }
+    ]
+  },
+  {
+    name: '하나증권 퇴직연금 일임형로보구축',
+    total: 16,
+    badge: '11/30 일부철수(3명)',
+    badgeType: 'alert',
+    emp: [
+      { label: '정규직', count: 12, color: '#111827' },
+      { label: '프리랜서', count: 3, color: '#4F46E5' },
+      { label: '협력사', count: 1, color: '#0D9488' }
+    ],
+    grade: [
+      { label: '특급', count: 5, color: '#111827' },
+      { label: '고급', count: 6, color: '#4F46E5' },
+      { label: '중급', count: 3, color: '#0D9488' },
+      { label: '초급', count: 2, color: '#9CA3AF' }
+    ]
+  },
+  {
+    name: '신영증권 외화표시펀드 매매 시스템',
+    total: 11,
+    badge: '11/20 일부철수(2명)',
+    badgeType: 'alert',
+    emp: [
+      { label: '정규직', count: 8, color: '#111827' },
+      { label: '프리랜서', count: 2, color: '#4F46E5' },
+      { label: '협력사', count: 1, color: '#0D9488' }
+    ],
+    grade: [
+      { label: '특급', count: 3, color: '#111827' },
+      { label: '고급', count: 5, color: '#4F46E5' },
+      { label: '중급', count: 2, color: '#0D9488' },
+      { label: '초급', count: 1, color: '#9CA3AF' }
+    ]
+  },
+  {
+    name: '사내 R&D · 신규 제안 지원',
+    total: 3,
+    badge: '100% 내부',
+    badgeType: 'full',
+    emp: [
+      { label: '정규직', count: 3, color: '#111827' }
+    ],
+    grade: [
+      { label: '특급', count: 1, color: '#111827' },
+      { label: '고급', count: 1, color: '#4F46E5' },
+      { label: '중급', count: 1, color: '#0D9488' }
+    ]
+  }
+];
+
+const DEPLOYED_GRADE_PYRAMID = [
+  { grade: '특급', count: 14, pct: 29, color: '#111827' },
+  { grade: '고급', count: 20, pct: 42, color: '#4F46E5' },
+  { grade: '중급', count: 10, pct: 21, color: '#0D9488' },
+  { grade: '초급', count: 4, pct: 8, color: '#9CA3AF' }
+];
+
+const DEPLOYED_WEEKLY_SCHEDULE = [
+  {
+    week: '11월 3주',
+    deploy: 0,
+    rolloff: 4,
+    summary: '11월 3주: 삼성증권 연금 개선(2명 · 11/18) 및 신영증권 외화펀드(2명 · 11/20) 철수 도래'
+  },
+  {
+    week: '11월 4주',
+    deploy: 6,
+    rolloff: 3,
+    summary: '11월 4주: 미래에셋 차세대(4명)·NH투자 ISP(2명) 투입 및 하나증권(3명 · 11/30) 철수'
+  },
+  {
+    week: '12월 1주',
+    deploy: 4,
+    rolloff: 1,
+    summary: '12월 1주: 미래에셋 퇴직연금 본착수 추가 투입(+4명) 및 단기 기술지원(-1명) 종료'
+  },
+  {
+    week: '12월 2주',
+    deploy: 2,
+    rolloff: 0,
+    summary: '12월 2주: NH투자증권 연금자산관리 플랫폼 ISP 추가 본투입(+2명) · 철수 없음'
+  }
+];
+
+function hoverDeployedDonut(idx) {
+  const rateEl = document.getElementById('dpmDonutMain');
+  const subEl = document.getElementById('dpmDonutSub');
+  const capEl = document.getElementById('dpmDonutCap');
+  const arcs = document.querySelectorAll('.dpm-donut-arc');
+  const legends = document.querySelectorAll('.dpm-legend-item');
+
+  if (idx === null || idx === undefined || !DEPLOYED_DONUT_SEGMENTS[idx]) {
+    if (rateEl) {
+      rateEl.textContent = '48명';
+      rateEl.style.color = '#111827';
+    }
+    if (subEl) subEl.textContent = '정규 36 · 외부 12';
+    if (capEl) capEl.textContent = '내부 75% · 외주 25%';
+    arcs.forEach(a => {
+      a.setAttribute('stroke-width', '24');
+      a.style.opacity = '1';
+    });
+    legends.forEach(l => l.classList.remove('active'));
+    return;
+  }
+
+  const seg = DEPLOYED_DONUT_SEGMENTS[idx];
+  if (rateEl) {
+    rateEl.textContent = `${seg.count}명`;
+    rateEl.style.color = seg.color;
+  }
+  if (subEl) subEl.textContent = `비중 ${seg.pct}%`;
+  if (capEl) capEl.textContent = seg.shortLabel;
+
+  arcs.forEach((a, i) => {
+    a.setAttribute('stroke-width', i === idx ? '28' : '21');
+    a.style.opacity = i === idx ? '1' : '0.32';
+  });
+  legends.forEach((l, i) => l.classList.toggle('active', i === idx));
+}
+
+function renderDeployedPrjBarListHtml(mode = 'EMP') {
+  const maxTotal = 18;
+  return DEPLOYED_PROJECT_BARS.map(prj => {
+    const items = mode === 'GRADE' ? prj.grade : prj.emp;
+    const widthRatio = Math.max(24, Math.round((prj.total / maxTotal) * 100));
+    const detailText = items.map(it => `${it.label} ${it.count}`).join(' · ');
+
+    return `
+      <div class="ium-bar-row">
+        <div class="ium-bar-top">
+          <div style="min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+            <span class="ium-bar-name">${prj.name}</span>
+            <span class="ium-bar-total">(${detailText})</span>
+          </div>
+          <div class="ium-bar-meta" style="flex-shrink:0;">
+            <span class="ium-mini-badge ${prj.badgeType}">${prj.badge}</span>
+            <span class="ium-bar-rate" style="min-width:36px;">${prj.total}명</span>
+          </div>
+        </div>
+        <div class="ium-bar-track" style="background:#f3f4f6;">
+          <div style="width:${widthRatio}%; height:100%; display:flex; gap:1px; border-radius:999px; overflow:hidden;">
+            ${items.map(it => {
+              const segPct = Math.round((it.count / prj.total) * 1000) / 10;
+              return `<div class="ium-bar-seg" style="width:${segPct}%; background:${it.color};" title="${it.label} ${it.count}명"></div>`;
+            }).join('')}
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderDeployedPrjLegendHtml(mode = 'EMP') {
+  if (mode === 'GRADE') {
+    return `
+      <span style="display:inline-flex; align-items:center; gap:5px;"><span style="width:8px; height:8px; border-radius:50%; background:#111827; display:inline-block;"></span>특급</span>
+      <span style="display:inline-flex; align-items:center; gap:5px;"><span style="width:8px; height:8px; border-radius:50%; background:#4F46E5; display:inline-block;"></span>고급</span>
+      <span style="display:inline-flex; align-items:center; gap:5px;"><span style="width:8px; height:8px; border-radius:50%; background:#0D9488; display:inline-block;"></span>중급</span>
+      <span style="display:inline-flex; align-items:center; gap:5px;"><span style="width:8px; height:8px; border-radius:50%; background:#9CA3AF; display:inline-block;"></span>초급</span>
+    `;
+  }
+  return `
+    <span style="display:inline-flex; align-items:center; gap:5px;"><span style="width:8px; height:8px; border-radius:50%; background:#111827; display:inline-block;"></span>정규직</span>
+    <span style="display:inline-flex; align-items:center; gap:5px;"><span style="width:8px; height:8px; border-radius:50%; background:#4F46E5; display:inline-block;"></span>프리랜서</span>
+    <span style="display:inline-flex; align-items:center; gap:5px;"><span style="width:8px; height:8px; border-radius:50%; background:#0D9488; display:inline-block;"></span>협력사</span>
+  `;
+}
+
+function switchDeployedPrjBarMode(mode) {
+  DEPLOYED_PERSONNEL_MODAL_STATE.barMode = mode;
+  const listEl = document.getElementById('dpmPrjBarListContainer');
+  if (listEl) {
+    listEl.innerHTML = renderDeployedPrjBarListHtml(mode);
+  }
+  const legendEl = document.getElementById('dpmPrjBarLegendContainer');
+  if (legendEl) {
+    legendEl.innerHTML = renderDeployedPrjLegendHtml(mode);
+  }
+  document.querySelectorAll('.ium-pill-btn[data-dpm-bar-mode]').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.dpmBarMode === mode);
+  });
+}
+
+function selectDeployedWeekCol(idx) {
+  const item = DEPLOYED_WEEKLY_SCHEDULE[idx];
+  if (!item) return;
+  DEPLOYED_PERSONNEL_MODAL_STATE.activeWeekIdx = idx;
+  const summaryEl = document.getElementById('dpmWeekReasonText');
+  if (summaryEl) {
+    summaryEl.textContent = item.summary;
+  }
+  document.querySelectorAll('.dpm-week-hit-col').forEach((el, i) => {
+    el.setAttribute('fill', i === idx ? 'rgba(79, 70, 229, 0.06)' : 'transparent');
+  });
+  document.querySelectorAll('.dpm-week-x-label').forEach((el, i) => {
+    el.setAttribute('font-weight', i === idx ? '800' : '600');
+    el.setAttribute('fill', i === idx ? '#111827' : '#6b7280');
+  });
+}
+
+function toggleDeployedRetentionPopover(event) {
+  if (event) event.stopPropagation();
+  const pop = document.getElementById('dpmRetentionPopover');
+  if (!pop) return;
+  const isHidden = pop.style.display === 'none' || !pop.style.display;
+  pop.style.display = isHidden ? 'block' : 'none';
+}
+
+function sendRetentionProposalToTalent(talentName, targetPrj, fitPct) {
+  const pop = document.getElementById('dpmRetentionPopover');
+  if (pop) pop.style.display = 'none';
+  showToast(`🚀 [우수 외주 리텐션] ${talentName}님께 '${targetPrj} (적합도 ${fitPct}%)' 차기 프로젝트 우선 연장/재투입 제안을 발송했습니다!`);
+}
+
+function sendAllRetentionProposals() {
+  const pop = document.getElementById('dpmRetentionPopover');
+  if (pop) pop.style.display = 'none';
+  showToast('🚀 [일괄 리텐션 발송 완료] 권지민·양동근·오세훈 (★4.5 이상 핵심 외부 인력 3명)에게 차기 프로젝트 우선 제안을 일괄 발송했습니다!');
+}
+
+function buildDeployedPersonnelSectionHtml() {
+  const r = 69;
+  const C = 2 * Math.PI * r;
+  let cumLen = 0;
+  const donutArcsSvg = DEPLOYED_DONUT_SEGMENTS.map((seg, idx) => {
+    const segLen = (seg.count / 48) * C;
+    const drawLen = Math.max(2, segLen - 2.5);
+    const dashOffset = -cumLen;
+    cumLen += segLen;
+    return `
+      <circle
+        class="dpm-donut-arc"
+        cx="88" cy="88" r="${r}"
+        fill="none"
+        stroke="${seg.color}"
+        stroke-width="24"
+        stroke-dasharray="${drawLen.toFixed(2)} ${C.toFixed(2)}"
+        stroke-dashoffset="${dashOffset.toFixed(2)}"
+        transform="rotate(-90 88 88)"
+        style="cursor:pointer; transition: stroke-width 0.18s ease, opacity 0.18s ease;"
+        onmouseenter="hoverDeployedDonut(${idx})"
+        onmouseleave="hoverDeployedDonut(null)"
+      />
+    `;
+  }).join('');
+
+  const pyrX = [46, 122, 198, 274];
+  const pyrBaseY = 122;
+  const wkX = [64, 174, 284, 394];
+  const wkBaseY = 122;
+  const curBarMode = DEPLOYED_PERSONNEL_MODAL_STATE.barMode || 'EMP';
+  const curWeekIdx = DEPLOYED_PERSONNEL_MODAL_STATE.activeWeekIdx ?? 1;
+
+  return `
+    <div class="ium-wrap" style="border:1px solid #e2e8f0; border-radius:18px; overflow:visible; box-shadow:0 2px 8px rgba(15,23,42,0.04);" onclick="const p=document.getElementById('dpmRetentionPopover'); if(p) p.style.display='none';">
+      <!-- [1] 섹션 헤더 -->
+      <header class="ium-header" style="border-radius:18px 18px 0 0; padding:18px 24px;">
+        <div class="ium-header-left">
+          <h3 class="ium-title">수행 인원 구성 및 프로젝트 배정 현황</h3>
+          <span class="ium-date-badge">2026.11.18 기준</span>
+          <span class="ium-sub-text">총 수행 48명 (수행 프로젝트 3건 + 사내 지원)</span>
+        </div>
+        <div class="ium-header-right">
+          <span class="ium-summary-chip dark">내부 인력 비중 75.0%</span>
+          <span class="ium-summary-chip slate">외주(프리·협력) 비중 25.0%</span>
+          <span class="ium-summary-chip warn">이달 철수 예정 7명</span>
+        </div>
+      </header>
+
+      <!-- 본문 -->
+      <div class="ium-body" style="padding:20px 24px; gap:16px;">
+        <!-- [2] 상단 2열 그리드 차트 영역 -->
+        <div class="ium-top-grid" style="gap:16px;">
+          <!-- 좌측 카드: 고용 형태별 인력 구조 (Interactive SVG 도넛 차트) -->
+          <section class="ium-card" style="padding:18px 20px; display:flex; flex-direction:column; justify-content:space-between;">
+            <div>
+              <div class="ium-card-head">
+                <div>
+                  <h4 class="ium-card-title">고용 형태별 인력 구조</h4>
+                  <span class="ium-card-subtitle">도넛 조각 또는 범례 호버 시 상세 인원·비중 표시</span>
+                </div>
+                <span style="font-size:11.5px; font-weight:700; color:#111827;">총 48명</span>
+              </div>
+
+              <div class="ium-donut-layout" style="gap:20px;">
+                <div class="ium-donut-box">
+                  <svg width="176" height="176" viewBox="0 0 176 176">
+                    <circle cx="88" cy="88" r="${r}" fill="none" stroke="#f3f4f6" stroke-width="24" />
+                    ${donutArcsSvg}
+                  </svg>
+                  <div class="ium-donut-center">
+                    <span id="dpmDonutMain" class="ium-donut-rate">48명</span>
+                    <span id="dpmDonutSub" class="ium-donut-sub">정규 36 · 외부 12</span>
+                    <span id="dpmDonutCap" class="ium-donut-caption">내부 75% · 외주 25%</span>
+                  </div>
+                </div>
+
+                <div class="ium-legend-list">
+                  ${DEPLOYED_DONUT_SEGMENTS.map((seg, idx) => `
+                    <div class="ium-legend-item dpm-legend-item" onmouseenter="hoverDeployedDonut(${idx})" onmouseleave="hoverDeployedDonut(null)">
+                      <div class="ium-legend-left">
+                        <span class="ium-legend-dot" style="background:${seg.color};"></span>
+                        <div style="min-width:0;">
+                          <span class="ium-legend-label">${seg.label}</span>
+                          <span class="ium-legend-note">${seg.note}</span>
+                        </div>
+                      </div>
+                      <div class="ium-legend-val">
+                        ${seg.count}명<span class="ium-legend-pct">(${seg.pct}%)</span>
+                      </div>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            </div>
+
+            <div style="margin-top:10px; padding:6px 10px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; display:flex; align-items:center; justify-content:center; gap:6px; font-size:11.5px; font-weight:600; color:#15803d;">
+              <span>✓</span>
+              <span>적정 외주 비중 유지 중 (권장 상한선 30% 이내 · 현재 25.0%)</span>
+            </div>
+          </section>
+
+          <!-- 우측 카드: 수행 프로젝트별 투입 인원 및 구성비 (가로 누적 바 차트 + 토글) -->
+          <section class="ium-card" style="padding:18px 20px; display:flex; flex-direction:column; justify-content:space-between;">
+            <div>
+              <div class="ium-card-head">
+                <div>
+                  <h4 class="ium-card-title">수행 프로젝트별 투입 인원 및 구성비</h4>
+                </div>
+                <div class="ium-pill-toggle">
+                  <button type="button" class="ium-pill-btn ${curBarMode === 'EMP' ? 'active' : ''}" data-dpm-bar-mode="EMP" onclick="switchDeployedPrjBarMode('EMP')">고용형태별</button>
+                  <button type="button" class="ium-pill-btn ${curBarMode === 'GRADE' ? 'active' : ''}" data-dpm-bar-mode="GRADE" onclick="switchDeployedPrjBarMode('GRADE')">기술등급별</button>
+                </div>
+              </div>
+
+              <div id="dpmPrjBarListContainer" class="ium-bar-list">
+                ${renderDeployedPrjBarListHtml(curBarMode)}
+              </div>
+            </div>
+
+            <div id="dpmPrjBarLegendContainer" style="display:flex; align-items:center; justify-content:center; gap:16px; margin-top:12px; padding-top:10px; border-top:1px solid #f3f4f6; font-size:11.5px; font-weight:600; color:#4b5563;">
+              ${renderDeployedPrjLegendHtml(curBarMode)}
+            </div>
+          </section>
+        </div>
+
+        <!-- [3] 중단 와이드 카드: 전체 수행 인력 등급 분포 & 주차별 철수·교체 타임라인 (5 : 7 분할) -->
+        <section class="ium-card" style="padding:18px 20px;">
+          <div class="dpm-mid-split">
+            <!-- 좌측 (5): 기술 등급 피라미드/수직 바 차트 (총 48명) -->
+            <div class="dpm-mid-left">
+              <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
+                <h4 class="ium-card-title">전체 수행 인력 등급 분포</h4>
+                <span style="font-size:11px; font-weight:700; color:#4f46e5; background:#eef2ff; padding:2px 8px; border-radius:999px;">고급 이상 71% 포진</span>
+              </div>
+
+              <svg width="100%" height="148" viewBox="0 0 320 142" style="display:block; overflow:visible;">
+                <line x1="16" y1="${pyrBaseY}" x2="304" y2="${pyrBaseY}" stroke="#e5e7eb" stroke-width="1" />
+                ${DEPLOYED_GRADE_PYRAMID.map((g, i) => {
+                  const barH = Math.max(12, Math.round((g.count / 20) * 74));
+                  const bx = pyrX[i];
+                  const by = pyrBaseY - barH;
+                  return `
+                    <g>
+                      <text x="${bx}" y="${by - 15}" text-anchor="middle" font-size="11.5" font-weight="800" fill="#111827">${g.count}명</text>
+                      <text x="${bx}" y="${by - 4}" text-anchor="middle" font-size="10" font-weight="600" fill="#6b7280">(${g.pct}%)</text>
+                      <rect x="${bx - 20}" y="${by}" width="40" height="${barH}" rx="6" fill="${g.color}" />
+                      <text x="${bx}" y="137" text-anchor="middle" font-size="11.5" font-weight="700" fill="#374151">${g.grade}</text>
+                    </g>
+                  `;
+                }).join('')}
+              </svg>
+
+              <div style="margin-top:6px; font-size:11.5px; font-weight:600; color:#4b5563; text-align:center; background:#f9fafb; padding:5px 8px; border-radius:6px; border:1px solid #f3f4f6;">
+                고급 이상 핵심 기술인력 <strong style="color:#111827;">71%(34명)</strong> 포진 · 안정적 수행 품질 확보
+              </div>
+            </div>
+
+            <!-- 우측 (7): 향후 4주 외부·내부 인력 변동 스케줄 차트 -->
+            <div class="dpm-mid-right">
+              <div>
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; margin-bottom:6px;">
+                  <h4 class="ium-card-title">향후 4주 인력 투입·철수 변동 스케줄</h4>
+                  <div style="display:inline-flex; align-items:center; gap:10px; font-size:11px; font-weight:600; color:#6b7280; margin-left:auto;">
+                    <span style="display:inline-flex; align-items:center; gap:4px;"><span style="width:8px; height:8px; border-radius:2px; background:#3b82f6; display:inline-block;"></span>신규 투입(+)</span>
+                    <span style="display:inline-flex; align-items:center; gap:4px;"><span style="width:8px; height:8px; border-radius:2px; background:#f59e0b; display:inline-block;"></span>계약 종료/철수(-)</span>
+                  </div>
+                </div>
+                <div class="ium-combo-reason-box" style="width:100%; box-sizing:border-box; margin-bottom:4px;">
+                  <span style="color:#4f46e5;">●</span>
+                  <span id="dpmWeekReasonText">${DEPLOYED_WEEKLY_SCHEDULE[curWeekIdx]?.summary || DEPLOYED_WEEKLY_SCHEDULE[1].summary}</span>
+                </div>
+              </div>
+
+              <svg width="100%" height="148" viewBox="0 0 460 142" style="display:block; overflow:visible;">
+                <line x1="16" y1="46" x2="444" y2="46" stroke="#f3f4f6" stroke-width="1" />
+                <line x1="16" y1="84" x2="444" y2="84" stroke="#f3f4f6" stroke-width="1" />
+                <line x1="16" y1="${wkBaseY}" x2="444" y2="${wkBaseY}" stroke="#e5e7eb" stroke-width="1" />
+
+                ${DEPLOYED_WEEKLY_SCHEDULE.map((w, idx) => {
+                  const isSel = idx === curWeekIdx;
+                  const wx = wkX[idx];
+                  const depH = Math.max(3, w.deploy * 11.5);
+                  const rolH = Math.max(3, w.rolloff * 11.5);
+                  return `
+                    <g style="cursor:pointer;" onmouseenter="selectDeployedWeekCol(${idx})" onclick="selectDeployedWeekCol(${idx})">
+                      <rect class="dpm-week-hit-col" x="${wx - 48}" y="12" width="96" height="128" rx="8" fill="${isSel ? 'rgba(79, 70, 229, 0.06)' : 'transparent'}" />
+
+                      <rect x="${wx - 24}" y="${wkBaseY - depH}" width="20" height="${depH}" rx="4" fill="#3b82f6" />
+                      <text x="${wx - 14}" y="${wkBaseY - depH - 5}" text-anchor="middle" font-size="11" font-weight="800" fill="#2563eb">${w.deploy > 0 ? `+${w.deploy}명` : '0'}</text>
+
+                      <rect x="${wx + 4}" y="${wkBaseY - rolH}" width="20" height="${rolH}" rx="4" fill="${w.rolloff >= 3 ? '#f59e0b' : '#10b981'}" />
+                      <text x="${wx + 14}" y="${wkBaseY - rolH - 5}" text-anchor="middle" font-size="11" font-weight="800" fill="${w.rolloff >= 3 ? '#d97706' : '#059669'}">${w.rolloff > 0 ? `-${w.rolloff}명` : '0'}</text>
+
+                      <text class="dpm-week-x-label" x="${wx}" y="137" text-anchor="middle" font-size="11.5" font-weight="${isSel ? '800' : '600'}" fill="${isSel ? '#111827' : '#6b7280'}">${w.week}</text>
+                    </g>
+                  `;
+                }).join('')}
+              </svg>
+            </div>
+          </div>
+        </section>
+
+        <!-- [4] 하단 포커스 액션 배너: 우수 외부 인력 이탈 방지 -->
+        <div class="dpm-retention-banner" style="padding:12px 16px;">
+          <div class="ium-focus-left">
+            <span class="dpm-retention-tag">우수 외주 리텐션</span>
+            <span>
+              <strong>철수 임박 ★4.5 이상 핵심 외부 인력 3명</strong> —
+              <strong>권지민</strong>(고급·D-2), <strong>양동근</strong>(중급·D-4), <strong>오세훈</strong>(고급·D-14)
+            </span>
+          </div>
+
+          <div class="ium-focus-actions">
+            <button type="button" class="btn btn-primary btn-sm" style="background:#111827; border-color:#111827; height:34px; padding:0 14px; font-size:12.5px; font-weight:700;" onclick="toggleDeployedRetentionPopover(event)">
+              🎯 차기 프로젝트 우선 제안
+            </button>
+            <button type="button" class="btn btn-outline btn-sm" style="background:#ffffff; height:34px; padding:0 12px; font-size:12.5px; font-weight:600;" onclick="switchTab('sourcing');">
+              구인·소싱 현황 보기 →
+            </button>
+          </div>
+
+          <div id="dpmRetentionPopover" class="ium-match-popover" style="display:none; width:460px;" onclick="event.stopPropagation()">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; padding-bottom:6px; border-bottom:1px solid #f3f4f6;">
+              <strong style="font-size:12.5px; color:#111827;">🎯 핵심 외부 인력 차기 프로젝트 매칭 (3명)</strong>
+              <div style="display:inline-flex; align-items:center; gap:6px;">
+                <button type="button" class="btn btn-primary btn-sm" style="height:24px; padding:0 8px; font-size:11px; background:#4f46e5; border-color:#4f46e5;" onclick="sendAllRetentionProposals()">일괄 발송</button>
+                <button type="button" style="border:none; background:none; color:#9ca3af; cursor:pointer; font-size:16px; line-height:1;" onclick="toggleDeployedRetentionPopover(event)">&times;</button>
+              </div>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:7px;">
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; padding:7px 10px; background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px;">
+                <div style="min-width:0;">
+                  <div style="font-size:12px; font-weight:700; color:#111827;">권지민 <span style="color:#f59e0b;">★4.8</span> <span style="font-size:11px; color:#6b7280; font-weight:500;">(고급 · 희망 950만 · D-2)</span></div>
+                  <div style="font-size:11px; color:#4f46e5; font-weight:600;">→ 미래에셋 퇴직연금 비대면 채널 매칭 (적합도 95%)</div>
+                </div>
+                <button type="button" class="btn btn-primary btn-sm" style="height:27px; padding:0 9px; font-size:11px; white-space:nowrap;" onclick="sendRetentionProposalToTalent('권지민', '미래에셋 퇴직연금 채널', 95)">우선 제안</button>
+              </div>
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; padding:7px 10px; background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px;">
+                <div style="min-width:0;">
+                  <div style="font-size:12px; font-weight:700; color:#111827;">양동근 <span style="color:#f59e0b;">★4.8</span> <span style="font-size:11px; color:#6b7280; font-weight:500;">(중급 · 희망 850만 · D-4)</span></div>
+                  <div style="font-size:11px; color:#4f46e5; font-weight:600;">→ 미래에셋 계정계 코어·정산 배치 매칭 (적합도 93%)</div>
+                </div>
+                <button type="button" class="btn btn-primary btn-sm" style="height:27px; padding:0 9px; font-size:11px; white-space:nowrap;" onclick="sendRetentionProposalToTalent('양동근', '미래에셋 계정계 코어 배치', 93)">우선 제안</button>
+              </div>
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; padding:7px 10px; background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px;">
+                <div style="min-width:0;">
+                  <div style="font-size:12px; font-weight:700; color:#111827;">오세훈 <span style="color:#f59e0b;">★4.6</span> <span style="font-size:11px; color:#6b7280; font-weight:500;">(고급 · 희망 1,030만 · D-14)</span></div>
+                  <div style="font-size:11px; color:#4f46e5; font-weight:600;">→ KB증권 글로벌 채권/펀드 결제 매칭 (적합도 96%)</div>
+                </div>
+                <button type="button" class="btn btn-primary btn-sm" style="height:27px; padding:0 9px; font-size:11px; white-space:nowrap;" onclick="sendRetentionProposalToTalent('오세훈', 'KB증권 글로벌 채권/펀드', 96)">우선 제안</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- [5] 푸터 안내 -->
+      <footer class="ium-footer" style="border-radius:0 0 18px 18px; padding:12px 24px;">
+        <span>* 수행 인원은 현재 고객사 프로젝트 및 사내 과제에 실투입된 정규직·프리랜서·협력사 합산 기준이며, 대기 중인 내부 정규직(4명)은 '내부 가동률' 탭에서 관리합니다.</span>
+      </footer>
+    </div>
+  `;
+}
+
+function openDeployedPersonnelModal() {
+  openAnalyticsFromDashboard('DEPLOYED');
+}
+
+function openAnalyticsFromDashboard(sectionKey = 'UTILIZATION') {
+  state.analyticsSection = sectionKey;
+  switchTab('analytics');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function setAnalyticsSection(sectionKey) {
+  state.analyticsSection = sectionKey;
+  renderAnalyticsTab();
+}
+
+function renderAnalyticsTab() {
+  const el = document.getElementById('tab-analytics');
+  if (!el) return;
+  const activeSec = state.analyticsSection || 'UTILIZATION';
+
+  el.innerHTML = `
+    <div class="filter-bar">
+      <button type="button" class="zal-chip-btn ${activeSec === 'UTILIZATION' ? 'active' : ''}" onclick="setAnalyticsSection('UTILIZATION')">
+        내부 가동률 분석 (90% · 36/40명)
+      </button>
+      <button type="button" class="zal-chip-btn ${activeSec === 'DEPLOYED' ? 'active' : ''}" onclick="setAnalyticsSection('DEPLOYED')">
+        수행 인원 · 배정 현황 (48명)
+      </button>
+    </div>
+
+    <div style="margin-top:4px;">
+      ${activeSec === 'DEPLOYED' ? buildDeployedPersonnelSectionHtml() : buildInternalUtilizationSectionHtml()}
+    </div>
+  `;
+}
+
 function filterProfilesFromDashboard(empType = 'ALL', grade = 'ALL', domain = 'ALL') {
   state.profileFilters.empType = empType;
   state.profileFilters.jobCategory = 'ALL';
@@ -351,6 +1350,21 @@ function jumpToPlannedProjectsFromDashboard(groupKey = 'PLANNED') {
 function switchDashboardCalTab(tabKey) {
   state.calTab = tabKey;
   state.calSelectedDay = null;
+  renderDashboardTab();
+}
+
+function changeDashboardCalMonth(delta) {
+  let y = Number(state.calYear || 2026);
+  let m = Number(state.calMonth || 11) + Number(delta || 0);
+  if (m < 1) {
+    m = 12;
+    y -= 1;
+  } else if (m > 12) {
+    m = 1;
+    y += 1;
+  }
+  state.calYear = y;
+  state.calMonth = m;
   renderDashboardTab();
 }
 
@@ -589,7 +1603,7 @@ function renderDashboardTab() {
         </article>
 
         <!-- KPI 3: 내부 가동률 -->
-        <article class="exec-kpi-card" onclick="filterProfilesFromDashboard('INTERNAL', 'ALL', 'ALL')">
+        <article class="exec-kpi-card" onclick="openInternalUtilizationModal()">
           <div class="exec-kpi-top">
             <span class="exec-kpi-label">내부 가동률</span>
             <span class="exec-kpi-icon">${svgIcon('users', 26)}</span>
@@ -603,7 +1617,7 @@ function renderDashboardTab() {
         </article>
 
         <!-- KPI 4: 수행 인원 -->
-        <article class="exec-kpi-card" onclick="filterProfilesFromDashboard('ALL', 'ALL', 'ALL')">
+        <article class="exec-kpi-card" onclick="openDeployedPersonnelModal()">
           <div class="exec-kpi-top">
             <span class="exec-kpi-label">수행 인원</span>
             <span class="exec-kpi-icon">${svgIcon('award', 26)}</span>
@@ -633,7 +1647,6 @@ function renderDashboardTab() {
                 <button type="button" class="tl-seg-btn ${state.calTab === 'DEPLOY' ? 'active' : ''}" onclick="switchDashboardCalTab('DEPLOY')">투입</button>
                 <button type="button" class="tl-seg-btn ${state.calTab === 'ROLLOFF' ? 'active' : ''}" onclick="switchDashboardCalTab('ROLLOFF')">철수</button>
               </div>
-              <button type="button" class="exec-header-link-btn" onclick="switchTab('projects')">전체보기 ›</button>
             </div>
           </div>
 
@@ -641,60 +1654,175 @@ function renderDashboardTab() {
             const sparkleSvg = `<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L14.6 9.4L22 12L14.6 14.6L12 22L9.4 14.6L2 12L9.4 9.4L12 2Z"/></svg>`;
             const userCountIcon = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`;
 
-            const projectTimelineRows = [
-              {
-                projectId: 'prj_ong_3',
-                projectName: '삼성증권 연금 고객중심 서비스 개선',
-                kind: 'ROLLOFF',
-                barColor: 'green',
-                barText: '철수 예정 (11/18)',
-                headcount: 2,
-                leftPct: 2,
-                widthPct: 48
-              },
-              {
-                projectId: 'prj_ong_2',
-                projectName: '신영증권 외화표시펀드 매매 시스템',
-                kind: 'ROLLOFF',
-                barColor: 'green',
-                barText: '철수 예정 (11/20)',
-                headcount: 2,
-                leftPct: 14,
-                widthPct: 46
-              },
-              {
-                projectId: 'prj_1',
-                projectName: '미래에셋증권 퇴직연금 차세대 구축',
-                kind: 'DEPLOY',
-                barColor: 'blue',
-                barText: '투입 예정 (11/23)',
-                headcount: 4,
-                leftPct: 33,
-                widthPct: 48
-              },
-              {
-                projectId: 'prj_ong_1',
-                projectName: '하나증권 퇴직연금 일임형로보구축',
-                kind: 'ROLLOFF',
-                barColor: 'green',
-                barText: '철수 예정 (11/30)',
-                headcount: 3,
-                leftPct: 54,
-                widthPct: 44
-              },
-              {
-                projectId: 'prj_3',
-                projectName: 'NH투자증권 연금자산관리 플랫폼 ISP',
-                kind: 'DEPLOY',
-                barColor: 'blue',
-                barText: '투입 예정 (11/30)',
-                headcount: 2,
-                leftPct: 58,
-                widthPct: 40
-              }
-            ];
+            const curY = Number(state.calYear || 2026);
+            const curM = Number(state.calMonth || 11);
+            const ymKey = `${curY}-${String(curM).padStart(2, '0')}`;
+            const ymLabel = `${curY}.${String(curM).padStart(2, '0')}`;
+            const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+            const fmtDateCol = (dayNum) => {
+              const dt = new Date(curY, curM - 1, dayNum);
+              const dow = dayNames[dt.getDay()] || '월';
+              return `${curM}/${String(dayNum).padStart(2, '0')} (${dow})`;
+            };
+            const dateCols = ymKey === '2026-11'
+              ? ['11/16 (월)', '11/23 (월)', '11/30 (월)']
+              : [fmtDateCol(5), fmtDateCol(15), fmtDateCol(25)];
 
-            const visibleRows = projectTimelineRows.filter(r => {
+            const monthlyPresetMap = {
+              '2026-10': [
+                {
+                  projectId: 'prj_cmp_3',
+                  projectName: '키움증권 퇴직연금 신시스템 안정화',
+                  kind: 'ROLLOFF',
+                  barColor: 'green',
+                  barText: '철수 완료 (10/15)',
+                  headcount: 2,
+                  leftPct: 10,
+                  widthPct: 45
+                },
+                {
+                  projectId: 'prj_ong_3',
+                  projectName: '삼성증권 연금 고객중심 서비스 개선',
+                  kind: 'DEPLOY',
+                  barColor: 'blue',
+                  barText: '단계 오픈 (10/26)',
+                  headcount: 2,
+                  leftPct: 48,
+                  widthPct: 44
+                }
+              ],
+              '2026-11': [
+                {
+                  projectId: 'prj_ong_3',
+                  projectName: '삼성증권 연금 고객중심 서비스 개선',
+                  kind: 'ROLLOFF',
+                  barColor: 'green',
+                  barText: '철수 예정 (11/18)',
+                  headcount: 2,
+                  leftPct: 2,
+                  widthPct: 48
+                },
+                {
+                  projectId: 'prj_ong_2',
+                  projectName: '신영증권 외화표시펀드 매매 시스템',
+                  kind: 'ROLLOFF',
+                  barColor: 'green',
+                  barText: '철수 예정 (11/20)',
+                  headcount: 2,
+                  leftPct: 14,
+                  widthPct: 46
+                },
+                {
+                  projectId: 'prj_1',
+                  projectName: '미래에셋증권 퇴직연금 차세대 구축',
+                  kind: 'DEPLOY',
+                  barColor: 'blue',
+                  barText: '투입 예정 (11/23)',
+                  headcount: 4,
+                  leftPct: 33,
+                  widthPct: 48
+                },
+                {
+                  projectId: 'prj_ong_1',
+                  projectName: '하나증권 퇴직연금 일임형로보구축',
+                  kind: 'ROLLOFF',
+                  barColor: 'green',
+                  barText: '철수 예정 (11/30)',
+                  headcount: 3,
+                  leftPct: 54,
+                  widthPct: 44
+                },
+                {
+                  projectId: 'prj_3',
+                  projectName: 'NH투자증권 연금자산관리 플랫폼 ISP',
+                  kind: 'DEPLOY',
+                  barColor: 'blue',
+                  barText: '투입 예정 (11/30)',
+                  headcount: 2,
+                  leftPct: 58,
+                  widthPct: 40
+                }
+              ],
+              '2026-12': [
+                {
+                  projectId: 'prj_1',
+                  projectName: '미래에셋증권 퇴직연금 차세대 구축',
+                  kind: 'DEPLOY',
+                  barColor: 'blue',
+                  barText: '본착수 투입 (12/01)',
+                  headcount: 4,
+                  leftPct: 4,
+                  widthPct: 48
+                },
+                {
+                  projectId: 'prj_3',
+                  projectName: 'NH투자증권 연금자산관리 플랫폼 ISP',
+                  kind: 'DEPLOY',
+                  barColor: 'blue',
+                  barText: '투입 예정 (12/15)',
+                  headcount: 2,
+                  leftPct: 32,
+                  widthPct: 46
+                },
+                {
+                  projectId: 'prj_2',
+                  projectName: 'KB증권 글로벌 채권·외화펀드 중개 플랫폼',
+                  kind: 'DEPLOY',
+                  barColor: 'blue',
+                  barText: '사전투입 (12/28)',
+                  headcount: 2,
+                  leftPct: 54,
+                  widthPct: 42
+                }
+              ],
+              '2027-01': [
+                {
+                  projectId: 'prj_2',
+                  projectName: 'KB증권 글로벌 채권·외화펀드 중개 플랫폼',
+                  kind: 'DEPLOY',
+                  barColor: 'blue',
+                  barText: '본투입 예정 (01/05)',
+                  headcount: 2,
+                  leftPct: 8,
+                  widthPct: 50
+                }
+              ]
+            };
+
+            const baseRows = (monthlyPresetMap[ymKey] || []).slice();
+            const existingIds = new Set(baseRows.map(r => `${r.projectId}_${r.kind}`));
+            projects.forEach((p, idx) => {
+              if ((p.start_date || '').startsWith(ymKey) && !existingIds.has(`${p.id}_DEPLOY`)) {
+                const dayStr = p.start_date.slice(8, 10) || '15';
+                const dayNum = Math.max(1, Math.min(31, Number(dayStr) || 15));
+                baseRows.push({
+                  projectId: p.id,
+                  projectName: p.name,
+                  kind: 'DEPLOY',
+                  barColor: 'blue',
+                  barText: `투입 예정 (${curM}/${dayStr})`,
+                  headcount: (p.to_slots || []).length || 2,
+                  leftPct: Math.min(56, Math.max(4, Math.round((dayNum / 31) * 58))),
+                  widthPct: 42
+                });
+              }
+              if ((p.end_date || '').startsWith(ymKey) && !existingIds.has(`${p.id}_ROLLOFF`)) {
+                const dayStr = p.end_date.slice(8, 10) || '28';
+                const dayNum = Math.max(1, Math.min(31, Number(dayStr) || 28));
+                baseRows.push({
+                  projectId: p.id,
+                  projectName: p.name,
+                  kind: 'ROLLOFF',
+                  barColor: 'green',
+                  barText: `철수 예정 (${curM}/${dayStr})`,
+                  headcount: (p.to_slots || []).length || 2,
+                  leftPct: Math.min(54, Math.max(4, Math.round((dayNum / 31) * 56) + (idx % 3) * 4)),
+                  widthPct: 42
+                });
+              }
+            });
+
+            const visibleRows = baseRows.filter(r => {
               if (state.calTab === 'DEPLOY') return r.kind === 'DEPLOY';
               if (state.calTab === 'ROLLOFF') return r.kind === 'ROLLOFF';
               return true;
@@ -703,17 +1831,25 @@ function renderDashboardTab() {
             return `
               <div class="prj-gantt-table">
                 <div class="prj-gantt-head">
-                  <div class="prj-gantt-col-name">11월</div>
+                  <div class="prj-gantt-col-name">
+                    <div class="prj-gantt-month-nav" style="display:inline-flex; align-items:center; gap:6px; white-space:nowrap;">
+                      <button type="button" class="prj-gantt-nav-btn" onclick="changeDashboardCalMonth(-1)" title="이전 달" style="display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; padding:0; border:none; background:transparent; color:#64748b; border-radius:6px; cursor:pointer;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                      </button>
+                      <span class="prj-gantt-month-label" style="font-size:12.5px; font-weight:700; color:#334155; min-width:50px; text-align:center;">${ymLabel}</span>
+                      <button type="button" class="prj-gantt-nav-btn" onclick="changeDashboardCalMonth(1)" title="다음 달" style="display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; padding:0; border:none; background:transparent; color:#64748b; border-radius:6px; cursor:pointer;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                      </button>
+                    </div>
+                  </div>
                   <div class="prj-gantt-col-track">
-                    <div class="prj-gantt-date-col">11/16 (월)</div>
-                    <div class="prj-gantt-date-col">11/23 (월)</div>
-                    <div class="prj-gantt-date-col">11/30 (월)</div>
+                    ${dateCols.map(dc => `<div class="prj-gantt-date-col">${dc}</div>`).join('')}
                   </div>
                   <div class="prj-gantt-col-meta">인원</div>
                 </div>
 
                 <div class="prj-gantt-body">
-                  ${visibleRows.map(row => `
+                  ${visibleRows.length > 0 ? visibleRows.map(row => `
                     <div class="prj-gantt-row" onclick="selectProjectDetail('${row.projectId}')">
                       <div class="prj-gantt-col-name">
                         <span class="prj-gantt-title" title="${row.projectName}">${row.projectName}</span>
@@ -736,7 +1872,11 @@ function renderDashboardTab() {
                         </span>
                       </div>
                     </div>
-                  `).join('')}
+                  `).join('') : `
+                    <div style="padding:28px 12px; text-align:center; color:#94a3b8; font-size:13px;">
+                      ${ymLabel}월에 예정된 프로젝트 투입·철수 일정이 없습니다.
+                    </div>
+                  `}
                 </div>
               </div>
             `;
@@ -4350,21 +5490,37 @@ async function submitProjectPerformanceEval(e, projectId, slotId, profileId) {
 function computeMatchScore(profile, slot, projectStartDate) {
   let score = 50;
   const reasons = [];
-  if (profile.domains.includes(slot.required_domain)) {
+  const reqDomain = String(slot.required_domain || '').trim();
+  const reqSkills = slot.required_skills || [];
+  const matchedSkills = reqSkills.filter(rs =>
+    (profile.skills || []).some(ps =>
+      ps.toLowerCase().includes(rs.toLowerCase()) || rs.toLowerCase().includes(ps.toLowerCase())
+    )
+  );
+
+  if ((profile.domains || []).includes(reqDomain)) {
     score += 22;
-    reasons.push(`${slot.required_domain} 도메인 일치`);
+    reasons.push(`${reqDomain} 도메인 일치`);
+  } else {
+    const careerHay = `${(profile.domains || []).join(' ')} ${(profile.skills || []).join(' ')} ${profile.review_summary || ''} ${(profile.career_history || []).map(c => `${c.project || ''} ${c.role || ''} ${c.tech || ''}`).join(' ')}`.toLowerCase();
+    const domainKeywords = reqDomain.split(/[·/\s,()-]+/).filter(w => w.length >= 2);
+    const hasRelatedExp = domainKeywords.some(k => careerHay.includes(k.toLowerCase()))
+      || (/그룹웨어|전자결재|인사|휴가/.test(reqDomain) && /협업|포털|ehr|웹|모바일|권한|인사/.test(careerHay));
+    if (hasRelatedExp || matchedSkills.length >= 2) {
+      score += 18;
+      reasons.push(`${reqDomain} 연관 수행역량 보유`);
+    } else if (matchedSkills.length >= 1) {
+      score += 12;
+      reasons.push('유관 시스템 수행 경험');
+    }
   }
   const gradeRank = { '특급': 4, '고급': 3, '중급': 2, '초급': 1 };
   if ((gradeRank[profile.tech_grade] || 2) >= (gradeRank[slot.required_grade] || 2)) {
     score += 12;
     reasons.push(`${profile.tech_grade} 기술등급 충족`);
   }
-  const reqSkills = slot.required_skills || [];
-  const matchedSkills = reqSkills.filter(rs =>
-    profile.skills.some(ps => ps.toLowerCase().includes(rs.toLowerCase()))
-  );
   if (matchedSkills.length > 0) {
-    score += Math.min(10, matchedSkills.length * 4);
+    score += Math.min(14, matchedSkills.length * 5);
     reasons.push(`스킬 ${matchedSkills.length}개 일치`);
   }
   if (profile.is_internal) {
@@ -4588,12 +5744,15 @@ const SAMPLE_RFP_DOCS = {
 function renderNewProjectToSlotRow(idx, slot = {}) {
   const roleVal = slot.role_name || (idx === 0 ? '퇴직연금 코어 PL' : '연금 정산/배치 개발');
   const gradeVal = slot.required_grade || (idx === 0 ? '특급' : '고급');
-  const skillsVal = slot.required_skills || (idx === 0 ? 'Java, Spring Boot, Oracle' : 'Java, Spring Batch, SQL튜닝');
+  const rawSkills = Array.isArray(slot.required_skills)
+    ? slot.required_skills.join(', ')
+    : slot.required_skills;
+  const skillsVal = rawSkills || (idx === 0 ? 'Java, Spring Boot, Oracle' : 'Java, Spring Batch, SQL튜닝');
   return `
     <div class="rfp-to-slot-row" style="display:grid; grid-template-columns: 1.4fr 110px 1.4fr auto; gap:8px; align-items:end; margin-bottom:8px;">
       <div class="form-field" style="margin:0;">
         <label style="font-size:11.5px;">TO #${idx + 1} 역할명</label>
-        <input class="input" name="slot_role" value="${roleVal}" required />
+        <input class="input" name="slot_role" value="${escAttr(roleVal)}" required />
       </div>
       <div class="form-field" style="margin:0;">
         <label style="font-size:11.5px;">요구 등급</label>
@@ -4603,7 +5762,7 @@ function renderNewProjectToSlotRow(idx, slot = {}) {
       </div>
       <div class="form-field" style="margin:0;">
         <label style="font-size:11.5px;">필수 기술스택 (쉼표 구분)</label>
-        <input class="input" name="slot_skills" value="${skillsVal}" />
+        <input class="input" name="slot_skills" value="${escAttr(skillsVal)}" />
       </div>
       <button type="button" class="btn btn-outline btn-sm" style="height:38px; padding:0 10px; color:#dc2626;" onclick="removeNewProjectToSlotRow(this)" title="슬롯 삭제">삭제</button>
     </div>
@@ -4627,6 +5786,58 @@ function removeNewProjectToSlotRow(btn) {
   btn.closest('.rfp-to-slot-row')?.remove();
 }
 
+function toggleProjectCustomInputMode(fieldType, isChecked, focusInput = true) {
+  const isCategory = fieldType === 'category';
+  const selectEl = document.getElementById(isCategory ? 'newPrjCategorySelect' : 'newPrjDomainSelect');
+  const customInput = document.getElementById(isCategory ? 'newPrjCategoryCustom' : 'newPrjDomainCustom');
+  const chkEl = document.getElementById(isCategory ? 'newPrjCategoryCustomChk' : 'newPrjDomainCustomChk');
+  if (chkEl) {
+    if (chkEl.checked !== Boolean(isChecked)) {
+      chkEl.checked = Boolean(isChecked);
+    }
+    chkEl.closest('.zal-direct-check-label')?.classList.toggle('checked', Boolean(isChecked));
+  }
+  if (!selectEl || !customInput) return;
+
+  if (isChecked) {
+    selectEl.style.display = 'none';
+    selectEl.disabled = true;
+    customInput.style.display = 'block';
+    customInput.disabled = false;
+    customInput.required = true;
+    if (focusInput) {
+      customInput.focus();
+    }
+  } else {
+    customInput.style.display = 'none';
+    customInput.disabled = true;
+    customInput.required = false;
+    selectEl.style.display = 'block';
+    selectEl.disabled = false;
+  }
+}
+
+function setProjectSelectOrCustomValue(form, fieldType, value, fallbackValue) {
+  const isCategory = fieldType === 'category';
+  const selectEl = document.getElementById(isCategory ? 'newPrjCategorySelect' : 'newPrjDomainSelect');
+  const customInput = document.getElementById(isCategory ? 'newPrjCategoryCustom' : 'newPrjDomainCustom');
+  if (!selectEl) return;
+  const targetVal = String(value || fallbackValue || '').trim();
+  const hasOption = Array.from(selectEl.options).some(opt => opt.value === targetVal);
+
+  if (!hasOption && targetVal) {
+    const newOpt = document.createElement('option');
+    newOpt.value = targetVal;
+    newOpt.textContent = targetVal;
+    selectEl.appendChild(newOpt);
+  }
+  selectEl.value = targetVal;
+  if (customInput) {
+    customInput.value = '';
+  }
+  toggleProjectCustomInputMode(fieldType, false, false);
+}
+
 function showNewProjectManualForm() {
   const form = document.getElementById('newProjectForm');
   if (form) {
@@ -4640,10 +5851,10 @@ function applyParsedRfpToProjectForm(parsed) {
   if (!form) return;
   form.style.display = 'block';
   form.elements['project_group'].value = parsed.project_group || 'PLANNED';
-  form.elements['category'].value = parsed.category || 'PENSION';
+  setProjectSelectOrCustomValue(form, 'category', parsed.category, 'PENSION');
   form.elements['name'].value = parsed.name || '';
   form.elements['client'].value = parsed.client || '';
-  form.elements['domain'].value = parsed.domain || '퇴직연금';
+  setProjectSelectOrCustomValue(form, 'domain', parsed.domain, '퇴직연금');
   form.elements['location'].value = parsed.location || '서울 여의도 (상주)';
   form.elements['start_date'].value = parsed.start_date || '2026-12-15';
   form.elements['end_date'].value = parsed.end_date || '2027-10-31';
@@ -4673,46 +5884,159 @@ function triggerSampleRfpParse(rfpKey) {
   applyParsedRfpToProjectForm(sample);
 }
 
-async function handleRfpFileUpload(event) {
-  const file = event.target.files?.[0];
-  if (!file) return;
-  const [rawText, fileBase64] = await Promise.all([
-    extractClientSideDocumentText(file),
-    fileToBase64(file)
-  ]);
+function renderRfpUploadedFileChips() {
+  const wrap = document.getElementById('rfpUploadedFilesList');
+  if (!wrap) return;
+  const list = state.rfpUploadedFiles || [];
+  if (list.length === 0) {
+    wrap.style.display = 'none';
+    wrap.innerHTML = '';
+    return;
+  }
+  wrap.style.display = 'flex';
+  wrap.innerHTML = list.map((item, idx) => `
+    <span class="rfp-file-chip">
+      ${svgIcon('file', 13)}
+      <span>${item.fileName}</span>
+      <button type="button" class="rfp-file-chip-remove" onclick="removeUploadedRfpFile(${idx})" title="파일 제외">&times;</button>
+    </span>
+  `).join('');
+}
+
+async function removeUploadedRfpFile(idx) {
+  if (!Array.isArray(state.rfpUploadedFiles)) return;
+  state.rfpUploadedFiles.splice(idx, 1);
+  renderRfpUploadedFileChips();
+  if (state.rfpUploadedFiles.length === 0) {
+    const statusBanner = document.getElementById('rfpAiParseStatusBanner');
+    if (statusBanner) {
+      statusBanner.style.display = 'none';
+      statusBanner.innerHTML = '';
+    }
+    return;
+  }
+  await runAiRfpParseFromUploadedFiles();
+}
+
+async function runAiRfpParseFromUploadedFiles() {
+  const list = state.rfpUploadedFiles || [];
+  if (list.length === 0) return;
+  const primary = list[0];
+  const combinedRawText = list.map(f => f.rawText).filter(Boolean).join('\n\n');
   const res = await apiCall('/api/ai/parse-rfp', 'POST', {
-    fileName: file.name,
-    rawText,
-    fileBase64
+    fileName: primary.fileName,
+    rawText: combinedRawText,
+    fileBase64: primary.fileBase64,
+    files: list
   });
   if (res && res.parsed) {
     applyParsedRfpToProjectForm(res.parsed);
   }
+}
+
+async function processRfpFiles(fileList) {
+  const files = Array.from(fileList || []).filter(Boolean);
+  if (files.length === 0) return;
+  if (!Array.isArray(state.rfpUploadedFiles)) {
+    state.rfpUploadedFiles = [];
+  }
+
+  const parsedItems = await Promise.all(
+    files.map(async file => {
+      const [rawText, fileBase64] = await Promise.all([
+        extractClientSideDocumentText(file),
+        fileToBase64(file)
+      ]);
+      return {
+        key: `${file.name}_${file.size}`,
+        fileName: file.name,
+        rawText,
+        fileBase64
+      };
+    })
+  );
+
+  for (const item of parsedItems) {
+    const existingIdx = state.rfpUploadedFiles.findIndex(f => f.key === item.key);
+    if (existingIdx >= 0) {
+      state.rfpUploadedFiles[existingIdx] = item;
+    } else {
+      state.rfpUploadedFiles.push(item);
+    }
+  }
+
+  renderRfpUploadedFileChips();
+  await runAiRfpParseFromUploadedFiles();
+}
+
+async function handleRfpFileUpload(event) {
+  const files = event.target.files;
+  if (!files || files.length === 0) return;
+  await processRfpFiles(files);
   event.target.value = '';
 }
 
+function handleRfpDragOver(event) {
+  event.preventDefault();
+  event.stopPropagation();
+  event.currentTarget.classList.add('drag-over');
+}
+
+function handleRfpDragLeave(event) {
+  event.preventDefault();
+  event.stopPropagation();
+  if (!event.currentTarget.contains(event.relatedTarget)) {
+    event.currentTarget.classList.remove('drag-over');
+  }
+}
+
+async function handleRfpDrop(event) {
+  event.preventDefault();
+  event.stopPropagation();
+  event.currentTarget.classList.remove('drag-over');
+  const files = event.dataTransfer?.files;
+  if (files && files.length > 0) {
+    await processRfpFiles(files);
+  }
+}
+
 function openNewProjectModal() {
+  state.rfpUploadedFiles = [];
   openModal('프로젝트 등록', `
     <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px 16px;">
-      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px;">
         <div>
           <span class="zal-status-pill green" style="margin-bottom:5px; display:inline-flex; align-items:center; gap:5px;">
             ${svgIcon('bolt', 13)} AI RFP(제안요청서) 자동 파싱 엔진
           </span>
-          <div style="font-size:14px; font-weight:700; color:#0f172a;">
-            RFP 문서(.pdf, .docx, .hwp, .txt)를 업로드하면 AI가 과업 범위와 필요 인력(TO)을 자동 생성합니다.
+          <div style="font-size:13.5px; font-weight:700; color:#0f172a;">
+            RFP 문서를 업로드하면 AI가 과업 범위와 필요 인력(TO)을 자동 생성합니다.
           </div>
         </div>
-        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
-          <input type="file" id="modalRfpFileInput" accept=".pdf,.doc,.docx,.hwp,.hwpx,.ppt,.pptx,.xlsx,.txt" style="display:none;" onchange="handleRfpFileUpload(event)" />
-          <button type="button" class="btn btn-primary btn-sm" style="width:176px; height:36px; padding:0 12px; box-sizing:border-box; display:inline-flex; align-items:center; justify-content:center; gap:6px;" onclick="document.getElementById('modalRfpFileInput').click()">
-            ${svgIcon('file', 14)} 내 PC RFP 문서 업로드
-          </button>
-          <button type="button" class="btn btn-outline btn-sm" style="width:176px; height:36px; padding:0 12px; box-sizing:border-box; display:inline-flex; align-items:center; justify-content:center; gap:6px;" onclick="showNewProjectManualForm()">
-            ${svgIcon('edit', 14)} 직접 입력하기
-          </button>
+        <button type="button" class="btn btn-outline btn-sm" style="height:34px; padding:0 12px; display:inline-flex; align-items:center; gap:6px; background:#fff;" onclick="showNewProjectManualForm()">
+          ${svgIcon('edit', 14)} 직접 입력하기
+        </button>
+      </div>
+
+      <input type="file" id="modalRfpFileInput" multiple accept=".pdf,.doc,.docx,.hwp,.hwpx,.ppt,.pptx,.xls,.xlsx,.txt,.csv,.md" style="display:none;" onchange="handleRfpFileUpload(event)" />
+
+      <div id="rfpDropZone" class="rfp-drop-zone" onclick="document.getElementById('modalRfpFileInput').click()" ondragover="handleRfpDragOver(event)" ondragenter="handleRfpDragOver(event)" ondragleave="handleRfpDragLeave(event)" ondrop="handleRfpDrop(event)">
+        <div class="rfp-drop-icon-box">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+        </div>
+        <div class="rfp-drop-main-text">
+          RFP 문서를 이곳에 드래그 앤 드롭하거나 <span class="rfp-drop-browse-link">파일 찾아보기</span>
+        </div>
+        <div class="rfp-drop-sub-text">
+          PDF, DOCX, HWP, XLSX, TXT · 복수 파일 동시 업로드 가능
         </div>
       </div>
+
+      <div id="rfpUploadedFilesList" class="rfp-uploaded-files-wrap" style="display:none;"></div>
       <div id="rfpAiParseStatusBanner" class="zal-request-banner" style="display:none; background:#ecfdf5; border-color:#a7f3d0; color:#059669; margin-top:12px; margin-bottom:0;"></div>
     </div>
 
@@ -4727,12 +6051,23 @@ function openNewProjectModal() {
           </select>
         </div>
         <div class="form-field">
-          <label>카테고리</label>
-          <select class="select" name="category">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+            <label style="margin:0;">카테고리</label>
+            <label class="zal-direct-check-label">
+              <input type="checkbox" id="newPrjCategoryCustomChk" onchange="toggleProjectCustomInputMode('category', this.checked)" />
+              <span>직접입력</span>
+              <span class="zal-circle-check-icon">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="8.5 12.2 11 14.7 15.8 9.5"/></svg>
+              </span>
+            </label>
+          </div>
+          <select class="select" name="category" id="newPrjCategorySelect">
             <option value="PENSION">PENSION</option>
             <option value="INVESTMENT">INVESTMENT</option>
             <option value="CONSULTING">CONSULTING</option>
+            <option value="GROUPWARE">GROUPWARE</option>
           </select>
+          <input class="input" name="category_custom" id="newPrjCategoryCustom" placeholder="카테고리 직접 입력 (예: GROUPWARE, ERP)" style="display:none;" disabled />
         </div>
         <div class="form-field">
           <label>프로젝트명</label>
@@ -4743,14 +6078,25 @@ function openNewProjectModal() {
           <input class="input" name="client" placeholder="예: 대신증권" required />
         </div>
         <div class="form-field">
-          <label>핵심 금융 도메인</label>
-          <select class="select" name="domain">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+            <label style="margin:0;">핵심 금융 도메인</label>
+            <label class="zal-direct-check-label">
+              <input type="checkbox" id="newPrjDomainCustomChk" onchange="toggleProjectCustomInputMode('domain', this.checked)" />
+              <span>직접입력</span>
+              <span class="zal-circle-check-icon">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="8.5 12.2 11 14.7 15.8 9.5"/></svg>
+              </span>
+            </label>
+          </div>
+          <select class="select" name="domain" id="newPrjDomainSelect">
             <option value="퇴직연금">퇴직연금</option>
             <option value="채권">채권</option>
             <option value="펀드">펀드</option>
             <option value="계정계 코어">계정계 코어</option>
             <option value="마이데이터">마이데이터</option>
+            <option value="그룹웨어·전자결재·인사(HR)">그룹웨어·전자결재·인사(HR)</option>
           </select>
+          <input class="input" name="domain_custom" id="newPrjDomainCustom" placeholder="도메인 직접 입력 (예: 그룹웨어·전자결재·인사)" style="display:none;" disabled />
         </div>
         <div class="form-field">
           <label>근무지</label>
@@ -4801,9 +6147,15 @@ async function submitNewProject(e) {
   e.preventDefault();
   const form = e.target;
   const fd = new FormData(form);
-  const domain = fd.get('domain');
+  const isDomainCustom = Boolean(document.getElementById('newPrjDomainCustomChk')?.checked);
+  const domain = isDomainCustom
+    ? (String(fd.get('domain_custom') || '').trim() || '기타 도메인')
+    : (fd.get('domain') || '퇴직연금');
   const project_group = fd.get('project_group') || 'PLANNED';
-  const category = fd.get('category') || 'PENSION';
+  const isCategoryCustom = Boolean(document.getElementById('newPrjCategoryCustomChk')?.checked);
+  const category = isCategoryCustom
+    ? (String(fd.get('category_custom') || '').trim() || 'GENERAL')
+    : (fd.get('category') || 'PENSION');
 
   const slotRows = Array.from(form.querySelectorAll('.rfp-to-slot-row'));
   const to_slots = slotRows.map(row => {
@@ -5814,6 +7166,14 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('modalCloseBtn').addEventListener('click', closeModal);
   document.getElementById('modalBackdrop').addEventListener('click', e => {
     if (e.target.id === 'modalBackdrop') closeModal();
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      const backdrop = document.getElementById('modalBackdrop');
+      if (backdrop && !backdrop.classList.contains('hidden')) {
+        closeModal();
+      }
+    }
   });
 
   // Initialize browser History API state so Back button returns to previous view inside SPA
