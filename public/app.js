@@ -85,9 +85,88 @@ const SAMPLE_RESUMES = {
   }
 };
 
+const MALE_AVATAR_IMAGES = [1, 2, 3, 5, 7, 9].map(n => `/profile (${n}).jpg?v=2`);
+const FEMALE_AVATAR_IMAGES = [4, 6, 8, 10].map(n => `/profile (${n}).jpg?v=2`);
+
+// 사람별 1:1 고정 아바타 매핑 (새로고침해도 항상 동일하게 유지)
+const FIXED_AVATAR_MAP = {
+  // 여성 인재 4명 <-> 여성 아바타 4종 (4, 6, 8, 10) 1:1 매칭
+  'p_1': '/profile (4).jpg?v=2',
+  'u_internal_pl': '/profile (4).jpg?v=2',
+  '정윤희': '/profile (4).jpg?v=2',
+  '정윤희 부장': '/profile (4).jpg?v=2',
+
+  'p_3': '/profile (10).jpg?v=2',
+  'u_internal_dev': '/profile (10).jpg?v=2',
+  '신은숙': '/profile (10).jpg?v=2',
+  '신은숙 부장': '/profile (10).jpg?v=2',
+
+  'p_4': '/profile (6).jpg?v=2',
+  '윤서연': '/profile (6).jpg?v=2',
+
+  'p_6': '/profile (8).jpg?v=2',
+  '한지민': '/profile (8).jpg?v=2',
+  '권지민': '/profile (8).jpg?v=2',
+
+  'u_manager': '/profile (6).jpg?v=2',
+  '김지영': '/profile (6).jpg?v=2',
+  '김지영 이사': '/profile (6).jpg?v=2',
+
+  // 남성 인재 6명 <-> 남성 아바타 6종 (1, 2, 3, 5, 7, 9) 1:1 매칭
+  'u_master': '/profile (1).jpg?v=2',
+  '조성현': '/profile (1).jpg?v=2',
+  '조성현 상무': '/profile (1).jpg?v=2',
+
+  'p_2': '/profile (2).jpg?v=2',
+  '강동원': '/profile (2).jpg?v=2',
+
+  'p_5': '/profile (5).jpg?v=2',
+  'u_external': '/profile (5).jpg?v=2',
+  '양동근': '/profile (5).jpg?v=2',
+  '양동근 과장': '/profile (5).jpg?v=2',
+
+  'p_7': '/profile (3).jpg?v=2',
+  '오세훈': '/profile (3).jpg?v=2',
+
+  'p_8': '/profile (7).jpg?v=2',
+  '김도현': '/profile (7).jpg?v=2',
+
+  'p_9': '/profile (9).jpg?v=2',
+  '이준호': '/profile (9).jpg?v=2'
+};
+
+function isFemaleProfileKey(key = '') {
+  const clean = String(key || '').trim();
+  const allProfiles = [
+    ...(state?.data?.profiles || []),
+    ...(state?.data?.dashboardProfiles || []),
+    ...(state?.data?.users || [])
+  ];
+  const found = allProfiles.find(item => item && (item.id === clean || item.name === clean));
+  const targetName = String(found?.name || clean).replace(/\s+(상무|이사|부장|차장|과장|대리|사원|팀장|수석|선임|책임)$/, '').trim();
+  return /(윤희|은숙|서연|지민|지영|수진|미영|혜진|유진|지현|민지|은지|수빈|아름|나연|소연|다은|채원|하은|서윤|지우|보람|유리|미나|연희|정희|영희|숙|희|연)$/.test(targetName);
+}
+
 function getAvatarForId(str = '') {
-  const sum = Array.from(String(str)).reduce((a, c) => a + c.charCodeAt(0), 0);
-  return sum % 2 === 0 ? '/pic1_thumb.png' : '/pic2_thumb.png';
+  const key = String(str || 'default').trim();
+  if (FIXED_AVATAR_MAP[key]) {
+    return FIXED_AVATAR_MAP[key];
+  }
+  const allProfiles = [
+    ...(state?.data?.profiles || []),
+    ...(state?.data?.dashboardProfiles || []),
+    ...(state?.data?.users || [])
+  ];
+  const found = allProfiles.find(item => item && (item.id === key || item.name === key));
+  if (found) {
+    if (FIXED_AVATAR_MAP[found.id]) return FIXED_AVATAR_MAP[found.id];
+    if (FIXED_AVATAR_MAP[found.name]) return FIXED_AVATAR_MAP[found.name];
+  }
+
+  const isFemale = isFemaleProfileKey(key);
+  const pool = isFemale ? FEMALE_AVATAR_IMAGES : MALE_AVATAR_IMAGES;
+  const hash = Array.from(key).reduce((acc, ch, idx) => acc + ch.charCodeAt(0) * (idx + 17), 0);
+  return pool[hash % pool.length];
 }
 
 function svgIcon(name, size = 15) {
@@ -350,10 +429,10 @@ const INTERNAL_UTIL_MODAL_STATE = {
 };
 
 const INTERNAL_UTIL_DONUT_SEGMENTS = [
-  { key: 'billable', label: '유상 수행', shortLabel: '유상 수행', count: 33, pct: '82.5', color: '#111827', note: '고객사 현업 프로젝트 유상 투입 중' },
-  { key: 'rnd', label: '사내 R&D · 제안 지원', shortLabel: '사내 R&D·제안', count: 3, pct: '7.5', color: '#6366F1', note: '차세대 RFP 제안 및 사내 AI R&D' },
-  { key: 'confirmed', label: '차기 확정 대기', shortLabel: '차기 확정 대기', count: 3, pct: '7.5', color: '#10B981', note: '11/23 미래에셋 투입 예정 등' },
-  { key: 'unconfirmed', label: '미확정 대기 (집중관리)', shortLabel: '미확정 대기', count: 1, pct: '2.5', color: '#EF4444', note: '김민수 차장 (대기 8일차)' }
+  { key: 'billable', label: '유상 수행', shortLabel: '유상 수행', count: 33, pct: '82.5', gradId: 'iumDonutGrad0', gradStart: '#93C5FD', gradEnd: '#3B82F6', cssGrad: 'linear-gradient(135deg, #93C5FD 0%, #3B82F6 100%)', color: '#3B82F6', note: '고객사 현업 프로젝트 유상 투입 중' },
+  { key: 'rnd', label: '사내 R&D · 제안 지원', shortLabel: '사내 R&D·제안', count: 3, pct: '7.5', gradId: 'iumDonutGrad1', gradStart: '#A5B4FC', gradEnd: '#6366F1', cssGrad: 'linear-gradient(135deg, #A5B4FC 0%, #6366F1 100%)', color: '#6366F1', note: '차세대 RFP 제안 및 사내 AI R&D' },
+  { key: 'confirmed', label: '차기 확정 대기', shortLabel: '차기 확정 대기', count: 3, pct: '7.5', gradId: 'iumDonutGrad2', gradStart: '#6EE7B7', gradEnd: '#10B981', cssGrad: 'linear-gradient(135deg, #6EE7B7 0%, #10B981 100%)', color: '#10B981', note: '11/23 미래에셋 투입 예정 등' },
+  { key: 'unconfirmed', label: '미확정 대기 (집중관리)', shortLabel: '미확정 대기', count: 1, pct: '2.5', gradId: 'iumDonutGrad3', gradStart: '#FCD34D', gradEnd: '#F59E0B', cssGrad: 'linear-gradient(135deg, #FCD34D 0%, #F59E0B 100%)', color: '#F59E0B', note: '김민수 차장 (대기 8일차)' }
 ];
 
 const INTERNAL_UTIL_BAR_DATA = {
@@ -375,6 +454,8 @@ const INTERNAL_UTIL_TREND_MONTHS = [
   {
     label: '9월(실적)',
     rate: 88,
+    billableRate: 80,
+    targetRate: 85,
     deploy: 3,
     rolloff: 1,
     isForecast: false,
@@ -383,6 +464,8 @@ const INTERNAL_UTIL_TREND_MONTHS = [
   {
     label: '10월(실적)',
     rate: 92,
+    billableRate: 85,
+    targetRate: 85,
     deploy: 2,
     rolloff: 0,
     isForecast: false,
@@ -391,6 +474,8 @@ const INTERNAL_UTIL_TREND_MONTHS = [
   {
     label: '11월(현재)',
     rate: 90,
+    billableRate: 82.5,
+    targetRate: 85,
     deploy: 4,
     rolloff: 5,
     isForecast: false,
@@ -399,6 +484,8 @@ const INTERNAL_UTIL_TREND_MONTHS = [
   {
     label: '12월(예상)',
     rate: 82,
+    billableRate: 75,
+    targetRate: 85,
     deploy: 4,
     rolloff: 7,
     isForecast: true,
@@ -407,12 +494,84 @@ const INTERNAL_UTIL_TREND_MONTHS = [
   {
     label: '1월(예상)',
     rate: 78,
+    billableRate: 72.5,
+    targetRate: 85,
     deploy: 2,
     rolloff: 4,
     isForecast: true,
     reason: '1월(예상): 연말 프로젝트 종료분 추가 철수(-4명) 대비 KB증권 채권 플랫폼(+2명) 투입 예정 — 선제 영업 필요'
   }
 ];
+
+function buildSmoothCatmullBezierPath(pts) {
+  if (!pts || pts.length === 0) return '';
+  if (pts.length === 1) return `M ${pts[0].x} ${pts[0].y}`;
+  let d = `M ${pts[0].x} ${pts[0].y}`;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[i === 0 ? 0 : i - 1];
+    const p1 = pts[i];
+    const p2 = pts[i + 1];
+    const p3 = pts[i + 2 < pts.length ? i + 2 : i + 1];
+    const cp1x = (p1.x + (p2.x - p0.x) / 5.5).toFixed(1);
+    const cp1y = (p1.y + (p2.y - p0.y) / 5.5).toFixed(1);
+    const cp2x = (p2.x - (p3.x - p1.x) / 5.5).toFixed(1);
+    const cp2y = (p2.y - (p3.y - p1.y) / 5.5).toFixed(1);
+    d += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p2.x} ${p2.y}`;
+  }
+  return d;
+}
+
+function buildRoundedDonutSectorPath(cx, cy, rIn, rOut, startDeg, endDeg, cornerRadius = 5) {
+  const a0 = (startDeg * Math.PI) / 180;
+  const a1 = (endDeg * Math.PI) / 180;
+  const span = Math.max(0.02, a1 - a0);
+  const rc = Math.max(1, Math.min(cornerRadius, (rOut - rIn) / 2 - 0.5, (span * rIn) / 2.2));
+  const dOut = rc / rOut;
+  const dIn = rc / rIn;
+
+  const p1x = (cx + (rOut - rc) * Math.cos(a0)).toFixed(2);
+  const p1y = (cy + (rOut - rc) * Math.sin(a0)).toFixed(2);
+  const c1x = (cx + rOut * Math.cos(a0)).toFixed(2);
+  const c1y = (cy + rOut * Math.sin(a0)).toFixed(2);
+  const p2x = (cx + rOut * Math.cos(a0 + dOut)).toFixed(2);
+  const p2y = (cy + rOut * Math.sin(a0 + dOut)).toFixed(2);
+
+  const p3x = (cx + rOut * Math.cos(a1 - dOut)).toFixed(2);
+  const p3y = (cy + rOut * Math.sin(a1 - dOut)).toFixed(2);
+  const c2x = (cx + rOut * Math.cos(a1)).toFixed(2);
+  const c2y = (cy + rOut * Math.sin(a1)).toFixed(2);
+  const p4x = (cx + (rOut - rc) * Math.cos(a1)).toFixed(2);
+  const p4y = (cy + (rOut - rc) * Math.sin(a1)).toFixed(2);
+
+  const p5x = (cx + (rIn + rc) * Math.cos(a1)).toFixed(2);
+  const p5y = (cy + (rIn + rc) * Math.sin(a1)).toFixed(2);
+  const c3x = (cx + rIn * Math.cos(a1)).toFixed(2);
+  const c3y = (cy + rIn * Math.sin(a1)).toFixed(2);
+  const p6x = (cx + rIn * Math.cos(a1 - dIn)).toFixed(2);
+  const p6y = (cy + rIn * Math.sin(a1 - dIn)).toFixed(2);
+
+  const p7x = (cx + rIn * Math.cos(a0 + dIn)).toFixed(2);
+  const p7y = (cy + rIn * Math.sin(a0 + dIn)).toFixed(2);
+  const c4x = (cx + rIn * Math.cos(a0)).toFixed(2);
+  const c4y = (cy + rIn * Math.sin(a0)).toFixed(2);
+  const p8x = (cx + (rIn + rc) * Math.cos(a0)).toFixed(2);
+  const p8y = (cy + (rIn + rc) * Math.sin(a0)).toFixed(2);
+
+  const largeArcOut = span - 2 * dOut > Math.PI ? 1 : 0;
+  const largeArcIn = span - 2 * dIn > Math.PI ? 1 : 0;
+
+  return [
+    `M ${p1x} ${p1y}`,
+    `Q ${c1x} ${c1y} ${p2x} ${p2y}`,
+    `A ${rOut} ${rOut} 0 ${largeArcOut} 1 ${p3x} ${p3y}`,
+    `Q ${c2x} ${c2y} ${p4x} ${p4y}`,
+    `L ${p5x} ${p5y}`,
+    `Q ${c3x} ${c3y} ${p6x} ${p6y}`,
+    `A ${rIn} ${rIn} 0 ${largeArcIn} 0 ${p7x} ${p7y}`,
+    `Q ${c4x} ${c4y} ${p8x} ${p8y}`,
+    'Z'
+  ].join(' ');
+}
 
 function hoverInternalUtilDonut(idx) {
   const rateEl = document.getElementById('iumDonutRate');
@@ -424,12 +583,12 @@ function hoverInternalUtilDonut(idx) {
   if (idx === null || idx === undefined || !INTERNAL_UTIL_DONUT_SEGMENTS[idx]) {
     if (rateEl) {
       rateEl.textContent = '90%';
-      rateEl.style.color = '#111827';
+      rateEl.style.color = '#0F172A';
     }
     if (subEl) subEl.textContent = '36 / 40명 가동';
     if (capEl) capEl.textContent = '유상 33 · 사내 3';
     arcs.forEach(a => {
-      a.setAttribute('stroke-width', '24');
+      a.setAttribute('stroke-width', '22');
       a.style.opacity = '1';
     });
     legends.forEach(l => l.classList.remove('active'));
@@ -445,7 +604,7 @@ function hoverInternalUtilDonut(idx) {
   if (capEl) capEl.textContent = seg.shortLabel;
 
   arcs.forEach((a, i) => {
-    a.setAttribute('stroke-width', i === idx ? '28' : '21');
+    a.setAttribute('stroke-width', i === idx ? '26' : '19');
     a.style.opacity = i === idx ? '1' : '0.32';
   });
   legends.forEach((l, i) => l.classList.toggle('active', i === idx));
@@ -474,9 +633,9 @@ function renderInternalUtilBarListHtml(mode = 'ROLE') {
           </div>
         </div>
         <div class="ium-bar-track">
-          <div class="ium-bar-seg" style="width:${activePct}%; background:#111827;" title="수행 ${r.active}명"></div>
-          ${r.confirmed > 0 ? `<div class="ium-bar-seg" style="width:${confirmedPct}%; background:#10B981;" title="확정대기 ${r.confirmed}명"></div>` : ''}
-          ${r.unconfirmed > 0 ? `<div class="ium-bar-seg" style="width:${unconfirmedPct}%; background:#EF4444;" title="미확정대기 ${r.unconfirmed}명"></div>` : ''}
+          <div class="ium-bar-seg" style="width:${activePct}%; background:linear-gradient(90deg, #93c5fd 0%, #3b82f6 100%);" title="수행 ${r.active}명"></div>
+          ${r.confirmed > 0 ? `<div class="ium-bar-seg" style="width:${confirmedPct}%; background:linear-gradient(90deg, #6ee7b7 0%, #10b981 100%);" title="확정대기 ${r.confirmed}명"></div>` : ''}
+          ${r.unconfirmed > 0 ? `<div class="ium-bar-seg" style="width:${unconfirmedPct}%; background:linear-gradient(90deg, #fcd34d 0%, #f59e0b 100%);" title="미확정대기 ${r.unconfirmed}명"></div>` : ''}
         </div>
       </div>
     `;
@@ -503,15 +662,15 @@ function selectInternalUtilMonth(idx) {
     reasonEl.textContent = item.reason;
   }
   document.querySelectorAll('.ium-month-hit-col').forEach((el, i) => {
-    el.setAttribute('fill', i === idx ? 'rgba(37, 99, 235, 0.06)' : 'transparent');
+    el.setAttribute('fill', i === idx ? 'rgba(59, 130, 246, 0.05)' : 'transparent');
   });
   document.querySelectorAll('.ium-month-point-ring').forEach((el, i) => {
     el.setAttribute('r', i === idx ? '6.5' : '4.5');
-    el.setAttribute('stroke-width', i === idx ? '3' : '2');
+    el.setAttribute('stroke-width', i === idx ? '3' : '2.2');
   });
   document.querySelectorAll('.ium-month-x-label').forEach((el, i) => {
     el.setAttribute('font-weight', i === idx ? '800' : '600');
-    el.setAttribute('fill', i === idx ? '#111827' : '#6b7280');
+    el.setAttribute('fill', i === idx ? '#0f172a' : '#94a3b8');
   });
 }
 
@@ -534,24 +693,31 @@ function quickProposeUnassignedToSlot(projectTitle, slotRole, fitPct, projectId,
 }
 
 function buildInternalUtilizationSectionHtml() {
-  const r = 69;
+  // Subtle Modern Donut Chart with Linear Gradients (No gap, flat edges)
+  const r = 68;
   const C = 2 * Math.PI * r;
   let cumLen = 0;
+  const donutGradsSvg = INTERNAL_UTIL_DONUT_SEGMENTS.map((seg, i) => `
+    <linearGradient id="${seg.gradId}" gradientUnits="userSpaceOnUse" x1="${i % 2 === 0 ? 15 : 165}" y1="15" x2="${i % 2 === 0 ? 165 : 15}" y2="165">
+      <stop offset="0%" stop-color="${seg.gradStart}" />
+      <stop offset="100%" stop-color="${seg.gradEnd}" />
+    </linearGradient>
+  `).join('');
   const donutArcsSvg = INTERNAL_UTIL_DONUT_SEGMENTS.map((seg, idx) => {
     const segLen = (seg.count / 40) * C;
-    const drawLen = Math.max(2, segLen - 2);
+    const drawLen = Math.max(2, segLen - 1);
     const dashOffset = -cumLen;
     cumLen += segLen;
     return `
       <circle
         class="ium-donut-arc"
-        cx="88" cy="88" r="${r}"
+        cx="90" cy="90" r="${r}"
         fill="none"
-        stroke="${seg.color}"
-        stroke-width="24"
+        stroke="url(#${seg.gradId})"
+        stroke-width="22"
         stroke-dasharray="${drawLen.toFixed(2)} ${C.toFixed(2)}"
         stroke-dashoffset="${dashOffset.toFixed(2)}"
-        transform="rotate(-90 88 88)"
+        transform="rotate(-90 90 90)"
         style="cursor:pointer; transition: stroke-width 0.18s ease, opacity 0.18s ease;"
         onmouseenter="hoverInternalUtilDonut(${idx})"
         onmouseleave="hoverInternalUtilDonut(null)"
@@ -559,58 +725,112 @@ function buildInternalUtilizationSectionHtml() {
     `;
   }).join('');
 
-  const xCoords = [175, 310, 445, 580, 715];
-  const yForRate = (rate) => Math.round(104 - ((rate - 70) / 30) * 76);
+  // Multi-Spline Smooth Bezier Chart
+  const xCoords = [110, 240, 370, 500, 630];
+  const yForRate = (rate) => Math.round(126 - ((rate - 68) / 28) * 94);
   const points = INTERNAL_UTIL_TREND_MONTHS.map((m, i) => ({
     ...m,
     x: xCoords[i],
-    y: yForRate(m.rate)
+    y: yForRate(m.rate),
+    yBill: yForRate(m.billableRate),
+    yTarget: yForRate(m.targetRate)
   }));
-  const yTarget85 = yForRate(85);
-  const solidPath = `M ${points[0].x} ${points[0].y} L ${points[1].x} ${points[1].y} L ${points[2].x} ${points[2].y}`;
-  const dashedPath = `M ${points[2].x} ${points[2].y} L ${points[3].x} ${points[3].y} L ${points[4].x} ${points[4].y}`;
-  const areaPath = `M ${points[0].x} 112 L ${points.map(p => `${p.x} ${p.y}`).join(' L ')} L ${points[4].x} 112 Z`;
+
+  const totalRatePath = buildSmoothCatmullBezierPath(points.map(p => ({ x: p.x, y: p.y })));
+  const billableRatePath = buildSmoothCatmullBezierPath(points.map(p => ({ x: p.x, y: p.yBill })));
+  const targetWavePath = buildSmoothCatmullBezierPath([
+    { x: xCoords[0], y: yForRate(84) },
+    { x: xCoords[1], y: yForRate(86) },
+    { x: xCoords[2], y: yForRate(85) },
+    { x: xCoords[3], y: yForRate(85.5) },
+    { x: xCoords[4], y: yForRate(85) }
+  ]);
+  const totalAreaPath = `${totalRatePath} L ${points[4].x} 136 L ${points[0].x} 136 Z`;
+  const billAreaPath = `${billableRatePath} L ${points[4].x} 136 L ${points[0].x} 136 Z`;
+
   const curBarMode = INTERNAL_UTIL_MODAL_STATE.barMode || 'ROLE';
   const curMonthIdx = INTERNAL_UTIL_MODAL_STATE.activeMonthIdx ?? 3;
 
   return `
-    <div class="ium-wrap" style="border:1px solid #e2e8f0; border-radius:18px; overflow:visible; box-shadow:0 2px 8px rgba(15,23,42,0.04);" onclick="const p=document.getElementById('iumMatchPopover'); if(p) p.style.display='none';">
-      <!-- [1] 섹션 헤더 -->
-      <header class="ium-header" style="border-radius:18px 18px 0 0; padding:18px 24px;">
-        <div class="ium-header-left">
-          <h3 class="ium-title">내부 인력 가동 현황 분석</h3>
-          <span class="ium-date-badge">2026.11.18 기준</span>
-          <span class="ium-sub-text">정규직 총원 40명</span>
-        </div>
-        <div class="ium-header-right">
-          <span class="ium-summary-chip dark">현재 가동률 90%</span>
-          <span class="ium-summary-chip slate">유상 가동률 82.5%</span>
-          <span class="ium-summary-chip warn">12월 예상 82% ▼8%p</span>
-        </div>
-      </header>
+    <div class="ium-wrap" onclick="const p=document.getElementById('iumMatchPopover'); if(p) p.style.display='none';">
+      <!-- [1] 최상단 4개 KPI 카드 (홈 화면과 동일한 구성) -->
+      <section class="exec-kpi-grid">
+        <article class="exec-kpi-card" style="cursor:default;">
+          <div class="exec-kpi-top">
+            <span class="exec-kpi-label">정규직 총원</span>
+            <span class="exec-kpi-icon">${svgIcon('users', 26)}</span>
+          </div>
+          <div class="exec-kpi-value-row">
+            <div class="exec-kpi-main-val">40<span class="exec-kpi-unit">명</span> <span class="exec-kpi-sub-val">(2026.11.18 기준)</span></div>
+          </div>
+          <div class="exec-kpi-foot">
+            <span>수행 36명 · 확정대기 3명 · 미확정 1명</span>
+          </div>
+        </article>
+
+        <article class="exec-kpi-card" style="cursor:default;">
+          <div class="exec-kpi-top">
+            <span class="exec-kpi-label">현재 가동률</span>
+            <span class="exec-kpi-icon">${svgIcon('award', 26)}</span>
+          </div>
+          <div class="exec-kpi-value-row">
+            <div class="exec-kpi-main-val">90<span class="exec-kpi-unit">%</span> <span class="exec-kpi-sub-val">(36/40명 가동)</span></div>
+          </div>
+          <div class="exec-kpi-foot">
+            <span>손익분기 목표(85%) 대비 <strong style="color:#dc2626; font-weight:700;">+5%</strong> 상회</span>
+          </div>
+        </article>
+
+        <article class="exec-kpi-card" style="cursor:default;">
+          <div class="exec-kpi-top">
+            <span class="exec-kpi-label">유상 가동률</span>
+            <span class="exec-kpi-icon">${svgIcon('briefcase', 26)}</span>
+          </div>
+          <div class="exec-kpi-value-row">
+            <div class="exec-kpi-main-val">82.5<span class="exec-kpi-unit">%</span> <span class="exec-kpi-sub-val">(33/40명 빌링)</span></div>
+          </div>
+          <div class="exec-kpi-foot">
+            <span>고객사 유상 33명 · 사내 R&D/제안 3명</span>
+          </div>
+        </article>
+
+        <article class="exec-kpi-card" style="cursor:default;">
+          <div class="exec-kpi-top">
+            <span class="exec-kpi-label">12월 예상 가동률</span>
+            <span class="exec-kpi-icon">${svgIcon('file', 26)}</span>
+          </div>
+          <div class="exec-kpi-value-row">
+            <div class="exec-kpi-main-val">82<span class="exec-kpi-unit">%</span> <span class="exec-kpi-sub-val" style="color:#2563eb; font-weight:700;">(-8%)</span></div>
+          </div>
+          <div class="exec-kpi-foot">
+            <span>유상 가동률 75.0% (<strong style="color:#2563eb; font-weight:700;">-7.5%</strong>) · 30/40명 빌링</span>
+          </div>
+        </article>
+      </section>
 
       <!-- 본문 -->
-      <div class="ium-body" style="padding:20px 24px; gap:16px; border-radius:0 0 18px 18px;">
+      <div class="ium-body">
         <!-- [2] 상단 2열 그리드 차트 영역 -->
-        <div class="ium-top-grid" style="gap:16px;">
+        <div class="ium-top-grid">
           <!-- 좌측 카드: 투입 성격별 구성 (Interactive SVG 도넛 차트) -->
-          <section class="ium-card" style="padding:18px 20px;">
+          <section class="ium-card">
             <div class="ium-card-head">
               <div>
                 <h4 class="ium-card-title">투입 성격별 구성</h4>
                 <span class="ium-card-subtitle">도넛 또는 범례에 마우스를 올리면 상세 비율이 표시됩니다</span>
               </div>
-              <span style="font-size:11.5px; font-weight:700; color:#111827;">총 40명</span>
+              <span style="font-size:11.5px; font-weight:700; color:#2563eb; background:#eff6ff; border:1px solid #dbeafe; padding:3px 10px; border-radius:999px;">총 40명</span>
             </div>
 
-            <div class="ium-donut-layout" style="gap:20px;">
-              <div class="ium-donut-box">
-                <svg width="176" height="176" viewBox="0 0 176 176">
-                  <circle cx="88" cy="88" r="${r}" fill="none" stroke="#f3f4f6" stroke-width="24" />
+            <div class="ium-donut-layout">
+              <div class="ium-donut-box" style="width:180px; height:180px;">
+                <svg width="180" height="180" viewBox="0 0 180 180">
+                  <defs>${donutGradsSvg}</defs>
+                  <circle cx="90" cy="90" r="${r}" fill="none" stroke="#f1f5f9" stroke-width="22" />
                   ${donutArcsSvg}
                 </svg>
                 <div class="ium-donut-center">
-                  <span id="iumDonutRate" class="ium-donut-rate">90%</span>
+                  <span id="iumDonutRate" class="ium-donut-rate" style="color:#0F172A;">90%</span>
                   <span id="iumDonutSub" class="ium-donut-sub">36 / 40명 가동</span>
                   <span id="iumDonutCap" class="ium-donut-caption">유상 33 · 사내 3</span>
                 </div>
@@ -620,7 +840,7 @@ function buildInternalUtilizationSectionHtml() {
                 ${INTERNAL_UTIL_DONUT_SEGMENTS.map((seg, idx) => `
                   <div class="ium-legend-item" onmouseenter="hoverInternalUtilDonut(${idx})" onmouseleave="hoverInternalUtilDonut(null)">
                     <div class="ium-legend-left">
-                      <span class="ium-legend-dot" style="background:${seg.color};"></span>
+                      <span class="ium-legend-dot" style="background:${seg.cssGrad};"></span>
                       <div style="min-width:0;">
                         <span class="ium-legend-label">${seg.label}</span>
                         <span class="ium-legend-note">${seg.note}</span>
@@ -635,12 +855,13 @@ function buildInternalUtilizationSectionHtml() {
             </div>
           </section>
 
-          <!-- 우측 카드: 직군·등급별 가동 편차 (가로 누적 바 차트 + 토글) -->
-          <section class="ium-card" style="padding:18px 20px; display:flex; flex-direction:column; justify-content:space-between;">
+          <!-- 우측 카드: 직군·등급별 가동 편차 (Soft Capsule Progress Bars) -->
+          <section class="ium-card" style="display:flex; flex-direction:column; justify-content:space-between;">
             <div>
               <div class="ium-card-head">
                 <div>
                   <h4 class="ium-card-title">직군·등급별 가동 편차</h4>
+                  <span class="ium-card-subtitle">직군 및 기술등급별 가동률과 대기 인원 분포</span>
                 </div>
                 <div class="ium-pill-toggle">
                   <button type="button" class="ium-pill-btn ${curBarMode === 'ROLE' ? 'active' : ''}" data-bar-mode="ROLE" onclick="switchInternalUtilBarMode('ROLE')">직군별</button>
@@ -653,93 +874,133 @@ function buildInternalUtilizationSectionHtml() {
               </div>
             </div>
 
-            <div style="display:flex; align-items:center; justify-content:center; gap:16px; margin-top:12px; padding-top:10px; border-top:1px solid #f3f4f6; font-size:11.5px; font-weight:600; color:#4b5563;">
-              <span style="display:inline-flex; align-items:center; gap:5px;"><span style="width:8px; height:8px; border-radius:50%; background:#111827; display:inline-block;"></span>수행</span>
-              <span style="display:inline-flex; align-items:center; gap:5px;"><span style="width:8px; height:8px; border-radius:50%; background:#10B981; display:inline-block;"></span>확정대기</span>
-              <span style="display:inline-flex; align-items:center; gap:5px;"><span style="width:8px; height:8px; border-radius:50%; background:#EF4444; display:inline-block;"></span>미확정</span>
+            <div style="display:flex; align-items:center; justify-content:center; gap:18px; margin-top:14px; padding-top:12px; border-top:1px dashed #e2e8f0; font-size:11.5px; font-weight:600; color:#64748b;">
+              <span style="display:inline-flex; align-items:center; gap:6px;"><span style="width:10px; height:6px; border-radius:99px; background:#3b82f6; display:inline-block;"></span>수행중</span>
+              <span style="display:inline-flex; align-items:center; gap:6px;"><span style="width:10px; height:6px; border-radius:99px; background:#10b981; display:inline-block;"></span>확정대기</span>
+              <span style="display:inline-flex; align-items:center; gap:6px;"><span style="width:10px; height:6px; border-radius:99px; background:#f59e0b; display:inline-block;"></span>미확정</span>
             </div>
           </section>
         </div>
 
-        <!-- [3] 중단 와이드 카드: 향후 3개월 가동률 추이 및 투입·철수 밸런스 -->
-        <section class="ium-card" style="padding:18px 20px;">
-          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:8px;">
+        <!-- [3] 중단 와이드 카드: 향후 3개월 가동률 추이 및 투입·철수 밸런스 (Multi-Wave Smooth Spline Chart) -->
+        <section class="ium-card">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; min-height:30px; margin-bottom:10px;">
             <h4 class="ium-card-title">향후 3개월 가동률 추이 및 투입·철수 밸런스</h4>
-            <div style="display:inline-flex; align-items:center; gap:12px; font-size:11px; color:#6b7280; font-weight:600; margin-left:auto;">
-              <span style="display:inline-flex; align-items:center; gap:4px;"><span style="width:12px; height:2.5px; background:#111827; display:inline-block;"></span>실적 가동률</span>
-              <span style="display:inline-flex; align-items:center; gap:4px;"><span style="width:12px; height:0; border-top:2.5px dashed #dc2626; display:inline-block;"></span>예측 가동률</span>
-              <span style="display:inline-flex; align-items:center; gap:4px;"><span style="width:8px; height:8px; border-radius:2px; background:#3b82f6; display:inline-block;"></span>투입(+인원)</span>
-              <span style="display:inline-flex; align-items:center; gap:4px;"><span style="width:8px; height:8px; border-radius:2px; background:#f59e0b; display:inline-block;"></span>철수(-인원)</span>
-            </div>
-          </div>
-          <div style="margin-bottom:10px;">
             <div class="ium-combo-reason-box">
-              <span style="color:#d97706;">●</span>
+              <span style="color:#3b82f6;">●</span>
               <span id="iumComboReasonText">${INTERNAL_UTIL_TREND_MONTHS[curMonthIdx]?.reason || INTERNAL_UTIL_TREND_MONTHS[3].reason}</span>
             </div>
           </div>
 
-          <svg width="100%" height="196" viewBox="0 0 820 184" style="display:block; overflow:visible;">
-            <defs>
-              <linearGradient id="iumLineAreaGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="#111827" stop-opacity="0.10" />
-                <stop offset="100%" stop-color="#111827" stop-opacity="0.0" />
-              </linearGradient>
-            </defs>
+          <div class="spline-chart-wrap">
+            <svg width="100%" height="225" viewBox="0 0 710 205" style="display:block; overflow:visible;">
+              <defs>
+                <linearGradient id="iumBlueAreaGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#3B82F6" stop-opacity="0.11" />
+                  <stop offset="100%" stop-color="#3B82F6" stop-opacity="0.0" />
+                </linearGradient>
+                <linearGradient id="iumMintAreaGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#10B981" stop-opacity="0.08" />
+                  <stop offset="100%" stop-color="#10B981" stop-opacity="0.0" />
+                </linearGradient>
+              </defs>
 
-            <line x1="122" y1="36" x2="788" y2="36" stroke="#f3f4f6" stroke-width="1" />
-            <line x1="122" y1="112" x2="788" y2="112" stroke="#e5e7eb" stroke-width="1" />
-            <line x1="122" y1="160" x2="788" y2="160" stroke="#f3f4f6" stroke-width="1" />
+              <!-- 2D Dashed Grid Lines -->
+              <line x1="48" y1="28" x2="680" y2="28" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3 4" />
+              <line x1="48" y1="64" x2="680" y2="64" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3 4" />
+              <line x1="48" y1="100" x2="680" y2="100" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3 4" />
+              <line x1="48" y1="136" x2="680" y2="136" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="3 4" />
+              <line x1="48" y1="174" x2="680" y2="174" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3 4" />
 
-            <rect x="6" y="${yTarget85 - 9}" width="112" height="18" rx="4" fill="#fffbeb" stroke="#fde68a" stroke-width="1" />
-            <text x="62" y="${yTarget85 + 3.5}" text-anchor="middle" font-size="10.5" font-weight="700" fill="#b45309">손익분기 목표선 (85%)</text>
-            <line x1="122" y1="${yTarget85}" x2="788" y2="${yTarget85}" stroke="#f59e0b" stroke-width="1.4" stroke-dasharray="4 4" />
+              ${xCoords.map(xc => `
+                <line x1="${xc}" y1="18" x2="${xc}" y2="174" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3 4" />
+              `).join('')}
 
-            <path d="${areaPath}" fill="url(#iumLineAreaGrad)" />
-            <path d="${solidPath}" fill="none" stroke="#111827" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" />
-            <path d="${dashedPath}" fill="none" stroke="#dc2626" stroke-width="2.6" stroke-dasharray="6 4" stroke-linecap="round" stroke-linejoin="round" />
+              <!-- Y-Axis Labels -->
+              <text x="38" y="32" text-anchor="end" font-size="10" font-weight="600" fill="#94a3b8">95%</text>
+              <text x="38" y="68" text-anchor="end" font-size="10" font-weight="600" fill="#94a3b8">85%</text>
+              <text x="38" y="104" text-anchor="end" font-size="10" font-weight="600" fill="#94a3b8">75%</text>
+              <text x="38" y="140" text-anchor="end" font-size="10" font-weight="600" fill="#94a3b8">68%</text>
 
-            ${points.map((p, idx) => {
-              const isSelected = idx === curMonthIdx;
-              const deployH = Math.max(3, p.deploy * 4.2);
-              const rolloffH = Math.max(2, p.rolloff * 4.2);
-              const baseBarY = 156;
-              const pointColor = p.isForecast ? '#dc2626' : '#111827';
-              return `
-                <g style="cursor:pointer;" onmouseenter="selectInternalUtilMonth(${idx})" onclick="selectInternalUtilMonth(${idx})">
-                  <rect class="ium-month-hit-col" x="${p.x - 62}" y="8" width="124" height="172" rx="8" fill="${isSelected ? 'rgba(37, 99, 235, 0.06)' : 'transparent'}" />
-                  <text x="${p.x}" y="${p.y - 11}" text-anchor="middle" font-size="12" font-weight="800" fill="${pointColor}">${p.rate}%</text>
-                  <circle class="ium-month-point-ring" cx="${p.x}" cy="${p.y}" r="${isSelected ? '6.5' : '4.5'}" fill="#ffffff" stroke="${pointColor}" stroke-width="${isSelected ? '3' : '2'}" />
+              <!-- Subtle Translucent Gradient Area Fills -->
+              <path d="${totalAreaPath}" fill="url(#iumBlueAreaGrad)" />
+              <path d="${billAreaPath}" fill="url(#iumMintAreaGrad)" />
 
-                  <rect x="${p.x - 22}" y="${baseBarY - deployH}" width="18" height="${deployH}" rx="3" fill="#3b82f6" />
-                  <text x="${p.x - 13}" y="${baseBarY - deployH - 4}" text-anchor="middle" font-size="10" font-weight="700" fill="#2563eb">+${p.deploy}</text>
+              <!-- Smooth Cubic Bezier Curves (Amber Target, Emerald Billable, Soft Blue Total) -->
+              <path d="${targetWavePath}" fill="none" stroke="#F59E0B" stroke-width="1.8" stroke-dasharray="5 4" stroke-linecap="round" />
+              <path d="${billableRatePath}" fill="none" stroke="#10B981" stroke-width="2.2" stroke-linecap="round" />
+              <path d="${totalRatePath}" fill="none" stroke="#3B82F6" stroke-width="2.6" stroke-linecap="round" />
 
-                  <rect x="${p.x + 4}" y="${baseBarY - rolloffH}" width="18" height="${rolloffH}" rx="3" fill="${p.rolloff >= 5 ? '#f59e0b' : '#10b981'}" />
-                  <text x="${p.x + 13}" y="${baseBarY - rolloffH - 4}" text-anchor="middle" font-size="10" font-weight="700" fill="${p.rolloff >= 5 ? '#d97706' : '#059669'}">${p.rolloff > 0 ? `-${p.rolloff}` : '0'}</text>
+              ${points.map((p, idx) => {
+                const isSelected = idx === curMonthIdx;
+                const deployH = Math.max(4, p.deploy * 3.8);
+                const rolloffH = Math.max(3, p.rolloff * 3.8);
+                const baseBarY = 174;
+                const mainColor = p.isForecast ? '#D97706' : '#2563EB';
+                return `
+                  <g style="cursor:pointer;" onmouseenter="selectInternalUtilMonth(${idx})" onclick="selectInternalUtilMonth(${idx})">
+                    <rect class="ium-month-hit-col" x="${p.x - 54}" y="12" width="108" height="184" rx="12" fill="${isSelected ? 'rgba(59, 130, 246, 0.05)' : 'transparent'}" />
 
-                  <text class="ium-month-x-label" x="${p.x}" y="175" text-anchor="middle" font-size="11.5" font-weight="${isSelected ? '800' : '600'}" fill="${isSelected ? '#111827' : '#6b7280'}">${p.label}</text>
-                </g>
-              `;
-            }).join('')}
-          </svg>
+                    <!-- Billable Curve Node -->
+                    <circle cx="${p.x}" cy="${p.yBill}" r="3.6" fill="#ffffff" stroke="#10B981" stroke-width="2" />
+                    <text x="${p.x}" y="${p.yBill + 13}" text-anchor="middle" font-size="9.5" font-weight="600" fill="#059669">${p.billableRate}%</text>
+
+                    <!-- Total Utilization Curve Node -->
+                    <text x="${p.x}" y="${p.y - 10}" text-anchor="middle" font-size="11.5" font-weight="800" fill="${mainColor}">${p.rate}%</text>
+                    <circle class="ium-month-point-ring" cx="${p.x}" cy="${p.y}" r="${isSelected ? '6.5' : '4.5'}" fill="#ffffff" stroke="${mainColor}" stroke-width="${isSelected ? '3' : '2.2'}" />
+
+                    <!-- Mini Capsule Bars for Deploy (+) / Rolloff (-) -->
+                    <rect x="${p.x - 19}" y="${baseBarY - deployH}" width="15" height="${deployH}" rx="4" fill="#93C5FD" />
+                    <text x="${p.x - 11.5}" y="${baseBarY - deployH - 3}" text-anchor="middle" font-size="9.5" font-weight="700" fill="#2563EB">+${p.deploy}</text>
+
+                    <rect x="${p.x + 4}" y="${baseBarY - rolloffH}" width="15" height="${rolloffH}" rx="4" fill="${p.rolloff >= 5 ? '#FCD34D' : '#6EE7B7'}" />
+                    <text x="${p.x + 11.5}" y="${baseBarY - rolloffH - 3}" text-anchor="middle" font-size="9.5" font-weight="700" fill="${p.rolloff >= 5 ? '#D97706' : '#059669'}">${p.rolloff > 0 ? `-${p.rolloff}` : '0'}</text>
+
+                    <text class="ium-month-x-label" x="${p.x}" y="194" text-anchor="middle" font-size="11.5" font-weight="${isSelected ? '800' : '600'}" fill="${isSelected ? '#0f172a' : '#94a3b8'}">${p.label}</text>
+                  </g>
+                `;
+              }).join('')}
+            </svg>
+
+            <!-- Right-Side Line Legend Column -->
+            <div class="spline-side-legend">
+              <div class="spline-legend-block">
+                <div class="spline-legend-line" style="background:#3B82F6;"></div>
+                <span class="spline-legend-title">전체 가동률</span>
+                <span class="spline-legend-sub">실적 · 예측 추이</span>
+              </div>
+              <div class="spline-legend-block">
+                <div class="spline-legend-line" style="background:#10B981;"></div>
+                <span class="spline-legend-title">유상 가동률</span>
+                <span class="spline-legend-sub">고객사 빌링 기준</span>
+              </div>
+              <div class="spline-legend-block">
+                <div class="spline-legend-line" style="background:#F59E0B;"></div>
+                <span class="spline-legend-title">목표 기준선</span>
+                <span class="spline-legend-sub">손익분기 85%</span>
+              </div>
+              <div class="spline-legend-block">
+                <div class="spline-legend-line" style="background:linear-gradient(90deg, #93C5FD 50%, #6EE7B7 50%);"></div>
+                <span class="spline-legend-title">투입 · 철수</span>
+                <span class="spline-legend-sub">월별 인력 증감</span>
+              </div>
+            </div>
+          </div>
         </section>
 
         <!-- [4] 하단 포커스 액션 배너 -->
-        <div class="ium-focus-banner" style="padding:12px 16px;">
+        <div class="ium-focus-banner">
           <div class="ium-focus-left">
             <span class="ium-focus-tag">집중 관리</span>
             <span>
               <strong>차기 미확정 대기 1명</strong> — <strong>김민수 차장</strong>
-              <span style="color:#4b5563; font-size:12px;">(고급 · 백엔드 · #퇴직연금 #계정계코어 · 대기 8일차)</span>
+              <span style="color:#64748b; font-size:12px;">(고급 · 백엔드 · #퇴직연금 #계정계코어 · 대기 8일차)</span>
             </span>
           </div>
 
           <div class="ium-focus-actions">
-            <button type="button" class="btn btn-primary btn-sm" style="background:#111827; border-color:#111827; height:34px; padding:0 14px; font-size:12.5px; font-weight:700;" onclick="toggleInternalUtilMatchPopover(event)">
+            <button type="button" class="btn btn-primary btn-sm" style="background:#0f172a; border-color:#0f172a; height:34px; padding:0 14px; font-size:12.5px; font-weight:700;" onclick="toggleInternalUtilMatchPopover(event)">
               ✨ AI 추천 TO 매칭
-            </button>
-            <button type="button" class="btn btn-outline btn-sm" style="background:#ffffff; height:34px; padding:0 12px; font-size:12.5px; font-weight:600;" onclick="filterProfilesFromDashboard('INTERNAL', 'ALL', 'ALL');">
-              인재 DB에서 전체보기 →
             </button>
           </div>
 
@@ -785,9 +1046,9 @@ const DEPLOYED_PERSONNEL_MODAL_STATE = {
 };
 
 const DEPLOYED_DONUT_SEGMENTS = [
-  { key: 'regular', label: '정규직 (내부)', shortLabel: '정규직 (내부)', count: 36, pct: '75.0', color: '#111827', note: '고객사 유상 33명 · 사내 지원 3명' },
-  { key: 'freelancer', label: '프리랜서 (개인/반프리)', shortLabel: '프리랜서', count: 8, pct: '16.7', color: '#4F46E5', note: '기검증 금융 도메인 전문 프리랜서' },
-  { key: 'partner', label: '협력사 (도급/파견)', shortLabel: '협력사 인력', count: 4, pct: '8.3', color: '#0D9488', note: '전략 파트너사 전문 기술인력' }
+  { key: 'regular', label: '정규직 (내부)', shortLabel: '정규직 (내부)', count: 36, pct: '75.0', gradId: 'dpmDonutGrad0', gradStart: '#93C5FD', gradEnd: '#3B82F6', cssGrad: 'linear-gradient(135deg, #93C5FD 0%, #3B82F6 100%)', color: '#3B82F6', pastelFill: '#93C5FD', note: '고객사 유상 33명 · 사내 지원 3명' },
+  { key: 'freelancer', label: '프리랜서 (개인/반프리)', shortLabel: '프리랜서', count: 8, pct: '16.7', gradId: 'dpmDonutGrad1', gradStart: '#A5B4FC', gradEnd: '#6366F1', cssGrad: 'linear-gradient(135deg, #A5B4FC 0%, #6366F1 100%)', color: '#6366F1', pastelFill: '#A5B4FC', note: '기검증 금융 도메인 전문 프리랜서' },
+  { key: 'partner', label: '협력사 (도급/파견)', shortLabel: '협력사 인력', count: 4, pct: '8.3', gradId: 'dpmDonutGrad2', gradStart: '#6EE7B7', gradEnd: '#10B981', cssGrad: 'linear-gradient(135deg, #6EE7B7 0%, #10B981 100%)', color: '#10B981', pastelFill: '#6EE7B7', note: '전략 파트너사 전문 기술인력' }
 ];
 
 const DEPLOYED_PROJECT_BARS = [
@@ -797,15 +1058,15 @@ const DEPLOYED_PROJECT_BARS = [
     badge: '11/18 일부철수(2명)',
     badgeType: 'alert',
     emp: [
-      { label: '정규직', count: 13, color: '#111827' },
-      { label: '프리랜서', count: 3, color: '#4F46E5' },
-      { label: '협력사', count: 2, color: '#0D9488' }
+      { label: '정규직', count: 13, color: 'linear-gradient(90deg, #93C5FD 0%, #3B82F6 100%)' },
+      { label: '프리랜서', count: 3, color: 'linear-gradient(90deg, #A5B4FC 0%, #6366F1 100%)' },
+      { label: '협력사', count: 2, color: 'linear-gradient(90deg, #6EE7B7 0%, #10B981 100%)' }
     ],
     grade: [
-      { label: '특급', count: 5, color: '#111827' },
-      { label: '고급', count: 8, color: '#4F46E5' },
-      { label: '중급', count: 4, color: '#0D9488' },
-      { label: '초급', count: 1, color: '#9CA3AF' }
+      { label: '특급', count: 5, color: 'linear-gradient(90deg, #93C5FD 0%, #3B82F6 100%)' },
+      { label: '고급', count: 8, color: 'linear-gradient(90deg, #A5B4FC 0%, #6366F1 100%)' },
+      { label: '중급', count: 4, color: 'linear-gradient(90deg, #6EE7B7 0%, #10B981 100%)' },
+      { label: '초급', count: 1, color: 'linear-gradient(90deg, #E2E8F0 0%, #94A3B8 100%)' }
     ]
   },
   {
@@ -814,15 +1075,15 @@ const DEPLOYED_PROJECT_BARS = [
     badge: '11/30 일부철수(3명)',
     badgeType: 'alert',
     emp: [
-      { label: '정규직', count: 12, color: '#111827' },
-      { label: '프리랜서', count: 3, color: '#4F46E5' },
-      { label: '협력사', count: 1, color: '#0D9488' }
+      { label: '정규직', count: 12, color: 'linear-gradient(90deg, #93C5FD 0%, #3B82F6 100%)' },
+      { label: '프리랜서', count: 3, color: 'linear-gradient(90deg, #A5B4FC 0%, #6366F1 100%)' },
+      { label: '협력사', count: 1, color: 'linear-gradient(90deg, #6EE7B7 0%, #10B981 100%)' }
     ],
     grade: [
-      { label: '특급', count: 5, color: '#111827' },
-      { label: '고급', count: 6, color: '#4F46E5' },
-      { label: '중급', count: 3, color: '#0D9488' },
-      { label: '초급', count: 2, color: '#9CA3AF' }
+      { label: '특급', count: 5, color: 'linear-gradient(90deg, #93C5FD 0%, #3B82F6 100%)' },
+      { label: '고급', count: 6, color: 'linear-gradient(90deg, #A5B4FC 0%, #6366F1 100%)' },
+      { label: '중급', count: 3, color: 'linear-gradient(90deg, #6EE7B7 0%, #10B981 100%)' },
+      { label: '초급', count: 2, color: 'linear-gradient(90deg, #E2E8F0 0%, #94A3B8 100%)' }
     ]
   },
   {
@@ -831,15 +1092,15 @@ const DEPLOYED_PROJECT_BARS = [
     badge: '11/20 일부철수(2명)',
     badgeType: 'alert',
     emp: [
-      { label: '정규직', count: 8, color: '#111827' },
-      { label: '프리랜서', count: 2, color: '#4F46E5' },
-      { label: '협력사', count: 1, color: '#0D9488' }
+      { label: '정규직', count: 8, color: 'linear-gradient(90deg, #93C5FD 0%, #3B82F6 100%)' },
+      { label: '프리랜서', count: 2, color: 'linear-gradient(90deg, #A5B4FC 0%, #6366F1 100%)' },
+      { label: '협력사', count: 1, color: 'linear-gradient(90deg, #6EE7B7 0%, #10B981 100%)' }
     ],
     grade: [
-      { label: '특급', count: 3, color: '#111827' },
-      { label: '고급', count: 5, color: '#4F46E5' },
-      { label: '중급', count: 2, color: '#0D9488' },
-      { label: '초급', count: 1, color: '#9CA3AF' }
+      { label: '특급', count: 3, color: 'linear-gradient(90deg, #93C5FD 0%, #3B82F6 100%)' },
+      { label: '고급', count: 5, color: 'linear-gradient(90deg, #A5B4FC 0%, #6366F1 100%)' },
+      { label: '중급', count: 2, color: 'linear-gradient(90deg, #6EE7B7 0%, #10B981 100%)' },
+      { label: '초급', count: 1, color: 'linear-gradient(90deg, #E2E8F0 0%, #94A3B8 100%)' }
     ]
   },
   {
@@ -848,27 +1109,27 @@ const DEPLOYED_PROJECT_BARS = [
     badge: '100% 내부',
     badgeType: 'full',
     emp: [
-      { label: '정규직', count: 3, color: '#111827' }
+      { label: '정규직', count: 3, color: 'linear-gradient(90deg, #93C5FD 0%, #3B82F6 100%)' }
     ],
     grade: [
-      { label: '특급', count: 1, color: '#111827' },
-      { label: '고급', count: 1, color: '#4F46E5' },
-      { label: '중급', count: 1, color: '#0D9488' }
+      { label: '특급', count: 1, color: 'linear-gradient(90deg, #93C5FD 0%, #3B82F6 100%)' },
+      { label: '고급', count: 1, color: 'linear-gradient(90deg, #A5B4FC 0%, #6366F1 100%)' },
+      { label: '중급', count: 1, color: 'linear-gradient(90deg, #6EE7B7 0%, #10B981 100%)' }
     ]
   }
 ];
 
 const DEPLOYED_GRADE_PYRAMID = [
-  { grade: '특급', count: 14, pct: 29, color: '#111827' },
-  { grade: '고급', count: 20, pct: 42, color: '#4F46E5' },
-  { grade: '중급', count: 10, pct: 21, color: '#0D9488' },
-  { grade: '초급', count: 4, pct: 8, color: '#9CA3AF' }
+  { grade: '특급', count: 14, pct: 29, color: '#3B82F6', gradId: 'dpmPyrGrad0', gradStart: '#93C5FD', gradEnd: '#3B82F6' },
+  { grade: '고급', count: 20, pct: 42, color: '#6366F1', gradId: 'dpmPyrGrad1', gradStart: '#A5B4FC', gradEnd: '#6366F1' },
+  { grade: '중급', count: 10, pct: 21, color: '#10B981', gradId: 'dpmPyrGrad2', gradStart: '#6EE7B7', gradEnd: '#10B981' },
+  { grade: '초급', count: 4, pct: 8, color: '#94A3B8', gradId: 'dpmPyrGrad3', gradStart: '#CBD5E1', gradEnd: '#94A3B8' }
 ];
 
 const DEPLOYED_WEEKLY_SCHEDULE = [
   {
     week: '11월 3주',
-    deploy: 0,
+    deploy: 1,
     rolloff: 4,
     summary: '11월 3주: 삼성증권 연금 개선(2명 · 11/18) 및 신영증권 외화펀드(2명 · 11/20) 철수 도래'
   },
@@ -902,12 +1163,12 @@ function hoverDeployedDonut(idx) {
   if (idx === null || idx === undefined || !DEPLOYED_DONUT_SEGMENTS[idx]) {
     if (rateEl) {
       rateEl.textContent = '48명';
-      rateEl.style.color = '#111827';
+      rateEl.style.color = '#0F172A';
     }
     if (subEl) subEl.textContent = '정규 36 · 외부 12';
     if (capEl) capEl.textContent = '내부 75% · 외주 25%';
     arcs.forEach(a => {
-      a.setAttribute('stroke-width', '24');
+      a.setAttribute('stroke-width', '22');
       a.style.opacity = '1';
     });
     legends.forEach(l => l.classList.remove('active'));
@@ -923,7 +1184,7 @@ function hoverDeployedDonut(idx) {
   if (capEl) capEl.textContent = seg.shortLabel;
 
   arcs.forEach((a, i) => {
-    a.setAttribute('stroke-width', i === idx ? '28' : '21');
+    a.setAttribute('stroke-width', i === idx ? '26' : '19');
     a.style.opacity = i === idx ? '1' : '0.32';
   });
   legends.forEach((l, i) => l.classList.toggle('active', i === idx));
@@ -948,8 +1209,8 @@ function renderDeployedPrjBarListHtml(mode = 'EMP') {
             <span class="ium-bar-rate" style="min-width:36px;">${prj.total}명</span>
           </div>
         </div>
-        <div class="ium-bar-track" style="background:#f3f4f6;">
-          <div style="width:${widthRatio}%; height:100%; display:flex; gap:1px; border-radius:999px; overflow:hidden;">
+        <div class="ium-bar-track">
+          <div style="width:${widthRatio}%; height:100%; display:flex; gap:2px; border-radius:999px; overflow:hidden;">
             ${items.map(it => {
               const segPct = Math.round((it.count / prj.total) * 1000) / 10;
               return `<div class="ium-bar-seg" style="width:${segPct}%; background:${it.color};" title="${it.label} ${it.count}명"></div>`;
@@ -964,16 +1225,16 @@ function renderDeployedPrjBarListHtml(mode = 'EMP') {
 function renderDeployedPrjLegendHtml(mode = 'EMP') {
   if (mode === 'GRADE') {
     return `
-      <span style="display:inline-flex; align-items:center; gap:5px;"><span style="width:8px; height:8px; border-radius:50%; background:#111827; display:inline-block;"></span>특급</span>
-      <span style="display:inline-flex; align-items:center; gap:5px;"><span style="width:8px; height:8px; border-radius:50%; background:#4F46E5; display:inline-block;"></span>고급</span>
-      <span style="display:inline-flex; align-items:center; gap:5px;"><span style="width:8px; height:8px; border-radius:50%; background:#0D9488; display:inline-block;"></span>중급</span>
-      <span style="display:inline-flex; align-items:center; gap:5px;"><span style="width:8px; height:8px; border-radius:50%; background:#9CA3AF; display:inline-block;"></span>초급</span>
+      <span style="display:inline-flex; align-items:center; gap:6px;"><span style="width:10px; height:6px; border-radius:99px; background:#3B82F6; display:inline-block;"></span>특급</span>
+      <span style="display:inline-flex; align-items:center; gap:6px;"><span style="width:10px; height:6px; border-radius:99px; background:#818CF8; display:inline-block;"></span>고급</span>
+      <span style="display:inline-flex; align-items:center; gap:6px;"><span style="width:10px; height:6px; border-radius:99px; background:#34D399; display:inline-block;"></span>중급</span>
+      <span style="display:inline-flex; align-items:center; gap:6px;"><span style="width:10px; height:6px; border-radius:99px; background:#CBD5E1; display:inline-block;"></span>초급</span>
     `;
   }
   return `
-    <span style="display:inline-flex; align-items:center; gap:5px;"><span style="width:8px; height:8px; border-radius:50%; background:#111827; display:inline-block;"></span>정규직</span>
-    <span style="display:inline-flex; align-items:center; gap:5px;"><span style="width:8px; height:8px; border-radius:50%; background:#4F46E5; display:inline-block;"></span>프리랜서</span>
-    <span style="display:inline-flex; align-items:center; gap:5px;"><span style="width:8px; height:8px; border-radius:50%; background:#0D9488; display:inline-block;"></span>협력사</span>
+    <span style="display:inline-flex; align-items:center; gap:6px;"><span style="width:10px; height:6px; border-radius:99px; background:#60A5FA; display:inline-block;"></span>정규직</span>
+    <span style="display:inline-flex; align-items:center; gap:6px;"><span style="width:10px; height:6px; border-radius:99px; background:#818CF8; display:inline-block;"></span>프리랜서</span>
+    <span style="display:inline-flex; align-items:center; gap:6px;"><span style="width:10px; height:6px; border-radius:99px; background:#34D399; display:inline-block;"></span>협력사</span>
   `;
 }
 
@@ -1001,11 +1262,11 @@ function selectDeployedWeekCol(idx) {
     summaryEl.textContent = item.summary;
   }
   document.querySelectorAll('.dpm-week-hit-col').forEach((el, i) => {
-    el.setAttribute('fill', i === idx ? 'rgba(79, 70, 229, 0.06)' : 'transparent');
+    el.setAttribute('fill', i === idx ? 'rgba(59, 130, 246, 0.05)' : 'transparent');
   });
   document.querySelectorAll('.dpm-week-x-label').forEach((el, i) => {
     el.setAttribute('font-weight', i === idx ? '800' : '600');
-    el.setAttribute('fill', i === idx ? '#111827' : '#6b7280');
+    el.setAttribute('fill', i === idx ? '#0f172a' : '#94a3b8');
   });
 }
 
@@ -1030,24 +1291,31 @@ function sendAllRetentionProposals() {
 }
 
 function buildDeployedPersonnelSectionHtml() {
-  const r = 69;
+  // Subtle Modern Donut Chart with Linear Gradients (No gap, flat edges)
+  const r = 68;
   const C = 2 * Math.PI * r;
   let cumLen = 0;
+  const donutGradsSvg = DEPLOYED_DONUT_SEGMENTS.map((seg, i) => `
+    <linearGradient id="${seg.gradId}" gradientUnits="userSpaceOnUse" x1="${i % 2 === 0 ? 15 : 165}" y1="15" x2="${i % 2 === 0 ? 165 : 15}" y2="165">
+      <stop offset="0%" stop-color="${seg.gradStart}" />
+      <stop offset="100%" stop-color="${seg.gradEnd}" />
+    </linearGradient>
+  `).join('');
   const donutArcsSvg = DEPLOYED_DONUT_SEGMENTS.map((seg, idx) => {
     const segLen = (seg.count / 48) * C;
-    const drawLen = Math.max(2, segLen - 2.5);
+    const drawLen = Math.max(2, segLen - 1);
     const dashOffset = -cumLen;
     cumLen += segLen;
     return `
       <circle
         class="dpm-donut-arc"
-        cx="88" cy="88" r="${r}"
+        cx="90" cy="90" r="${r}"
         fill="none"
-        stroke="${seg.color}"
-        stroke-width="24"
+        stroke="url(#${seg.gradId})"
+        stroke-width="22"
         stroke-dasharray="${drawLen.toFixed(2)} ${C.toFixed(2)}"
         stroke-dashoffset="${dashOffset.toFixed(2)}"
-        transform="rotate(-90 88 88)"
+        transform="rotate(-90 90 90)"
         style="cursor:pointer; transition: stroke-width 0.18s ease, opacity 0.18s ease;"
         onmouseenter="hoverDeployedDonut(${idx})"
         onmouseleave="hoverDeployedDonut(null)"
@@ -1062,81 +1330,143 @@ function buildDeployedPersonnelSectionHtml() {
   const curBarMode = DEPLOYED_PERSONNEL_MODAL_STATE.barMode || 'EMP';
   const curWeekIdx = DEPLOYED_PERSONNEL_MODAL_STATE.activeWeekIdx ?? 1;
 
+  // Overlapping Translucent Polygon Area Points for 4-Week Schedule (Soft Blue & Soft Emerald)
+  const deployPts = DEPLOYED_WEEKLY_SCHEDULE.map((w, i) => ({
+    x: wkX[i],
+    y: wkBaseY - Math.max(8, w.deploy * 12.5)
+  }));
+  const rolloffPts = DEPLOYED_WEEKLY_SCHEDULE.map((w, i) => ({
+    x: wkX[i],
+    y: wkBaseY - Math.max(8, w.rolloff * 14)
+  }));
+  const deployLinePath = deployPts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+  const deployAreaPoly = `${deployLinePath} L ${wkX[3]} ${wkBaseY} L ${wkX[0]} ${wkBaseY} Z`;
+  const rolloffLinePath = rolloffPts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+  const rolloffAreaPoly = `${rolloffLinePath} L ${wkX[3]} ${wkBaseY} L ${wkX[0]} ${wkBaseY} Z`;
+
   return `
-    <div class="ium-wrap" style="border:1px solid #e2e8f0; border-radius:18px; overflow:visible; box-shadow:0 2px 8px rgba(15,23,42,0.04);" onclick="const p=document.getElementById('dpmRetentionPopover'); if(p) p.style.display='none';">
-      <!-- [1] 섹션 헤더 -->
-      <header class="ium-header" style="border-radius:18px 18px 0 0; padding:18px 24px;">
-        <div class="ium-header-left">
-          <h3 class="ium-title">수행 인원 구성 및 프로젝트 배정 현황</h3>
-          <span class="ium-date-badge">2026.11.18 기준</span>
-          <span class="ium-sub-text">총 수행 48명 (수행 프로젝트 3건 + 사내 지원)</span>
-        </div>
-        <div class="ium-header-right">
-          <span class="ium-summary-chip dark">내부 인력 비중 75.0%</span>
-          <span class="ium-summary-chip slate">외주(프리·협력) 비중 25.0%</span>
-          <span class="ium-summary-chip warn">이달 철수 예정 7명</span>
-        </div>
-      </header>
+    <div class="ium-wrap" onclick="const p=document.getElementById('dpmRetentionPopover'); if(p) p.style.display='none';">
+      <!-- [1] 최상단 4개 KPI 카드 (홈 화면과 동일한 구성) -->
+      <section class="exec-kpi-grid">
+        <article class="exec-kpi-card" style="cursor:default;">
+          <div class="exec-kpi-top">
+            <span class="exec-kpi-label">총 수행 인원</span>
+            <span class="exec-kpi-icon">${svgIcon('users', 26)}</span>
+          </div>
+          <div class="exec-kpi-value-row">
+            <div class="exec-kpi-main-val">48<span class="exec-kpi-unit">명</span> <span class="exec-kpi-sub-val">(2026.11.18 기준)</span></div>
+          </div>
+          <div class="exec-kpi-foot">
+            <span>수행 과제 3건(45명) · 사내 지원 3명</span>
+          </div>
+        </article>
+
+        <article class="exec-kpi-card" style="cursor:default;">
+          <div class="exec-kpi-top">
+            <span class="exec-kpi-label">내부 인력 비중</span>
+            <span class="exec-kpi-icon">${svgIcon('award', 26)}</span>
+          </div>
+          <div class="exec-kpi-value-row">
+            <div class="exec-kpi-main-val">75.0<span class="exec-kpi-unit">%</span> <span class="exec-kpi-sub-val">(36/48명)</span></div>
+          </div>
+          <div class="exec-kpi-foot">
+            <span>고객사 유상 33명 · 사내 R&D/제안 3명</span>
+          </div>
+        </article>
+
+        <article class="exec-kpi-card" style="cursor:default;">
+          <div class="exec-kpi-top">
+            <span class="exec-kpi-label">외주(프리·협력) 비중</span>
+            <span class="exec-kpi-icon">${svgIcon('briefcase', 26)}</span>
+          </div>
+          <div class="exec-kpi-value-row">
+            <div class="exec-kpi-main-val">25.0<span class="exec-kpi-unit">%</span> <span class="exec-kpi-sub-val">(12/48명)</span></div>
+          </div>
+          <div class="exec-kpi-foot">
+            <span>프리랜서 8명 · 협력사 4명 (상한 30%)</span>
+          </div>
+        </article>
+
+        <article class="exec-kpi-card" style="cursor:default;">
+          <div class="exec-kpi-top">
+            <span class="exec-kpi-label">이달 철수 예정</span>
+            <span class="exec-kpi-icon">${svgIcon('file', 26)}</span>
+          </div>
+          <div class="exec-kpi-value-row">
+            <div class="exec-kpi-main-val">7<span class="exec-kpi-unit">명</span> <span class="exec-kpi-sub-val" style="color:#d97706; font-weight:700;">(11월 말 도래)</span></div>
+          </div>
+          <div class="exec-kpi-foot">
+            <span>삼성 2명 · 신영 2명 · 하나 3명 철수 예정</span>
+          </div>
+        </article>
+      </section>
 
       <!-- 본문 -->
-      <div class="ium-body" style="padding:20px 24px; gap:16px;">
+      <div class="ium-body">
         <!-- [2] 상단 2열 그리드 차트 영역 -->
-        <div class="ium-top-grid" style="gap:16px;">
-          <!-- 좌측 카드: 고용 형태별 인력 구조 (Interactive SVG 도넛 차트) -->
-          <section class="ium-card" style="padding:18px 20px; display:flex; flex-direction:column; justify-content:space-between;">
-            <div>
-              <div class="ium-card-head">
-                <div>
-                  <h4 class="ium-card-title">고용 형태별 인력 구조</h4>
-                  <span class="ium-card-subtitle">도넛 조각 또는 범례 호버 시 상세 인원·비중 표시</span>
-                </div>
-                <span style="font-size:11.5px; font-weight:700; color:#111827;">총 48명</span>
+        <div class="ium-top-grid">
+          <!-- 좌측 카드: 고용 형태별 인력 구조 (Interactive SVG 도넛 차트 - 가동률 분석과 동일 위치/규격) -->
+          <section class="ium-card">
+            <div class="ium-card-head">
+              <div>
+                <h4 class="ium-card-title">고용 형태별 인력 구조</h4>
+                <span class="ium-card-subtitle">도넛 조각 또는 범례 호버 시 상세 인원·비중 표시</span>
               </div>
-
-              <div class="ium-donut-layout" style="gap:20px;">
-                <div class="ium-donut-box">
-                  <svg width="176" height="176" viewBox="0 0 176 176">
-                    <circle cx="88" cy="88" r="${r}" fill="none" stroke="#f3f4f6" stroke-width="24" />
-                    ${donutArcsSvg}
-                  </svg>
-                  <div class="ium-donut-center">
-                    <span id="dpmDonutMain" class="ium-donut-rate">48명</span>
-                    <span id="dpmDonutSub" class="ium-donut-sub">정규 36 · 외부 12</span>
-                    <span id="dpmDonutCap" class="ium-donut-caption">내부 75% · 외주 25%</span>
-                  </div>
-                </div>
-
-                <div class="ium-legend-list">
-                  ${DEPLOYED_DONUT_SEGMENTS.map((seg, idx) => `
-                    <div class="ium-legend-item dpm-legend-item" onmouseenter="hoverDeployedDonut(${idx})" onmouseleave="hoverDeployedDonut(null)">
-                      <div class="ium-legend-left">
-                        <span class="ium-legend-dot" style="background:${seg.color};"></span>
-                        <div style="min-width:0;">
-                          <span class="ium-legend-label">${seg.label}</span>
-                          <span class="ium-legend-note">${seg.note}</span>
-                        </div>
-                      </div>
-                      <div class="ium-legend-val">
-                        ${seg.count}명<span class="ium-legend-pct">(${seg.pct}%)</span>
-                      </div>
-                    </div>
-                  `).join('')}
-                </div>
-              </div>
+              <span style="font-size:11.5px; font-weight:700; color:#2563eb; background:#eff6ff; border:1px solid #dbeafe; padding:3px 10px; border-radius:999px;">총 48명</span>
             </div>
 
-            <div style="margin-top:10px; padding:6px 10px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; display:flex; align-items:center; justify-content:center; gap:6px; font-size:11.5px; font-weight:600; color:#15803d;">
-              <span>✓</span>
-              <span>적정 외주 비중 유지 중 (권장 상한선 30% 이내 · 현재 25.0%)</span>
+            <div class="ium-donut-layout">
+              <div class="ium-donut-box" style="width:180px; height:180px;">
+                <svg width="180" height="180" viewBox="0 0 180 180">
+                  <defs>${donutGradsSvg}</defs>
+                  <circle cx="90" cy="90" r="${r}" fill="none" stroke="#f1f5f9" stroke-width="22" />
+                  ${donutArcsSvg}
+                </svg>
+                <div class="ium-donut-center">
+                  <span id="dpmDonutMain" class="ium-donut-rate" style="color:#0F172A;">48명</span>
+                  <span id="dpmDonutSub" class="ium-donut-sub">정규 36 · 외부 12</span>
+                  <span id="dpmDonutCap" class="ium-donut-caption">내부 75% · 외주 25%</span>
+                </div>
+              </div>
+
+              <div class="ium-legend-list">
+                ${DEPLOYED_DONUT_SEGMENTS.map((seg, idx) => `
+                  <div class="ium-legend-item dpm-legend-item" onmouseenter="hoverDeployedDonut(${idx})" onmouseleave="hoverDeployedDonut(null)">
+                    <div class="ium-legend-left">
+                      <span class="ium-legend-dot" style="background:${seg.cssGrad};"></span>
+                      <div style="min-width:0;">
+                        <span class="ium-legend-label">${seg.label}</span>
+                        <span class="ium-legend-note">${seg.note}</span>
+                      </div>
+                    </div>
+                    <div class="ium-legend-val">
+                      ${seg.count}명<span class="ium-legend-pct">(${seg.pct}%)</span>
+                    </div>
+                  </div>
+                `).join('')}
+                <div class="ium-legend-item" style="background:#ecfdf5; border-color:#a7f3d0; cursor:default;">
+                  <div class="ium-legend-left">
+                    <span class="ium-legend-dot" style="background:linear-gradient(135deg, #6EE7B7 0%, #10B981 100%);"></span>
+                    <div style="min-width:0;">
+                      <span class="ium-legend-label" style="color:#047857;">적정 외주 비중 유지 중</span>
+                      <span class="ium-legend-note" style="color:#059669;">권장 상한선 30% 이내 안정 운영</span>
+                    </div>
+                  </div>
+                  <div class="ium-legend-val" style="color:#047857;">
+                    25.0%<span class="ium-legend-pct" style="color:#059669;">(적정)</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </section>
 
-          <!-- 우측 카드: 수행 프로젝트별 투입 인원 및 구성비 (가로 누적 바 차트 + 토글) -->
-          <section class="ium-card" style="padding:18px 20px; display:flex; flex-direction:column; justify-content:space-between;">
+          <!-- 우측 카드: 수행 프로젝트별 투입 인원 및 구성비 (Soft Capsule Horizontal Bars) -->
+          <section class="ium-card" style="display:flex; flex-direction:column; justify-content:space-between;">
             <div>
               <div class="ium-card-head">
                 <div>
                   <h4 class="ium-card-title">수행 프로젝트별 투입 인원 및 구성비</h4>
+                  <span class="ium-card-subtitle">각 수행 과제의 고용형태·기술등급별 인력 비중</span>
                 </div>
                 <div class="ium-pill-toggle">
                   <button type="button" class="ium-pill-btn ${curBarMode === 'EMP' ? 'active' : ''}" data-dpm-bar-mode="EMP" onclick="switchDeployedPrjBarMode('EMP')">고용형태별</button>
@@ -1149,91 +1479,116 @@ function buildDeployedPersonnelSectionHtml() {
               </div>
             </div>
 
-            <div id="dpmPrjBarLegendContainer" style="display:flex; align-items:center; justify-content:center; gap:16px; margin-top:12px; padding-top:10px; border-top:1px solid #f3f4f6; font-size:11.5px; font-weight:600; color:#4b5563;">
+            <div id="dpmPrjBarLegendContainer" style="display:flex; align-items:center; justify-content:center; gap:18px; margin-top:14px; padding-top:12px; border-top:1px dashed #e2e8f0; font-size:11.5px; font-weight:600; color:#64748b;">
               ${renderDeployedPrjLegendHtml(curBarMode)}
             </div>
           </section>
         </div>
 
         <!-- [3] 중단 와이드 카드: 전체 수행 인력 등급 분포 & 주차별 철수·교체 타임라인 (5 : 7 분할) -->
-        <section class="ium-card" style="padding:18px 20px;">
+        <section class="ium-card">
           <div class="dpm-mid-split">
-            <!-- 좌측 (5): 기술 등급 피라미드/수직 바 차트 (총 48명) -->
+            <!-- 좌측 (5): 기술 등급 수직 바 차트 + Dashed Horizontal Grid -->
             <div class="dpm-mid-left">
-              <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
+              <div style="display:flex; align-items:center; justify-content:space-between; min-height:30px; margin-bottom:10px;">
                 <h4 class="ium-card-title">전체 수행 인력 등급 분포</h4>
-                <span style="font-size:11px; font-weight:700; color:#4f46e5; background:#eef2ff; padding:2px 8px; border-radius:999px;">고급 이상 71% 포진</span>
+                <span style="font-size:11px; font-weight:700; color:#4f46e5; background:#eef2ff; border:1px solid #e0e7ff; padding:2px 9px; border-radius:999px;">고급 이상 71% 포진</span>
               </div>
 
-              <svg width="100%" height="148" viewBox="0 0 320 142" style="display:block; overflow:visible;">
-                <line x1="16" y1="${pyrBaseY}" x2="304" y2="${pyrBaseY}" stroke="#e5e7eb" stroke-width="1" />
+              <svg width="100%" height="181" viewBox="0 0 320 146" style="display:block; overflow:visible;">
+                <defs>
+                  ${DEPLOYED_GRADE_PYRAMID.map(g => `
+                    <linearGradient id="${g.gradId}" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stop-color="${g.gradStart}" />
+                      <stop offset="100%" stop-color="${g.gradEnd}" />
+                    </linearGradient>
+                  `).join('')}
+                </defs>
+                <!-- Dashed Horizontal Grid Lines -->
+                <line x1="16" y1="34" x2="304" y2="34" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3 3" />
+                <line x1="16" y1="64" x2="304" y2="64" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3 3" />
+                <line x1="16" y1="94" x2="304" y2="94" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3 3" />
+                <line x1="16" y1="${pyrBaseY}" x2="304" y2="${pyrBaseY}" stroke="#cbd5e1" stroke-width="1.2" />
+
                 ${DEPLOYED_GRADE_PYRAMID.map((g, i) => {
-                  const barH = Math.max(12, Math.round((g.count / 20) * 74));
+                  const barH = Math.max(14, Math.round((g.count / 20) * 78));
                   const bx = pyrX[i];
                   const by = pyrBaseY - barH;
                   return `
                     <g>
-                      <text x="${bx}" y="${by - 15}" text-anchor="middle" font-size="11.5" font-weight="800" fill="#111827">${g.count}명</text>
-                      <text x="${bx}" y="${by - 4}" text-anchor="middle" font-size="10" font-weight="600" fill="#6b7280">(${g.pct}%)</text>
-                      <rect x="${bx - 20}" y="${by}" width="40" height="${barH}" rx="6" fill="${g.color}" />
-                      <text x="${bx}" y="137" text-anchor="middle" font-size="11.5" font-weight="700" fill="#374151">${g.grade}</text>
+                      <!-- Soft Translucent Track Column -->
+                      <rect x="${bx - 16}" y="30" width="32" height="${pyrBaseY - 30}" rx="5" fill="#f1f5f9" />
+                      <text x="${bx}" y="${by - 14}" text-anchor="middle" font-size="11" font-weight="800" fill="#1e293b">${g.count}명</text>
+                      <text x="${bx}" y="${by - 3}" text-anchor="middle" font-size="9.5" font-weight="600" fill="#64748b">(${g.pct}%)</text>
+                      <rect x="${bx - 16}" y="${by}" width="32" height="${barH}" rx="5" fill="url(#${g.gradId})" />
+                      <text x="${bx}" y="139" text-anchor="middle" font-size="11.5" font-weight="700" fill="#475569">${g.grade}</text>
                     </g>
                   `;
                 }).join('')}
               </svg>
 
-              <div style="margin-top:6px; font-size:11.5px; font-weight:600; color:#4b5563; text-align:center; background:#f9fafb; padding:5px 8px; border-radius:6px; border:1px solid #f3f4f6;">
-                고급 이상 핵심 기술인력 <strong style="color:#111827;">71%(34명)</strong> 포진 · 안정적 수행 품질 확보
+              <div style="margin-top:10px; height:34px; box-sizing:border-box; display:flex; align-items:center; justify-content:center; font-size:11.5px; font-weight:600; color:#64748b; text-align:center; background:#f8fafc; padding:0 10px; border-radius:10px; border:1px solid #e2e8f0;">
+                <span>고급 이상 핵심 기술인력 <strong style="color:#0f172a;">71%(34명)</strong> 포진 · 안정적 수행 품질 확보</span>
               </div>
             </div>
 
-            <!-- 우측 (7): 향후 4주 외부·내부 인력 변동 스케줄 차트 -->
+            <!-- 우측 (7): 향후 4주 인력 변동 스케줄 (Subtle Overlapping Translucent Area) -->
             <div class="dpm-mid-right">
-              <div>
-                <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; margin-bottom:6px;">
-                  <h4 class="ium-card-title">향후 4주 인력 투입·철수 변동 스케줄</h4>
-                  <div style="display:inline-flex; align-items:center; gap:10px; font-size:11px; font-weight:600; color:#6b7280; margin-left:auto;">
-                    <span style="display:inline-flex; align-items:center; gap:4px;"><span style="width:8px; height:8px; border-radius:2px; background:#3b82f6; display:inline-block;"></span>신규 투입(+)</span>
-                    <span style="display:inline-flex; align-items:center; gap:4px;"><span style="width:8px; height:8px; border-radius:2px; background:#f59e0b; display:inline-block;"></span>계약 종료/철수(-)</span>
-                  </div>
-                </div>
-                <div class="ium-combo-reason-box" style="width:100%; box-sizing:border-box; margin-bottom:4px;">
-                  <span style="color:#4f46e5;">●</span>
-                  <span id="dpmWeekReasonText">${DEPLOYED_WEEKLY_SCHEDULE[curWeekIdx]?.summary || DEPLOYED_WEEKLY_SCHEDULE[1].summary}</span>
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; min-height:30px; margin-bottom:10px;">
+                <h4 class="ium-card-title">향후 4주 인력 투입·철수 변동 스케줄</h4>
+                <div style="display:inline-flex; align-items:center; gap:8px; font-size:11px; font-weight:700; margin-left:auto;">
+                  <span style="display:inline-flex; align-items:center; gap:5px; background:#eff6ff; color:#2563eb; border:1px solid #dbeafe; padding:2px 9px; border-radius:8px;">신규 투입(+)</span>
+                  <span style="display:inline-flex; align-items:center; gap:5px; background:#ecfdf5; color:#059669; border:1px solid #a7f3d0; padding:2px 9px; border-radius:8px;">종료/철수(-)</span>
                 </div>
               </div>
 
-              <svg width="100%" height="148" viewBox="0 0 460 142" style="display:block; overflow:visible;">
-                <line x1="16" y1="46" x2="444" y2="46" stroke="#f3f4f6" stroke-width="1" />
-                <line x1="16" y1="84" x2="444" y2="84" stroke="#f3f4f6" stroke-width="1" />
-                <line x1="16" y1="${wkBaseY}" x2="444" y2="${wkBaseY}" stroke="#e5e7eb" stroke-width="1" />
+              <svg width="100%" height="181" viewBox="0 0 460 146" style="display:block; overflow:visible;">
+                <!-- Dashed 2D Grid Lines -->
+                <line x1="20" y1="36" x2="440" y2="36" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3 3" />
+                <line x1="20" y1="65" x2="440" y2="65" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3 3" />
+                <line x1="20" y1="94" x2="440" y2="94" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3 3" />
+                <line x1="20" y1="${wkBaseY}" x2="440" y2="${wkBaseY}" stroke="#cbd5e1" stroke-width="1.2" />
+                ${wkX.map(wx => `<line x1="${wx}" y1="22" x2="${wx}" y2="${wkBaseY}" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3 3" />`).join('')}
+
+                <!-- Overlapping Translucent Polygon Areas (Soft Blue & Soft Emerald - Home Screen Timeline Palette) -->
+                <path d="${rolloffAreaPoly}" fill="rgba(16, 185, 129, 0.14)" />
+                <path d="${deployAreaPoly}" fill="rgba(59, 130, 246, 0.16)" />
+                <path d="${rolloffLinePath}" fill="none" stroke="#10B981" stroke-width="2" stroke-linejoin="round" />
+                <path d="${deployLinePath}" fill="none" stroke="#3B82F6" stroke-width="2.2" stroke-linejoin="round" />
 
                 ${DEPLOYED_WEEKLY_SCHEDULE.map((w, idx) => {
                   const isSel = idx === curWeekIdx;
                   const wx = wkX[idx];
-                  const depH = Math.max(3, w.deploy * 11.5);
-                  const rolH = Math.max(3, w.rolloff * 11.5);
+                  const depY = deployPts[idx].y;
+                  const rolY = rolloffPts[idx].y;
                   return `
                     <g style="cursor:pointer;" onmouseenter="selectDeployedWeekCol(${idx})" onclick="selectDeployedWeekCol(${idx})">
-                      <rect class="dpm-week-hit-col" x="${wx - 48}" y="12" width="96" height="128" rx="8" fill="${isSel ? 'rgba(79, 70, 229, 0.06)' : 'transparent'}" />
+                      <rect class="dpm-week-hit-col" x="${wx - 48}" y="12" width="96" height="130" rx="10" fill="${isSel ? 'rgba(59, 130, 246, 0.05)' : 'transparent'}" />
 
-                      <rect x="${wx - 24}" y="${wkBaseY - depH}" width="20" height="${depH}" rx="4" fill="#3b82f6" />
-                      <text x="${wx - 14}" y="${wkBaseY - depH - 5}" text-anchor="middle" font-size="11" font-weight="800" fill="#2563eb">${w.deploy > 0 ? `+${w.deploy}명` : '0'}</text>
+                      <!-- Deploy Node & Label -->
+                      <circle cx="${wx}" cy="${depY}" r="4.2" fill="#ffffff" stroke="#3B82F6" stroke-width="2.2" />
+                      <text x="${wx - 14}" y="${depY - 7}" text-anchor="middle" font-size="10.5" font-weight="800" fill="#2563EB">${w.deploy > 0 ? `+${w.deploy}명` : '0'}</text>
 
-                      <rect x="${wx + 4}" y="${wkBaseY - rolH}" width="20" height="${rolH}" rx="4" fill="${w.rolloff >= 3 ? '#f59e0b' : '#10b981'}" />
-                      <text x="${wx + 14}" y="${wkBaseY - rolH - 5}" text-anchor="middle" font-size="11" font-weight="800" fill="${w.rolloff >= 3 ? '#d97706' : '#059669'}">${w.rolloff > 0 ? `-${w.rolloff}명` : '0'}</text>
+                      <!-- Rolloff Node & Label -->
+                      <circle cx="${wx}" cy="${rolY}" r="4.2" fill="#ffffff" stroke="#10B981" stroke-width="2.2" />
+                      <text x="${wx + 14}" y="${rolY - 7}" text-anchor="middle" font-size="10.5" font-weight="800" fill="#059669">${w.rolloff > 0 ? `-${w.rolloff}명` : '0'}</text>
 
-                      <text class="dpm-week-x-label" x="${wx}" y="137" text-anchor="middle" font-size="11.5" font-weight="${isSel ? '800' : '600'}" fill="${isSel ? '#111827' : '#6b7280'}">${w.week}</text>
+                      <text class="dpm-week-x-label" x="${wx}" y="139" text-anchor="middle" font-size="11.5" font-weight="${isSel ? '800' : '600'}" fill="${isSel ? '#0f172a' : '#94a3b8'}">${w.week}</text>
                     </g>
                   `;
                 }).join('')}
               </svg>
+
+              <div class="ium-combo-reason-box" style="width:100%; height:34px; box-sizing:border-box; margin-top:10px;">
+                <span style="color:#3b82f6;">●</span>
+                <span id="dpmWeekReasonText">${DEPLOYED_WEEKLY_SCHEDULE[curWeekIdx]?.summary || DEPLOYED_WEEKLY_SCHEDULE[1].summary}</span>
+              </div>
             </div>
           </div>
         </section>
 
         <!-- [4] 하단 포커스 액션 배너: 우수 외부 인력 이탈 방지 -->
-        <div class="dpm-retention-banner" style="padding:12px 16px;">
+        <div class="dpm-retention-banner">
           <div class="ium-focus-left">
             <span class="dpm-retention-tag">우수 외주 리텐션</span>
             <span>
@@ -1243,11 +1598,8 @@ function buildDeployedPersonnelSectionHtml() {
           </div>
 
           <div class="ium-focus-actions">
-            <button type="button" class="btn btn-primary btn-sm" style="background:#111827; border-color:#111827; height:34px; padding:0 14px; font-size:12.5px; font-weight:700;" onclick="toggleDeployedRetentionPopover(event)">
+            <button type="button" class="btn btn-primary btn-sm" style="background:#0f172a; border-color:#0f172a; height:34px; padding:0 14px; font-size:12.5px; font-weight:700;" onclick="toggleDeployedRetentionPopover(event)">
               🎯 차기 프로젝트 우선 제안
-            </button>
-            <button type="button" class="btn btn-outline btn-sm" style="background:#ffffff; height:34px; padding:0 12px; font-size:12.5px; font-weight:600;" onclick="switchTab('sourcing');">
-              구인·소싱 현황 보기 →
             </button>
           </div>
 
@@ -1285,11 +1637,6 @@ function buildDeployedPersonnelSectionHtml() {
           </div>
         </div>
       </div>
-
-      <!-- [5] 푸터 안내 -->
-      <footer class="ium-footer" style="border-radius:0 0 18px 18px; padding:12px 24px;">
-        <span>* 수행 인원은 현재 고객사 프로젝트 및 사내 과제에 실투입된 정규직·프리랜서·협력사 합산 기준이며, 대기 중인 내부 정규직(4명)은 '내부 가동률' 탭에서 관리합니다.</span>
-      </footer>
     </div>
   `;
 }
@@ -1317,10 +1664,10 @@ function renderAnalyticsTab() {
   el.innerHTML = `
     <div class="filter-bar">
       <button type="button" class="zal-chip-btn ${activeSec === 'UTILIZATION' ? 'active' : ''}" onclick="setAnalyticsSection('UTILIZATION')">
-        내부 가동률 분석 (90% · 36/40명)
+        가동률 분석
       </button>
       <button type="button" class="zal-chip-btn ${activeSec === 'DEPLOYED' ? 'active' : ''}" onclick="setAnalyticsSection('DEPLOYED')">
-        수행 인원 · 배정 현황 (48명)
+        인력 현황
       </button>
     </div>
 

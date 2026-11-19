@@ -4617,13 +4617,17 @@ button, input, select, textarea {
 }
 
 /* =========================================================================
-   INTERNAL UTILIZATION EXECUTIVE INSIGHT MODAL (InternalUtilizationModal)
+   INTERNAL UTILIZATION & DEPLOYED PERSONNEL MODERN CHART UI (Subtle Home Tone)
    ========================================================================= */
 .ium-wrap {
   display: flex;
   flex-direction: column;
-  background: #ffffff;
-  color: #111827;
+  gap: 14px;
+  background: transparent;
+  color: #0f172a;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
 }
 
 .ium-header {
@@ -4632,22 +4636,23 @@ button, input, select, textarea {
   justify-content: space-between;
   gap: 12px;
   flex-wrap: wrap;
-  padding: 16px 22px;
-  border-bottom: 1px solid #e5e7eb;
+  padding: 18px 24px !important;
+  border-bottom: 1px solid #f1f5f9;
   background: #ffffff;
+  border-radius: 20px 20px 0 0 !important;
 }
 
 .ium-header-left {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   flex-wrap: wrap;
 }
 
 .ium-title {
   font-size: 16.5px;
   font-weight: 800;
-  color: #111827;
+  color: #0f172a;
   margin: 0;
   letter-spacing: -0.3px;
 }
@@ -4655,54 +4660,56 @@ button, input, select, textarea {
 .ium-date-badge {
   font-size: 11.5px;
   font-weight: 600;
-  color: #4b5563;
-  background: #f3f4f6;
-  border: 1px solid #e5e7eb;
-  padding: 2px 8px;
+  color: #475569;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 3px 10px;
   border-radius: 999px;
 }
 
 .ium-sub-text {
   font-size: 12.5px;
   font-weight: 600;
-  color: #6b7280;
-  padding-left: 4px;
-  border-left: 1px solid #e5e7eb;
+  color: #64748b;
+  padding-left: 8px;
+  border-left: 1.5px solid #e2e8f0;
 }
 
 .ium-header-right {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
 .ium-summary-chip {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
   font-size: 11.5px;
   font-weight: 700;
-  padding: 4px 10px;
+  padding: 4px 11px;
   border-radius: 999px;
   white-space: nowrap;
+  letter-spacing: -0.1px;
 }
 
 .ium-summary-chip.dark {
-  background: #111827;
-  color: #ffffff;
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #dbeafe;
 }
 
 .ium-summary-chip.slate {
-  background: #f3f4f6;
-  color: #1f2937;
-  border: 1px solid #e5e7eb;
+  background: #f8fafc;
+  color: #475569;
+  border: 1px solid #e2e8f0;
 }
 
 .ium-summary-chip.warn {
-  background: #fef2f2;
-  color: #dc2626;
-  border: 1px solid #fecaca;
+  background: #fffbeb;
+  color: #d97706;
+  border: 1px solid #fde68a;
 }
 
 .ium-close-btn {
@@ -4728,17 +4735,18 @@ button, input, select, textarea {
 }
 
 .ium-body {
-  padding: 16px 22px 14px 22px;
+  padding: 0 !important;
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  background: #f9fafb;
+  gap: 14px !important;
+  background: transparent;
+  border-radius: 0 !important;
 }
 
 .ium-top-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
+  gap: 14px !important;
 }
 
 @media (max-width: 760px) {
@@ -4749,44 +4757,109 @@ button, input, select, textarea {
 
 .ium-card {
   background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 14px;
-  padding: 14px 16px;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 18px 20px !important;
+  box-shadow: 0 2px 7px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.02);
+  transition: box-shadow 0.2s ease;
+}
+
+.ium-card:hover {
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
 }
 
 .ium-card-head {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 12px;
+  gap: 10px;
+  min-height: 42px;
+  margin-bottom: 14px;
+}
+
+/* Subtle Pastel Category Tag Pills (Home Screen Tone) */
+.chart-pastel-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 9px;
+  border-radius: 8px;
+  margin-bottom: 5px;
+  letter-spacing: -0.1px;
+}
+
+.chart-pastel-tag.peach {
+  background: #fffbeb;
+  color: #d97706;
+  border: 1px solid #fde68a;
+}
+
+.chart-pastel-tag.pink {
+  background: #f8fafc;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+}
+
+.chart-pastel-tag.violet {
+  background: #eef2ff;
+  color: #4f46e5;
+  border: 1px solid #e0e7ff;
+}
+
+.chart-pastel-tag.sky {
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #dbeafe;
+}
+
+.chart-pastel-tag.mint {
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+}
+
+.chart-widget-ctrls {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #cbd5e1;
+  font-size: 12.5px;
+  font-weight: 600;
+  user-select: none;
 }
 
 .ium-card-title {
-  font-size: 13.5px;
+  font-size: 14.5px;
   font-weight: 700;
-  color: #111827;
+  color: #0f172a;
   margin: 0;
+  letter-spacing: -0.2px;
 }
 
 .ium-card-subtitle {
   font-size: 11.5px;
-  color: #6b7280;
+  color: #64748b;
   font-weight: 500;
+  display: block;
+  margin-top: 2px;
 }
 
 .ium-donut-layout {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 20px;
 }
 
 .ium-donut-box {
   position: relative;
-  width: 176px;
-  height: 176px;
+  width: 180px;
+  height: 180px;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .ium-donut-center {
@@ -4802,24 +4875,24 @@ button, input, select, textarea {
 }
 
 .ium-donut-rate {
-  font-size: 26px;
+  font-size: 22px;
   font-weight: 800;
-  color: #111827;
+  color: #0f172a;
   line-height: 1.1;
   letter-spacing: -0.5px;
 }
 
 .ium-donut-sub {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
-  color: #4b5563;
+  color: #64748b;
   margin-top: 3px;
 }
 
 .ium-donut-caption {
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 600;
-  color: #9ca3af;
+  color: #94a3b8;
   margin-top: 2px;
   max-width: 112px;
   white-space: nowrap;
@@ -4840,21 +4913,25 @@ button, input, select, textarea {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 5px 8px;
-  border-radius: 8px;
+  min-height: 44px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: #f8fafc;
   cursor: pointer;
-  transition: background-color 0.15s ease;
+  transition: all 0.16s ease;
 }
 
 .ium-legend-item:hover,
 .ium-legend-item.active {
-  background: #f3f4f6;
+  background: #eff6ff;
+  border-color: #dbeafe;
 }
 
 .ium-legend-left {
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 8px;
   min-width: 0;
 }
 
@@ -4868,7 +4945,7 @@ button, input, select, textarea {
 .ium-legend-label {
   font-size: 12px;
   font-weight: 600;
-  color: #1f2937;
+  color: #1e293b;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -4877,60 +4954,82 @@ button, input, select, textarea {
 .ium-legend-note {
   display: block;
   font-size: 10.5px;
-  color: #6b7280;
+  color: #64748b;
   font-weight: 400;
 }
 
 .ium-legend-val {
   font-size: 12px;
   font-weight: 700;
-  color: #111827;
+  color: #0f172a;
   white-space: nowrap;
 }
 
 .ium-legend-pct {
   font-size: 11px;
   font-weight: 500;
-  color: #6b7280;
+  color: #64748b;
   margin-left: 2px;
+}
+
+/* Bottom Mini Pill Indicators under Radial/Pie Chart (Subtle Pastel Style) */
+.chart-mini-pills-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.chart-mini-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: -0.1px;
 }
 
 .ium-pill-toggle {
   display: inline-flex;
-  background: #f3f4f6;
-  padding: 2px;
+  background: #f1f5f9;
+  padding: 2.5px;
   border-radius: 999px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #e2e8f0;
 }
 
 .ium-pill-btn {
   border: none;
   background: transparent;
-  color: #6b7280;
+  color: #64748b;
   font-size: 11px;
   font-weight: 600;
-  padding: 3px 10px;
+  padding: 3.5px 11px;
   border-radius: 999px;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.16s ease;
 }
 
 .ium-pill-btn.active {
-  background: #111827;
+  background: #0f172a;
   color: #ffffff;
   font-weight: 700;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.15);
 }
 
 .ium-bar-list {
   display: flex;
   flex-direction: column;
-  gap: 9px;
+  gap: 12px;
 }
 
 .ium-bar-row {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 5px;
 }
 
 .ium-bar-top {
@@ -4938,31 +5037,32 @@ button, input, select, textarea {
   align-items: center;
   justify-content: space-between;
   gap: 6px;
+  min-height: 22px;
   font-size: 12px;
 }
 
 .ium-bar-name {
   font-weight: 600;
-  color: #1f2937;
+  color: #1e293b;
 }
 
 .ium-bar-total {
   font-size: 11px;
-  color: #6b7280;
+  color: #64748b;
   font-weight: 500;
-  margin-left: 4px;
+  margin-left: 5px;
 }
 
 .ium-bar-meta {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
 }
 
 .ium-mini-badge {
   font-size: 10.5px;
   font-weight: 700;
-  padding: 1px 6px;
+  padding: 2px 8px;
   border-radius: 999px;
 }
 
@@ -4973,45 +5073,95 @@ button, input, select, textarea {
 }
 
 .ium-mini-badge.alert {
-  background: #fef2f2;
-  color: #dc2626;
-  border: 1px solid #fecaca;
+  background: #fffbeb;
+  color: #d97706;
+  border: 1px solid #fde68a;
 }
 
 .ium-bar-rate {
-  font-size: 12px;
+  font-size: 12.5px;
   font-weight: 700;
-  color: #111827;
-  min-width: 32px;
+  color: #0f172a;
+  min-width: 34px;
   text-align: right;
 }
 
+/* Soft Slate-Blue Capsule Progress Track */
 .ium-bar-track {
   width: 100%;
-  height: 9px;
-  background: #f3f4f6;
+  height: 10px;
+  background: #f1f5f9;
   border-radius: 999px;
   overflow: hidden;
   display: flex;
-  gap: 1px;
+  gap: 2px;
+  padding: 1px;
 }
 
 .ium-bar-seg {
   height: 100%;
-  transition: width 0.25s ease;
+  border-radius: 999px;
+  transition: width 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .ium-combo-reason-box {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 7px;
   font-size: 11.5px;
   font-weight: 600;
-  color: #374151;
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
-  padding: 4px 10px;
-  border-radius: 8px;
+  color: #334155;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 5px 12px;
+  border-radius: 10px;
+}
+
+/* Right-Side Line Legend Column */
+.spline-chart-wrap {
+  display: grid;
+  grid-template-columns: 1fr 118px;
+  gap: 16px;
+  align-items: center;
+}
+
+@media (max-width: 760px) {
+  .spline-chart-wrap {
+    grid-template-columns: 1fr;
+  }
+}
+
+.spline-side-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-left: 8px;
+}
+
+.spline-legend-block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.spline-legend-line {
+  width: 100%;
+  height: 2.5px;
+  border-radius: 999px;
+}
+
+.spline-legend-title {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #334155;
+  text-align: center;
+}
+
+.spline-legend-sub {
+  font-size: 10px;
+  font-weight: 500;
+  color: #94a3b8;
+  text-align: center;
 }
 
 .ium-focus-banner {
@@ -5021,10 +5171,10 @@ button, input, select, textarea {
   justify-content: space-between;
   gap: 10px;
   flex-wrap: wrap;
-  background: rgba(254, 243, 199, 0.55);
+  background: #fffbeb;
   border: 1px solid #fde68a;
-  border-radius: 12px;
-  padding: 10px 14px;
+  border-radius: 14px;
+  padding: 12px 16px;
 }
 
 .ium-focus-left {
@@ -5033,16 +5183,16 @@ button, input, select, textarea {
   gap: 8px;
   flex-wrap: wrap;
   font-size: 12.5px;
-  color: #111827;
+  color: #0f172a;
 }
 
 .ium-focus-tag {
   font-size: 11px;
   font-weight: 700;
-  color: #b45309;
+  color: #d97706;
   background: #fef3c7;
   border: 1px solid #fcd34d;
-  padding: 2px 8px;
+  padding: 2px 9px;
   border-radius: 999px;
 }
 
@@ -5059,19 +5209,19 @@ button, input, select, textarea {
   width: 420px;
   max-width: calc(100vw - 48px);
   background: #ffffff;
-  border: 1px solid #d1d5db;
-  border-radius: 12px;
-  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.16);
-  padding: 12px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12);
+  padding: 14px 16px;
   z-index: 30;
 }
 
 .ium-footer {
-  padding: 10px 22px 13px 22px;
-  border-top: 1px solid #e5e7eb;
+  padding: 12px 24px 14px 24px;
+  border-top: 1px solid #f1f5f9;
   background: #ffffff;
   font-size: 11.5px;
-  color: #6b7280;
+  color: #64748b;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -5080,7 +5230,7 @@ button, input, select, textarea {
 .dpm-mid-split {
   display: grid;
   grid-template-columns: 5fr 7fr;
-  gap: 18px;
+  gap: 20px;
   align-items: stretch;
 }
 
@@ -5091,8 +5241,8 @@ button, input, select, textarea {
 }
 
 .dpm-mid-left {
-  padding-right: 16px;
-  border-right: 1px solid #f3f4f6;
+  padding-right: 18px;
+  border-right: 1px dashed #e2e8f0;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -5112,19 +5262,19 @@ button, input, select, textarea {
   justify-content: space-between;
   gap: 10px;
   flex-wrap: wrap;
-  background: rgba(238, 242, 255, 0.72);
-  border: 1px solid #c7d2fe;
-  border-radius: 12px;
-  padding: 10px 14px;
+  background: #eff6ff;
+  border: 1px solid #dbeafe;
+  border-radius: 14px;
+  padding: 12px 16px;
 }
 
 .dpm-retention-tag {
   font-size: 11px;
   font-weight: 700;
-  color: #4338ca;
-  background: #e0e7ff;
-  border: 1px solid #a5b4fc;
-  padding: 2px 8px;
+  color: #2563eb;
+  background: #dbeafe;
+  border: 1px solid #bfdbfe;
+  padding: 2px 9px;
   border-radius: 999px;
 }
 

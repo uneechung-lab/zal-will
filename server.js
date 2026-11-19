@@ -27,7 +27,13 @@ const server = http.createServer(async (req, res) => {
     return freshApiHandler(req, res);
   }
 
-  let filePath = path.join(PUBLIC_DIR, urlObj.pathname === '/' ? 'index.html' : urlObj.pathname);
+  let decodedPath = urlObj.pathname;
+  try {
+    decodedPath = decodeURIComponent(urlObj.pathname);
+  } catch {
+    decodedPath = urlObj.pathname;
+  }
+  let filePath = path.join(PUBLIC_DIR, decodedPath === '/' ? 'index.html' : decodedPath);
   if (!filePath.startsWith(PUBLIC_DIR)) {
     res.writeHead(403);
     res.end('Forbidden');
