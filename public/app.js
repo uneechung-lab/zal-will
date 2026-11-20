@@ -35,7 +35,17 @@ const state = {
     status: 'ALL',
     grade: 'ALL',
     domain: 'ALL',
-    keyword: ''
+    keyword: '',
+    sortBy: 'URGENT',
+    viewMode: 'CARD',
+    kpiFilter: 'ALL',
+    skill: 'ALL',
+    startMonth: 'ALL',
+    location: 'ALL',
+    maxRate: 'ALL',
+    detailPopoverOpen: false,
+    openMenuPostingId: null,
+    expandedApplicantPostings: []
   },
   interviewFilters: {
     status: 'ALL',
@@ -2597,126 +2607,139 @@ function openProfileComparisonModal() {
   const targets = profiles.filter(p => compareIds.includes(p.id));
   const favIds = profiles.filter(p => p.favorite).map(p => p.id).slice(0, 4);
 
-  openModal(`인재 핵심 역량 및 조건 비교 (${targets.length}명)`, `
-    <div style="display:flex; flex-direction:column; gap:12px;">
-      <div style="position:relative; display:flex; justify-content:center; align-items:center; min-height:32px; font-size:13px; color:#64748b;">
-        <span style="display:inline-flex; align-items:center; gap:6px; text-align:center;">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; color:#64748b;">
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="12" y1="8" x2="12" y2="12"></line>
-            <line x1="12" y1="16" x2="12.01" y2="16"></line>
-          </svg>
-          <span>인재별 기술 역량, 경력 연수, 투입 가용일${!hideSensitive ? ', 기준·희망 단가' : ''}, 수행 평가 점수를 한눈에 비교합니다.</span>
-        </span>
-        <div style="position:absolute; right:0; display:flex; align-items:center; gap:6px;">
-          ${favIds.length > 0 ? `
-            <button type="button" class="btn btn-outline btn-sm" onclick="compareFavoriteProfiles()">
-              ★ 관심 인재 일괄 불러오기 (${favIds.length}명)
-            </button>
-          ` : ''}
+  openModal(`인재 핵심 역량 및 조건 비교 분석 (${targets.length}명)`, `
+    <div style="display:flex; flex-direction:column; gap:16px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; padding:12px 16px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px;">
+        <div>
+          <div style="font-size:12px; color:#64748b;">인재 DB 비교 기준</div>
+          <div style="font-size:13.5px; font-weight:700; color:#0f172a; margin-top:2px;">
+            인재별 기술 역량 · 경력 연수 · 투입 가용일${!hideSensitive ? ' · 기준/희망 단가' : ''} · 수행 평가 점수 비교
+          </div>
         </div>
+        ${favIds.length > 0 ? `
+          <button type="button" class="btn btn-outline btn-sm" onclick="compareFavoriteProfiles()">
+            ★ 관심 인재 일괄 불러오기 (${favIds.length}명)
+          </button>
+        ` : ''}
       </div>
 
       ${targets.length > 0 ? `
-        <div style="overflow-x:auto; padding-bottom:4px;">
-          <table class="inv-compare-card-table">
+        <div style="overflow-x:auto;">
+          <table class="src-compare-table">
             <thead>
               <tr>
-                <th class="cmp-label-col"></th>
-                ${targets.map(p => {
-                  const availBadgeCls = p.availability_status === '즉시투입가능'
-                    ? 'stage-final final-selected'
-                    : p.availability_status === '투입중(철수예정)'
-                      ? 'stage-eval-pending'
-                      : 'stage-doc';
-                  return `
-                    <th class="cmp-cand-card-head">
-                      <div style="display:flex; flex-direction:column; gap:8px;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; width:100%; gap:6px;">
-                          <span class="inv-status-badge ${availBadgeCls}">${p.availability_status || '즉시투입가능'}</span>
-                          <button
-                            type="button"
-                            class="cmp-card-remove-btn"
-                            onclick="removeProfileFromComparison('${p.id}')"
-                            title="비교 목록에서 제외"
-                            aria-label="제외"
-                          >
-                            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                              <line x1="18" y1="6" x2="6" y2="18"></line>
-                              <line x1="6" y1="6" x2="18" y2="18"></line>
-                            </svg>
-                          </button>
-                        </div>
-                        <div style="display:flex; align-items:center; gap:9px;">
-                          <img src="${getAvatarForId(p.id)}" alt="${p.name}" style="width:34px; height:34px; border-radius:50%; object-fit:cover; border:1.5px solid #cbd5e1;" />
-                          <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
-                            <strong style="font-size:16.5px; color:#0f172a;">${p.name}</strong>
-                            <span class="inv-grade-pill grade-${p.tech_grade}">${p.tech_grade}</span>
+                <th style="width:140px;">비교 항목</th>
+                ${targets.map(p => `
+                  <th>
+                    <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+                      <div style="display:flex; align-items:center; gap:9px;">
+                        <img src="${getAvatarForId(p.id)}" alt="${p.name}" style="width:36px; height:36px; border-radius:50%; object-fit:cover; border:1.5px solid #e2e8f0;" />
+                        <div>
+                          <div style="display:flex; align-items:center; gap:5px; flex-wrap:wrap;">
+                            <strong style="font-size:14.5px; color:#0f172a;">${p.name}</strong>
+                            <span class="src-applicant-grade-chip grade-${p.tech_grade}">${p.tech_grade}</span>
                           </div>
+                          <span style="font-size:11.5px; color:#64748b; font-weight:500;">${p.employment_type} · ${p.job_title || '선임'}</span>
                         </div>
                       </div>
-                    </th>
-                  `;
-                }).join('')}
+                      <button
+                        type="button"
+                        class="cmp-card-remove-btn"
+                        onclick="removeProfileFromComparison('${p.id}')"
+                        title="비교 목록에서 제외"
+                        aria-label="제외"
+                      >
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                          <line x1="18" y1="6" x2="6" y2="18"></line>
+                          <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                      </button>
+                    </div>
+                  </th>
+                `).join('')}
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td class="cmp-label-col">전문 도메인</td>
-                ${targets.map(p => `<td class="cmp-cand-card-cell" style="font-weight:600; color:#0f172a;">${(p.domains || []).join(' · ') || '-'}</td>`).join('')}
+                <td class="src-cmp-label">가용 상태</td>
+                ${targets.map(p => {
+                  const pillCls = p.availability_status === '즉시투입가능'
+                    ? 'evaluated'
+                    : p.availability_status === '투입중(철수예정)'
+                      ? 'new'
+                      : 'interview';
+                  return `
+                    <td>
+                      <span class="src-applicant-stage-pill ${pillCls}">${p.availability_status || '즉시투입가능'}</span>
+                    </td>
+                  `;
+                }).join('')}
               </tr>
               <tr>
-                <td class="cmp-label-col">경력 · 소속유형</td>
-                ${targets.map(p => `<td class="cmp-cand-card-cell"><strong>경력 ${p.experience_years || 0}년</strong> (${p.job_title || '선임'}) · ${p.employment_type}</td>`).join('')}
-              </tr>
-              <tr>
-                <td class="cmp-label-col">핵심 기술 스택</td>
+                <td class="src-cmp-label">기술등급 · 경력</td>
                 ${targets.map(p => `
-                  <td class="cmp-cand-card-cell">
+                  <td>
+                    <span class="src-applicant-grade-chip grade-${p.tech_grade}">${p.tech_grade} 기술자</span>
+                    <strong style="margin-left:6px; color:#0f172a;">${p.experience_years || 0}년차</strong>
+                  </td>
+                `).join('')}
+              </tr>
+              <tr>
+                <td class="src-cmp-label">전문 도메인</td>
+                ${targets.map(p => `<td style="font-weight:700; color:#0f172a;">${(p.domains || []).join(' · ') || '-'}</td>`).join('')}
+              </tr>
+              ${!hideSensitive ? `
+                <tr>
+                  <td class="src-cmp-label">기준 · 희망 단가</td>
+                  ${targets.map(p => {
+                    const rate = p.is_internal ? p.contract_rate : p.desired_rate;
+                    return `<td><strong style="font-size:14px; color:#0f172a;">${rate ? `월 ${Number(rate).toLocaleString()}만원` : '협의'}</strong></td>`;
+                  }).join('')}
+                </tr>
+              ` : ''}
+              <tr>
+                <td class="src-cmp-label">투입 가용일</td>
+                ${targets.map(p => `
+                  <td>
+                    <strong style="color:#0f172a;">${p.available_date || p.availability_status || '즉시 가능'}</strong>
+                  </td>
+                `).join('')}
+              </tr>
+              <tr>
+                <td class="src-cmp-label">핵심 기술 스택</td>
+                ${targets.map(p => `
+                  <td>
                     <div style="display:flex; flex-wrap:wrap; gap:4px;">
-                      ${(p.skills || []).map(sk => `<span class="inv-skill-pill">${sk}</span>`).join('')}
+                      ${(p.skills || []).map(sk => `<span class="src-hover-skill-tag hit">${sk}</span>`).join('')}
                     </div>
                   </td>
                 `).join('')}
               </tr>
               <tr>
-                <td class="cmp-label-col">투입 가용일</td>
-                ${targets.map(p => `<td class="cmp-cand-card-cell" style="font-weight:700; color:#0f172a;">${p.available_date || p.availability_status || '즉시 가능'}</td>`).join('')}
-              </tr>
-              ${!hideSensitive ? `
-                <tr>
-                  <td class="cmp-label-col">기준 · 희망 단가</td>
-                  ${targets.map(p => {
-                    const rate = p.is_internal ? p.contract_rate : p.desired_rate;
-                    return `<td class="cmp-cand-card-cell" style="font-weight:700; color:#0f172a;">${rate ? `월 ${Number(rate).toLocaleString()}만원` : '협의'}</td>`;
-                  }).join('')}
-                </tr>
-              ` : ''}
-              <tr>
-                <td class="cmp-label-col">수행 · 검증 평점</td>
+                <td class="src-cmp-label">수행 · 검증 평점</td>
                 ${targets.map(p => {
                   const hasScore = Number(p.rating || 0) > 0;
                   return hasScore
-                    ? `<td class="cmp-cand-card-cell"><strong style="font-size:16px; color:#0f172a;"><span style="color:#f59e0b;">★</span> ${Number(p.rating).toFixed(1)}</strong> <span style="font-size:12px; color:#64748b;">/ 5.0</span></td>`
-                    : `<td class="cmp-cand-card-cell" style="color:#94a3b8;">미평가</td>`;
+                    ? `<td><strong style="font-size:15px; color:#0f172a;"><span style="color:#f59e0b;">★</span> ${Number(p.rating).toFixed(1)}</strong> <span style="font-size:12px; color:#64748b;">/ 5.0</span></td>`
+                    : `<td style="color:#94a3b8;">미평가</td>`;
                 }).join('')}
               </tr>
               <tr>
-                <td class="cmp-label-col">최근 수행 프로젝트</td>
+                <td class="src-cmp-label">최근 수행 프로젝트</td>
                 ${targets.map(p => {
                   const ch = (p.career_history && p.career_history[0]) || null;
-                  return `<td class="cmp-cand-card-cell" style="font-size:12.5px; color:#334155; line-height:1.5;">${ch ? `<strong>${ch.project}</strong><br/><span style="color:#64748b;">${[ch.client, ch.period, ch.role].filter(Boolean).join(' · ')}</span>` : (p.review_summary || '-')}</td>`;
+                  return `<td style="font-size:12.5px; color:#334155; line-height:1.5;">${ch ? `<strong>${ch.project}</strong><br/><span style="color:#64748b;">${[ch.client, ch.period, ch.role].filter(Boolean).join(' · ')}</span>` : (p.review_summary || '-')}</td>`;
                 }).join('')}
               </tr>
-              <tr class="cmp-last-row">
-                <td class="cmp-label-col">바로가기</td>
+              <tr>
+                <td class="src-cmp-label">빠른 액션</td>
                 ${targets.map(p => `
-                  <td class="cmp-cand-card-cell">
-                    <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                  <td>
+                    <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                      <button type="button" class="btn btn-outline btn-sm" onclick="closeModal(); openProfileDetailModal('${p.id}')">상세 프로필</button>
                       <button type="button" class="btn btn-primary btn-sm" onclick="closeModal(); ${isInternalOrContractProfile(p) ? `openProfileProjectAssignmentModal('${p.id}')` : `openProfileTargetSourcingModal('${p.id}')`}">
                         ${isInternalOrContractProfile(p) ? '프로젝트 배정' : '타겟 소싱'}
                       </button>
-                      <button type="button" class="btn btn-outline btn-sm" onclick="closeModal(); openProfileDetailModal('${p.id}')">상세</button>
                     </div>
                   </td>
                 `).join('')}
@@ -2857,7 +2880,7 @@ function renderProfilesTab() {
   el.innerHTML = `
     <div class="filter-bar">
       <button type="button" class="zal-chip-btn ${f.empType === 'ALL' ? 'active' : ''}" onclick="updateProfileFilter('empType', 'ALL')">
-        전체 인력 (${profiles.length})
+        전체 (${profiles.length})
       </button>
       <button type="button" class="zal-chip-btn ${f.empType === 'INTERNAL' ? 'active' : ''}" onclick="updateProfileFilter('empType', 'INTERNAL')">
         사내 인력 (${internalCount})
@@ -4339,33 +4362,544 @@ function renderProjectSummaryCard(prj) {
   `;
 }
 
-function renderPostingApplicantBox(post) {
-  const defaultMap = {
-    post_1: ['양동근', '김도현', '이준호'],
-    post_2: ['한지민', '박성진'],
-    post_3: ['오세훈', '김도윤', '최민수']
+function parsePostingRateRange(rateGuideStr = '') {
+  const nums = String(rateGuideStr || '')
+    .replace(/,/g, '')
+    .match(/\d{3,4}/g);
+  if (!nums || nums.length === 0) return { min: 950, max: 1100 };
+  const parsed = nums.map(Number).filter(n => n >= 400 && n <= 2500);
+  if (parsed.length === 0) return { min: 950, max: 1100 };
+  return {
+    min: Math.min(...parsed),
+    max: Math.max(...parsed)
   };
-  const rawApplicants = Array.isArray(post.applicants)
+}
+
+function resolvePostingApplicants(post) {
+  if (!post) return [];
+  const defaultMap = {
+    post_1: ['양동근', '김도현', '이준호', '장민호', '윤태영', '배성우', '서유진', '문정훈', '안소희', '고경표'],
+    post_2: ['한지민', '박성진'],
+    post_3: ['오세훈', '김도윤', '최민수'],
+    post_4: ['배성우', '문정훈', '안소희']
+  };
+  const rawApplicants = Array.isArray(post.applicants) && post.applicants.length > 0
     ? post.applicants
-    : (defaultMap[post.id] || []);
-  const isMaster = state.data?.currentUser?.role_group === 'MASTER';
-  const displayApplicants = rawApplicants.map(name => {
-    const clean = String(name || '').trim();
-    if (isMaster) return clean.replace(/\*\*$/, '');
-    if (clean.endsWith('**')) return clean;
-    return `${clean.charAt(0)}**`;
+    : (Array.isArray(post.applicants) && post.applicant_count === 0 ? [] : (defaultMap[post.id] || []));
+
+  const { interviews = [], profiles = [], currentUser, permissions } = state.data || {};
+  const isExternalGuest = currentUser?.role_group === 'EXTERNAL';
+  const canViewSensitive = Boolean(permissions?.can_view_sensitive_info) && currentUser?.role_group !== 'INTERNAL';
+  const budgetRange = parsePostingRateRange(post.rate_guide);
+  const reqSkills = Array.isArray(post.required_skills) ? post.required_skills : ['Java', 'Oracle'];
+
+  const gradeRank = { '특급': 3, '고급': 2, '중급': 1, '초급': 0 };
+  const reqGradeRank = gradeRank[post.required_grade] ?? 2;
+
+  return rawApplicants.map((name, idx) => {
+    const rawName = String(name || '').trim().replace(/\*\*$/, '');
+    const displayName = isExternalGuest ? `${rawName.charAt(0)}**` : rawName;
+    const matchedInv = interviews.find(i => i.posting_id === post.id && i.candidate_name === rawName)
+      || interviews.find(i => i.candidate_name === rawName);
+    const prof = profiles.find(p => (matchedInv?.candidate_profile_id && p.id === matchedInv.candidate_profile_id) || p.name === rawName);
+    const fb = (typeof APPLICANT_FALLBACK_MAP !== 'undefined' && APPLICANT_FALLBACK_MAP[rawName]) || {};
+
+    const grade = matchedInv?.tech_grade || prof?.tech_grade || fb.tech_grade || post.required_grade || '고급';
+    const expYears = matchedInv?.experience_years || prof?.experience_years || fb.experience_years || 9;
+    const empType = (matchedInv?.candidate_type || prof?.employment_type || fb.candidate_type || '프리랜서').replace(/^외주\s*/, '');
+    const availDate = matchedInv?.available_from || prof?.available_date || fb.available_from || '2026-11-25';
+    const availShort = availDate.length >= 10 ? `${availDate.slice(5, 7)}/${availDate.slice(8, 10)}` : availDate;
+    const desiredRate = Number(matchedInv?.desired_rate ?? prof?.desired_rate ?? fb.desired_rate ?? budgetRange.min);
+    const skills = Array.isArray(matchedInv?.skills) && matchedInv.skills.length > 0
+      ? matchedInv.skills
+      : (Array.isArray(prof?.skills) && prof.skills.length > 0 ? prof.skills : (fb.skills || reqSkills));
+    const domains = Array.isArray(matchedInv?.domains) && matchedInv.domains.length > 0
+      ? matchedInv.domains
+      : (Array.isArray(prof?.domains) && prof.domains.length > 0 ? prof.domains : (fb.domains || [post.required_domain]));
+
+    const matchedSkills = reqSkills.filter(reqSk =>
+      skills.some(candSk => candSk.toLowerCase().includes(reqSk.toLowerCase()) || reqSk.toLowerCase().includes(candSk.toLowerCase()))
+    );
+    const skillMatchRatio = reqSkills.length > 0 ? (matchedSkills.length / reqSkills.length) : 1;
+    const domainMatched = domains.some(d => String(d).includes(post.required_domain) || String(post.required_domain).includes(d));
+    const candGradeRank = gradeRank[grade] ?? 2;
+    const gradeScore = candGradeRank >= reqGradeRank ? 15 : 8;
+    const rateScore = desiredRate <= budgetRange.max ? 15 : Math.max(5, 15 - Math.round((desiredRate - budgetRange.max) / 15));
+    const matchPct = Math.min(99, Math.max(76, Math.round(skillMatchRatio * 55 + (domainMatched ? 15 : 7) + gradeScore + rateScore)));
+
+    const rateDiff = desiredRate - budgetRange.max;
+    let rateFitLabel = '예산 부합';
+    let rateFitTone = 'fit';
+    if (desiredRate <= budgetRange.min) {
+      rateFitLabel = `예산 절감 (-${budgetRange.min - desiredRate}만)`;
+      rateFitTone = 'save';
+    } else if (rateDiff > 0) {
+      rateFitLabel = `협의 필요 (+${rateDiff}만)`;
+      rateFitTone = 'over';
+    }
+
+    let pipeline = {
+      code: 'NEW',
+      label: '신규접수',
+      subLabel: '서류 검토대기',
+      dotCls: 'new',
+      pillCls: 'new'
+    };
+    const totalScore = Number(matchedInv?.total_score || 0);
+    if (matchedInv) {
+      const stMeta = typeof getInterviewStageBadgeMeta === 'function' ? getInterviewStageBadgeMeta(matchedInv) : null;
+      const st = stMeta?.stage || matchedInv.status || '';
+      if (st === '최종 결과' || matchedInv.final_decision === 'SELECTED' || matchedInv.status === '최종 선정') {
+        pipeline = {
+          code: 'SELECTED',
+          label: '투입확정',
+          subLabel: totalScore > 0 ? `★ ${totalScore.toFixed(1)}` : '선정 완료',
+          dotCls: 'selected',
+          pillCls: 'selected'
+        };
+      } else if (st === '평가 완료' || totalScore > 0) {
+        pipeline = {
+          code: 'EVALUATED',
+          label: `검증완료 ★${totalScore.toFixed(1)}`,
+          subLabel: '면접 평가완료',
+          dotCls: 'evaluated',
+          pillCls: 'evaluated'
+        };
+      } else if (st === '인터뷰 예정' || matchedInv.interview_date) {
+        pipeline = {
+          code: 'INTERVIEW',
+          label: '인터뷰예정',
+          subLabel: matchedInv.interview_date ? matchedInv.interview_date.slice(5, 16) : '일정 조율중',
+          dotCls: 'interview',
+          pillCls: 'interview'
+        };
+      } else {
+        pipeline = {
+          code: 'REVIEW',
+          label: '서류검토중',
+          subLabel: '인터뷰 배정대기',
+          dotCls: 'new',
+          pillCls: 'new'
+        };
+      }
+    }
+
+    const sourceType = fb.recommender
+      ? (fb.recommender.includes('타겟') ? '타겟소싱 응답' : '오픈구인 지원')
+      : (idx === 0 ? '타겟소싱 응답' : '오픈구인 지원');
+    const summaryText = matchedInv?.resume_summary || prof?.review_summary || fb.resume_summary || `${post.required_domain} 핵심 모듈 설계 및 개발 ${expYears}년차`;
+
+    return {
+      idx,
+      rawName,
+      displayName,
+      avatarUrl: getAvatarForId(prof?.id || rawName),
+      profileId: prof?.id || null,
+      interviewId: matchedInv?.id || '',
+      grade,
+      expYears,
+      empType,
+      availDate,
+      availShort,
+      desiredRate,
+      canViewSensitive,
+      rateFitLabel,
+      rateFitTone,
+      skills,
+      matchedSkills,
+      reqSkills,
+      domains,
+      domainMatched,
+      matchPct,
+      pipeline,
+      totalScore,
+      sourceType,
+      summaryText,
+      interviewDate: matchedInv?.interview_date || '',
+      interviewerName: matchedInv?.interviewer_name || ''
+    };
   });
-  const count = typeof post.applicant_count === 'number' ? post.applicant_count : displayApplicants.length;
+}
+
+function getPostingEnrichedMeta(post) {
+  const { projects = [], profiles = [] } = state.data || {};
+  const prj = projects.find(p => p.id === post.project_id);
+
+  // Extract bracket prefix e.g. "[미래에셋증권 퇴직연금 차세대] ..."
+  const bracketMatch = String(post.title || '').match(/^\[([^\]]+)\]\s*(.*)$/);
+  const bracketText = bracketMatch ? bracketMatch[1].trim() : '';
+  let cleanTitle = bracketMatch ? bracketMatch[2].trim() : String(post.title || post.role_name || '').trim();
+  // Remove redundant trailing grade in parentheses like "(특급/고급)" or "(고급)" since grade badge is shown clearly
+  cleanTitle = cleanTitle.replace(/\s*\((특급|고급|중급|초급|특급\/고급|고급\/중급)\)\s*$/, '').trim();
+
+  const clientName = prj?.client || (bracketText.split(/\s+/)[0] || '금융권 고객사');
+  const projectLabel = prj?.name || bracketText || `${post.required_domain} 시스템 구축`;
+
+  // Compute start month & D-Day from period (reference date: 2026-11-20)
+  const todayMs = new Date('2026-11-20T00:00:00').getTime();
+  const ymMatch = String(post.period || '').match(/(202\d)[.-](\d{2})/);
+  const startYm = ymMatch ? `${ymMatch[1]}.${ymMatch[2]}` : '2026.12';
+  let targetStartDateStr = prj?.start_date || `${startYm.replace('.', '-')}-01`;
+  if (startYm === '2026.12' && (!prj?.start_date || prj.start_date < '2026-11-20')) {
+    targetStartDateStr = '2026-12-01';
+  }
+  const startMs = new Date(`${targetStartDateStr}T00:00:00`).getTime();
+  const dDay = Math.max(1, Math.round((startMs - todayMs) / (1000 * 60 * 60 * 24)));
+  const isUrgent = post.status === 'OPEN' && dDay <= 15;
+
+  // Elapsed days since posting registration
+  const createdMs = new Date(`${post.created_at || '2026-11-10'}T00:00:00`).getTime();
+  const elapsedDays = Math.max(0, Math.round((todayMs - createdMs) / (1000 * 60 * 60 * 24)));
+
+  const applicants = resolvePostingApplicants(post);
+  const sentCount = Number(post.sourcing_sent_count || 0);
+  const openedCount = typeof post.opened_count === 'number'
+    ? post.opened_count
+    : (Math.max(sentCount, applicants.length) + (sentCount > 0 ? 2 : 0));
+  const appliedCount = applicants.length;
+  const interviewCount = applicants.filter(a => a.pipeline.code !== 'NEW' && a.pipeline.code !== 'REVIEW').length;
+  const unreviewedCount = applicants.filter(a => a.pipeline.code === 'NEW' || a.pipeline.code === 'REVIEW').length;
+
+  // Count matching external talent pool for Target Sourcing CTA
+  const matchingPoolCount = profiles.filter(p =>
+    !p.is_internal &&
+    ((p.domains || []).includes(post.required_domain) ||
+      (p.skills || []).some(sk => (post.required_skills || []).includes(sk)))
+  ).length || profiles.filter(p => !p.is_internal).length;
+
+  const budgetRange = parsePostingRateRange(post.rate_guide);
+
+  return {
+    prj,
+    clientName,
+    projectLabel,
+    cleanTitle: cleanTitle || post.role_name,
+    roleSubName: post.role_name && post.role_name !== cleanTitle ? post.role_name : '',
+    startYm,
+    dDay,
+    dDayBadgeText: isUrgent ? `투입 D-${dDay} · ${startYm.slice(5)}월 긴급` : `${startYm.slice(5)}월 투입 (D-${dDay})`,
+    isUrgent,
+    elapsedDays,
+    applicants,
+    sentCount,
+    openedCount,
+    appliedCount,
+    interviewCount,
+    unreviewedCount,
+    matchingPoolCount,
+    budgetRange
+  };
+}
+
+function togglePostingApplicantsExpand(postingId, event) {
+  if (event) event.stopPropagation();
+  if (!state.sourcingFilters.expandedApplicantPostings) {
+    state.sourcingFilters.expandedApplicantPostings = [];
+  }
+  const arr = state.sourcingFilters.expandedApplicantPostings;
+  const idx = arr.indexOf(postingId);
+  if (idx >= 0) arr.splice(idx, 1);
+  else arr.push(postingId);
+  renderActiveTab();
+}
+
+function switchPostingFunnelTab(postingId, tabKey, event) {
+  if (event) event.stopPropagation();
+  if (!state.sourcingFilters.funnelTabByPosting) {
+    state.sourcingFilters.funnelTabByPosting = {};
+  }
+  const current = state.sourcingFilters.funnelTabByPosting[postingId] || null;
+  state.sourcingFilters.funnelTabByPosting[postingId] = current === tabKey ? null : tabKey;
+  renderActiveTab();
+}
+
+function buildPostingFunnelTabItems(post, meta, activeTab) {
+  const { applicants, sentCount, openedCount } = meta;
+  const sortedApps = [...applicants].sort((a, b) => b.matchPct - a.matchPct);
+  const { profiles = [], permissions, currentUser } = state.data || {};
+  const canViewSensitive = Boolean(permissions?.can_view_sensitive_info) && currentUser?.role_group !== 'INTERNAL';
+  const isExternalGuest = currentUser?.role_group === 'EXTERNAL';
+  const externalProfiles = profiles.filter(p => !p.is_internal);
+
+  // Additional pool candidates who were invited or viewed the posting but haven't applied yet
+  const extraPoolCandidates = [
+    ...externalProfiles,
+    { id: 'ext_s1', name: '강태호', tech_grade: post.required_grade || '고급', experience_years: 12, available_date: '2026-11-29', desired_rate: meta.budgetRange.min + 20, skills: post.required_skills || ['Java', 'Oracle'] },
+    { id: 'ext_s2', name: '유하늘', tech_grade: '고급', experience_years: 10, available_date: '2026-12-03', desired_rate: meta.budgetRange.min, skills: post.required_skills || ['Java', 'Spring Boot'] },
+    { id: 'ext_s3', name: '정현우', tech_grade: '특급', experience_years: 14, available_date: '2026-11-26', desired_rate: meta.budgetRange.max, skills: post.required_skills || ['Java', 'Oracle'] }
+  ].filter(ep => !sortedApps.some(a => a.rawName === ep.name));
+
+  const toExtraItem = (ep, i, stageLabel, stagePillCls, subNote, actionType) => {
+    const rawName = ep.name;
+    const displayName = isExternalGuest ? `${rawName.charAt(0)}**` : rawName;
+    const availDate = ep.available_date || '2026-11-28';
+    const availShort = availDate.length >= 10 ? `${availDate.slice(5, 7)}/${availDate.slice(8, 10)}` : availDate;
+    const desiredRate = Number(ep.desired_rate || meta.budgetRange.min);
+    return {
+      isExtraPool: true,
+      profileId: ep.id && String(ep.id).startsWith('p_') ? ep.id : null,
+      rawName,
+      displayName,
+      avatarUrl: getAvatarForId(ep.id || rawName),
+      grade: ep.tech_grade || post.required_grade || '고급',
+      expYears: ep.experience_years || 10,
+      availShort,
+      desiredRate,
+      canViewSensitive,
+      rateFitLabel: desiredRate <= meta.budgetRange.max ? '예산 부합' : '협의 필요',
+      rateFitTone: desiredRate <= meta.budgetRange.max ? 'fit' : 'over',
+      matchedSkills: (ep.skills || post.required_skills || []).slice(0, 3),
+      skills: ep.skills || post.required_skills || ['Java'],
+      matchPct: Math.max(82, 94 - i * 3),
+      pipeline: { code: actionType, label: stageLabel, pillCls: stagePillCls },
+      subNote
+    };
+  };
+
+  if (activeTab === 'INTERVIEW') {
+    return sortedApps.filter(a => a.pipeline.code !== 'NEW' && a.pipeline.code !== 'REVIEW');
+  }
+
+  if (activeTab === 'SENT') {
+    const items = [];
+    // Include target-sourced applicants first
+    const sourcedApps = sortedApps.filter(a => a.sourceType.includes('타겟')).slice(0, sentCount);
+    sourcedApps.forEach(a => {
+      items.push({
+        ...a,
+        customBadgeLabel: '참여신청 전환',
+        customBadgeCls: 'evaluated',
+        customSubNote: `타겟발송(${post.created_at}) → 참여신청 완료`
+      });
+    });
+    // Fill remaining up to sentCount from extra pool or other applicants
+    let poolIdx = 0;
+    while (items.length < sentCount && poolIdx < extraPoolCandidates.length) {
+      const ep = extraPoolCandidates[poolIdx++];
+      items.push(toExtraItem(
+        ep,
+        poolIdx,
+        poolIdx % 2 === 1 ? '열람·응답대기' : '초청발송 완료',
+        poolIdx % 2 === 1 ? 'new' : 'interview',
+        `발송 ${post.created_at} · 알림톡/이메일 초청`,
+        'REMIND'
+      ));
+    }
+    while (items.length < sentCount && items.length < sortedApps.length) {
+      const fallbackApp = sortedApps.find(a => !items.some(it => it.rawName === a.rawName));
+      if (!fallbackApp) break;
+      items.push({
+        ...fallbackApp,
+        customBadgeLabel: '참여신청 전환',
+        customBadgeCls: 'evaluated',
+        customSubNote: `타겟발송(${post.created_at}) → 참여신청 완료`
+      });
+    }
+    return items.slice(0, sentCount);
+  }
+
+  if (activeTab === 'OPENED') {
+    const items = sortedApps.map(a => ({
+      ...a,
+      customBadgeLabel: '참여신청 완료',
+      customBadgeCls: 'interview',
+      customSubNote: `${a.sourceType} · 공고 열람 후 지원 완료`
+    }));
+    let poolIdx = 0;
+    while (items.length < openedCount && poolIdx < extraPoolCandidates.length) {
+      const ep = extraPoolCandidates[poolIdx++];
+      items.push(toExtraItem(
+        ep,
+        poolIdx,
+        '열람·관심등록',
+        'new',
+        '오픈 구인 링크 3회 열람 · 지원 검토중',
+        'NUDGE'
+      ));
+    }
+    return items.slice(0, openedCount);
+  }
+
+  // Default: 'APPLIED' (참여신청)
+  return sortedApps;
+}
+
+function renderPostingApplicantBox(post, options = {}) {
+  const meta = getPostingEnrichedMeta(post);
+  const { applicants, sentCount, openedCount, appliedCount, interviewCount, unreviewedCount } = meta;
+  const permissions = state.data?.permissions || {};
+  const canRequest = Boolean(permissions.can_schedule_interviews || permissions.can_manage_postings);
+
+  const tabMap = state.sourcingFilters?.funnelTabByPosting || {};
+  const activeTab = tabMap[post.id] || null;
+
+  const tabItems = activeTab ? buildPostingFunnelTabItems(post, meta, activeTab) : [];
+  const expandedList = state.sourcingFilters?.expandedApplicantPostings || [];
+  const isExpanded = Boolean(options.showAll || expandedList.includes(post.id));
+  const maxVisible = 3;
+  const visibleItems = isExpanded ? tabItems : tabItems.slice(0, maxVisible);
+  const hiddenCount = Math.max(0, tabItems.length - visibleItems.length);
+
   return `
-    <div class="posting-applicant-box">
-      <div class="posting-applicant-title">
-        프로젝트 참여신청 <span class="posting-applicant-count">${count}명</span>
+    <div class="src-applicant-pipeline-box" onclick="event.stopPropagation();">
+      <!-- [4단 토글 버튼 바 (디폴트: 미선택, 클릭 시 토글/선택 해제)] -->
+      <div class="src-funnel-seg-bar" role="group">
+        <button
+          type="button"
+          class="src-funnel-seg-tab ${activeTab === 'SENT' ? 'active' : ''}"
+          aria-pressed="${activeTab === 'SENT'}"
+          onclick="switchPostingFunnelTab('${post.id}', 'SENT', event)"
+        >
+          <span>타겟발송</span>
+          <strong>${sentCount}건</strong>
+          <svg class="src-funnel-seg-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </button>
+        <button
+          type="button"
+          class="src-funnel-seg-tab ${activeTab === 'OPENED' ? 'active' : ''}"
+          aria-pressed="${activeTab === 'OPENED'}"
+          onclick="switchPostingFunnelTab('${post.id}', 'OPENED', event)"
+        >
+          <span>열람·관심</span>
+          <strong>${openedCount}명</strong>
+          <svg class="src-funnel-seg-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </button>
+        <button
+          type="button"
+          class="src-funnel-seg-tab ${activeTab === 'APPLIED' ? 'active' : ''}"
+          aria-pressed="${activeTab === 'APPLIED'}"
+          onclick="switchPostingFunnelTab('${post.id}', 'APPLIED', event)"
+        >
+          <span>참여신청</span>
+          <strong class="is-highlight">${appliedCount}명</strong>
+          <svg class="src-funnel-seg-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </button>
+        <button
+          type="button"
+          class="src-funnel-seg-tab ${activeTab === 'INTERVIEW' ? 'active' : ''}"
+          aria-pressed="${activeTab === 'INTERVIEW'}"
+          onclick="switchPostingFunnelTab('${post.id}', 'INTERVIEW', event)"
+        >
+          <span>면접·검증</span>
+          <strong>${interviewCount}명</strong>
+          <svg class="src-funnel-seg-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </button>
       </div>
-      <div class="posting-applicant-avatars">
-        ${displayApplicants.length > 0 ? displayApplicants.map((label, idx) => `
-          <span class="posting-applicant-circle color-${idx % 4}" onclick="event.stopPropagation(); openApplicantDetailFromPosting('${post.id}', ${idx})" title="${label} 상세 프로필 보기">${label}</span>
-        `).join('') : `<span style="font-size:12.5px; color:#94a3b8;">신청 대기중</span>`}
-      </div>
+
+      ${activeTab ? `
+        <div class="src-applicant-box-header">
+          <div class="src-applicant-header-left" style="font-size:12.5px; color:#475569; font-weight:500;">
+            ${activeTab === 'APPLIED' ? `
+              <span>총 <strong style="color:#0f172a;">${appliedCount}명</strong>${unreviewedCount > 0 ? `<span style="color:#cbd5e1; margin:0 7px;">|</span>미검토·신규 <strong style="color:#0f172a;">${unreviewedCount}</strong>` : ''}${interviewCount > 0 ? `<span style="color:#cbd5e1; margin:0 7px;">|</span>면접·검증 <strong style="color:#0f172a;">${interviewCount}</strong>` : ''}</span>
+            ` : `
+              <span>총 <strong style="color:#0f172a;">${tabItems.length}${activeTab === 'SENT' ? '건' : '명'}</strong></span>
+            `}
+          </div>
+          <div class="src-applicant-header-actions">
+            ${activeTab === 'APPLIED' && applicants.length >= 2 ? `
+              <button type="button" class="src-mini-action-btn compare" onclick="event.stopPropagation(); openPostingApplicantsCompareModal('${post.id}', 'APPLIED')" title="참여신청 지원자 ${applicants.length}명 스펙·단가·매칭률 한눈에 비교">
+                ${svgIcon('users', 12)} 후보 비교 (${applicants.length})
+              </button>
+            ` : activeTab === 'INTERVIEW' && interviewCount >= 2 ? `
+              <button type="button" class="src-mini-action-btn compare" onclick="event.stopPropagation(); openPostingApplicantsCompareModal('${post.id}', 'INTERVIEW')" title="면접·검증 대상자 ${interviewCount}명 스펙·단가·매칭률 한눈에 비교">
+                ${svgIcon('users', 12)} 후보 비교 (${interviewCount})
+              </button>
+            ` : ''}
+          </div>
+        </div>
+
+        ${tabItems.length > 0 ? `
+          <div class="src-applicant-list">
+            ${visibleItems.map(app => {
+              const stageLabel = app.customBadgeLabel || app.pipeline.label;
+              const stagePillCls = app.customBadgeCls || app.pipeline.pillCls;
+              const rowClickJs = app.isExtraPool
+                ? (app.profileId ? `openProfileDetailModal('${app.profileId}')` : `openTargetSourcingModal('${post.id}')`)
+                : `openApplicantDetailFromPosting('${post.id}', ${app.idx})`;
+
+              return `
+                <div class="src-applicant-row" onclick="event.stopPropagation(); ${rowClickJs}">
+                  <div class="src-applicant-avatar-wrap">
+                    <img src="${app.avatarUrl}" alt="${app.displayName}" class="src-applicant-avatar-img" />
+                  </div>
+
+                  <div class="src-applicant-main-info">
+                    <div class="src-applicant-top-line">
+                      <strong class="src-applicant-name">${app.displayName}</strong>
+                      <span class="src-applicant-grade-chip grade-${app.grade}">${app.grade} · ${app.expYears}년</span>
+                      <span class="src-applicant-match-chip ${app.matchPct >= 92 ? 'high' : 'mid'}">매칭 ${app.matchPct}%</span>
+                      <span class="src-applicant-stage-pill ${stagePillCls}">${stageLabel}</span>
+                    </div>
+                    <div class="src-applicant-sub-line">
+                      ${activeTab === 'INTERVIEW' && app.interviewDate ? `
+                        <span>면접 <strong style="color:#1d4ed8;">${app.interviewDate}</strong></span>
+                        <span class="src-dot-sep">·</span>
+                        <span>면접관 <strong style="color:#0f172a;">${app.interviewerName || '배정완료'}</strong></span>
+                      ` : app.customSubNote || app.subNote ? `
+                        <span>${app.customSubNote || app.subNote}</span>
+                        <span class="src-dot-sep">·</span>
+                        <span>가용 <strong style="color:#0f172a;">${app.availShort}</strong></span>
+                      ` : `
+                        <span>가용 <strong style="color:#0f172a;">${app.availShort}</strong></span>
+                        ${app.canViewSensitive ? `
+                          <span class="src-dot-sep">·</span>
+                          <span>희망 <strong style="color:#0f172a;">${app.desiredRate.toLocaleString()}만</strong> <em class="src-rate-fit-text ${app.rateFitTone}">(${app.rateFitLabel})</em></span>
+                        ` : ''}
+                        <span class="src-dot-sep">·</span>
+                        <span class="src-skill-preview-inline">${app.matchedSkills.slice(0, 3).join(', ') || app.skills.slice(0, 2).join(', ')}</span>
+                      `}
+                    </div>
+                  </div>
+
+                  <div class="src-applicant-row-cta">
+                    ${app.isExtraPool ? `
+                      <button
+                        type="button"
+                        class="src-row-quick-btn outline"
+                        onclick="event.stopPropagation(); showToast('📩 ${app.displayName} 후보자에게 ${activeTab === 'SENT' ? '타겟 소싱 리마인드' : '간편 지원 독려'} 알림을 발송했습니다.');"
+                      >
+                        ${activeTab === 'SENT' ? '재발송' : '지원 독려'}
+                      </button>
+                    ` : canRequest && (app.pipeline.code === 'NEW' || app.pipeline.code === 'REVIEW') ? `
+                      <button
+                        type="button"
+                        class="src-row-quick-btn primary"
+                        onclick="event.stopPropagation(); openSourcingInterviewRequestModal('${post.id}', '${app.rawName}', '${app.interviewId}')"
+                        title="면접관 배정 및 인터뷰 일정 요청"
+                      >
+                        인터뷰 요청
+                      </button>
+                    ` : `
+                      <button
+                        type="button"
+                        class="src-row-quick-btn outline"
+                        onclick="event.stopPropagation(); openApplicantDetailFromPosting('${post.id}', ${app.idx})"
+                        title="지원자 이력서 및 검증 상세 보기"
+                      >
+                        ${activeTab === 'INTERVIEW' ? '검증·프로필' : '프로필'}
+                      </button>
+                    `}
+                  </div>
+                </div>
+              `;
+            }).join('')}
+
+            ${hiddenCount > 0 || (isExpanded && tabItems.length > maxVisible) ? `
+              <button
+                type="button"
+                class="src-applicant-more-btn"
+                onclick="togglePostingApplicantsExpand('${post.id}', event)"
+              >
+                ${isExpanded ? '목록 접기 ▲' : `+${hiddenCount}명 더보기 (총 ${tabItems.length}${activeTab === 'SENT' ? '건' : '명'}) ▼`}
+              </button>
+            ` : ''}
+          </div>
+        ` : `
+          <div class="src-applicant-empty-row">
+            <span>해당 단계의 후보자가 없습니다.</span>
+          </div>
+        `}
+      ` : ''}
     </div>
   `;
 }
@@ -4437,6 +4971,125 @@ const APPLICANT_FALLBACK_MAP = {
     resume_summary: '투자자산운용사 보유. 채권 시가평가 및 장외파생 상품 정산 엔진 개발 10년차.',
     career_history: [
       { project: '키움증권 채권 시가평가 및 장외파생 원장 고도화', client: '키움증권', period: '2024.05 ~ 2026.10', role: '응용개발', tech: 'Java, Spring Boot, Oracle' }
+    ]
+  },
+  '장민호': {
+    candidate_type: '외주 프리랜서',
+    tech_grade: '특급',
+    experience_years: 15,
+    education: '한양대학교 컴퓨터공학과 학사',
+    certifications: ['정보처리기사', 'SQLP', 'PMP'],
+    available_from: '2026-11-24',
+    desired_rate: 1140,
+    recommender: '타겟소싱 지원 (신규)',
+    domains: ['퇴직연금', '계정계 코어'],
+    skills: ['Java', 'Spring Batch', 'Oracle', 'ProFrame'],
+    status: '참여신청 접수 (서류검토중)',
+    resume_summary: '메이저 증권사·은행 퇴직연금 수수료 일마감 정산 및 ProFrame 대용량 배치 아키텍트 15년차.',
+    career_history: [
+      { project: '삼성증권 퇴직연금 수수료 및 디폴트옵션 대용량 배치 고도화', client: '삼성증권', period: '2024.02 ~ 2026.10', role: '배치 아키텍트/선임', tech: 'Java, Spring Batch, Oracle, ProFrame' }
+    ]
+  },
+  '윤태영': {
+    candidate_type: '외주 프리랜서',
+    tech_grade: '특급',
+    experience_years: 13,
+    education: '경희대학교 소프트웨어융합학과 학사',
+    certifications: ['정보처리기사', 'SQLD'],
+    available_from: '2026-11-26',
+    desired_rate: 1120,
+    recommender: '타겟소싱 지원 (신규)',
+    domains: ['퇴직연금', '펀드'],
+    skills: ['Java', 'Spring Batch', 'Oracle', 'SQL튜닝'],
+    status: '참여신청 접수 (서류검토중)',
+    resume_summary: '퇴직연금 로보어드바이저 일임 리밸런싱 배치 및 Oracle 대용량 튜닝 13년차 특급 개발자.',
+    career_history: [
+      { project: '신한투자증권 연금 로보일임 및 상품결제 배치 구축', client: '신한투자증권', period: '2024.05 ~ 2026.10', role: '선임개발', tech: 'Java, Spring Batch, Oracle' }
+    ]
+  },
+  '배성우': {
+    candidate_type: '외주 반프리',
+    tech_grade: '고급',
+    experience_years: 11,
+    education: '건국대학교 컴퓨터공학부 학사',
+    certifications: ['정보처리기사', 'OCJP'],
+    available_from: '2026-12-01',
+    desired_rate: 1080,
+    recommender: '오픈 구인 직접 지원 (신규)',
+    domains: ['퇴직연금', '신탁/수탁'],
+    skills: ['Java', 'Spring Batch', 'Oracle', 'ProFrame'],
+    status: '참여신청 접수 (서류검토중)',
+    resume_summary: 'ProFrame 및 Spring Batch 기반 퇴직연금 부담금·수수료 정산 원장 개발 11년차.',
+    career_history: [
+      { project: '우리은행 퇴직연금 원장 및 수수료 정산 시스템 개선', client: '우리은행', period: '2024.03 ~ 2026.09', role: '코어/배치 개발', tech: 'Java, ProFrame, Oracle' }
+    ]
+  },
+  '서유진': {
+    candidate_type: '외주 프리랜서',
+    tech_grade: '특급',
+    experience_years: 14,
+    education: '숙명여자대학교 컴퓨터과학전공 학사',
+    certifications: ['정보처리기사', 'SQLP'],
+    available_from: '2026-11-25',
+    desired_rate: 1150,
+    recommender: '타겟소싱 지원 (신규)',
+    domains: ['퇴직연금', '자산운용'],
+    skills: ['Java', 'Spring Batch', 'Oracle', 'Spring Boot'],
+    status: '참여신청 접수 (서류검토중)',
+    resume_summary: '증권사 IRP/DC 실적배당 상품 매수·매도 결제 및 수수료 정산 배치 14년차.',
+    career_history: [
+      { project: 'KB증권 퇴직연금 ETF/로보일임 비대면 정산 원장 구축', client: 'KB증권', period: '2024.01 ~ 2026.08', role: '배치 PL', tech: 'Java, Spring Batch, Oracle' }
+    ]
+  },
+  '문정훈': {
+    candidate_type: '외주 프리랜서',
+    tech_grade: '고급',
+    experience_years: 10,
+    education: '인하대학교 컴퓨터공학과 학사',
+    certifications: ['정보처리기사', 'SQLD'],
+    available_from: '2026-12-02',
+    desired_rate: 1050,
+    recommender: '오픈 구인 직접 지원 (신규)',
+    domains: ['퇴직연금'],
+    skills: ['Java', 'Spring Batch', 'Oracle'],
+    status: '참여신청 접수 (서류검토중)',
+    resume_summary: '퇴직연금 대외계 전문 연동 및 야간 일괄 정산 배치 개발 10년차 고급 기술자.',
+    career_history: [
+      { project: '하나증권 퇴직연금 대외결제 및 수수료 배치 개발', client: '하나증권', period: '2024.06 ~ 2026.10', role: '백엔드 개발', tech: 'Java, Spring Batch, Oracle' }
+    ]
+  },
+  '안소희': {
+    candidate_type: '협력사 소속',
+    tech_grade: '고급',
+    experience_years: 9,
+    education: '홍익대학교 컴퓨터공학과 학사',
+    certifications: ['정보처리기사'],
+    available_from: '2026-11-27',
+    desired_rate: 1030,
+    recommender: '오픈 구인 직접 지원 (신규)',
+    domains: ['퇴직연금', '채널계'],
+    skills: ['Java', 'Spring Boot', 'Oracle'],
+    status: '참여신청 접수 (서류검토중)',
+    resume_summary: '퇴직연금 가입자 수수료 계산 모듈 및 원장 API 개발 9년차.',
+    career_history: [
+      { project: 'NH농협은행 퇴직연금 수수료 산출 및 통계 배치 개발', client: 'NH농협은행', period: '2024.04 ~ 2026.09', role: '응용개발', tech: 'Java, Spring Boot, Oracle' }
+    ]
+  },
+  '고경표': {
+    candidate_type: '외주 프리랜서',
+    tech_grade: '고급',
+    experience_years: 8,
+    education: '아주대학교 소프트웨어학과 학사',
+    certifications: ['정보처리기사', 'SQLD'],
+    available_from: '2026-12-05',
+    desired_rate: 1200,
+    recommender: '오픈 구인 직접 지원 (신규)',
+    domains: ['펀드', '신탁/수탁'],
+    skills: ['Java', 'Oracle', 'Spring Boot'],
+    status: '참여신청 접수 (서류검토중)',
+    resume_summary: '자산운용 및 수탁 결제 원장 배치 개발 8년차.',
+    career_history: [
+      { project: '신영증권 펀드/신탁 수탁결제 배치 고도화', client: '신영증권', period: '2024.07 ~ 2026.10', role: '백엔드 개발', tech: 'Java, Oracle' }
     ]
   }
 };
@@ -6065,9 +6718,10 @@ function openApplicantDetailFromPosting(postingId, applicantIndex) {
   if (!post) return;
 
   const defaultMap = {
-    post_1: ['양동근', '김도현', '이준호'],
+    post_1: ['양동근', '김도현', '이준호', '장민호', '윤태영', '배성우', '서유진', '문정훈', '안소희', '고경표'],
     post_2: ['한지민', '박성진'],
-    post_3: ['오세훈', '김도윤', '최민수']
+    post_3: ['오세훈', '김도윤', '최민수'],
+    post_4: ['배성우', '문정훈', '안소희']
   };
   const rawApplicants = Array.isArray(post.applicants) ? post.applicants : (defaultMap[post.id] || []);
   const rawName = String(rawApplicants[applicantIndex] || '').trim().replace(/\*\*$/, '');
@@ -6370,10 +7024,10 @@ function renderInterviewVerticalCard(inv, idx, permissions, currentUser) {
           </div>
         </div>
 
-        <!-- E. 카드 하단 액션 (더보기 선택 시 함께 노출) -->
+        <!-- E. 카드 하단 액션 (더보기 선택 시 함께 노출 — 보조 액션 좌측, 프라이머리 CTA 우측 끝 정렬) -->
         <div class="inv-vcard-actions" onclick="event.stopPropagation();">
-          ${primaryActionHtml}
           ${secondaryActionHtml}
+          ${primaryActionHtml}
         </div>
       ` : ''}
 
@@ -6574,51 +7228,7 @@ function renderProjectDetailView(el, prj, postings, interviews, templates, permi
     </div>
 
     <div class="dashboard-feed-masonry" style="margin-bottom:28px;">
-      ${projectPostings.length > 0 ? projectPostings.map(post => `
-        <article class="zal-feed-card" style="cursor:pointer;" onclick="openPostingDetailModal('${post.id}')">
-          <div class="zal-card-header">
-            <div class="zal-author-box">
-              <div>
-                <span class="zal-author-name">${post.role_name}</span>
-                <span class="zal-author-role">${post.required_grade} · ${post.required_domain}</span>
-                <div class="zal-card-time">${svgIcon('clock', 12)} 등록 ${post.created_at} | 타겟소싱 ${post.sourcing_sent_count}건</div>
-              </div>
-            </div>
-            <span class="zal-status-pill ${post.status === 'OPEN' ? 'green' : 'gray'}">${post.status === 'OPEN' ? '모집중' : '마감됨'}</span>
-          </div>
-
-          <div class="zal-card-title">${post.title}</div>
-
-          <div class="zal-meta-list">
-            <div class="zal-meta-row"><span class="zal-meta-label">${svgIcon('calendar', 14)} 기간</span><span class="zal-meta-val">${post.period} (${post.work_location})</span></div>
-            <div class="zal-meta-row"><span class="zal-meta-label">${svgIcon('dollar', 14)} 단가</span><span class="zal-meta-val">${post.rate_guide}</span></div>
-            <div class="zal-meta-row"><span class="zal-meta-label">${svgIcon('code', 14)} 스킬</span><span class="zal-meta-val">${post.required_skills.join(', ')}</span></div>
-          </div>
-
-          <div class="zal-card-footer">
-            <div class="zal-reaction-group" style="flex-wrap:wrap;">
-              <button type="button" class="btn btn-outline btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="event.stopPropagation(); copyPostingWebLink('${post.id}')">
-                ${svgIcon('link', 13)} 오픈 구인 웹 링크 복사하기
-              </button>
-              ${post.status === 'OPEN' && currentUser?.role_group !== 'MASTER' ? `
-                <button type="button" class="btn btn-primary btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="event.stopPropagation(); openEasyApplyModal('${post.id}')">
-                  ${svgIcon('edit', 13)} ${currentUser?.role_group === 'INTERNAL' ? '사내 지인 추천' : '간편 지원하기'}
-                </button>
-              ` : ''}
-              ${permissions.can_manage_postings ? `
-                <button type="button" class="btn btn-outline btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="event.stopPropagation(); openTargetSourcingModal('${post.id}')">${svgIcon('target', 13)} 타겟 소싱 발송</button>
-              ` : ''}
-            </div>
-          </div>
-
-          <div class="posting-bottom-row">
-            ${renderPostingApplicantBox(post)}
-            ${permissions.can_manage_postings ? `
-              <button type="button" class="btn btn-primary btn-sm" style="margin-left:auto; align-self:flex-end;" onclick="event.stopPropagation(); togglePostingStatus('${post.id}')">${post.status === 'OPEN' ? '채용마감' : '재오픈'}</button>
-            ` : ''}
-          </div>
-        </article>
-      `).join('') : `
+      ${projectPostings.length > 0 ? renderSourcingMasonryColumnsHtml(projectPostings, permissions, currentUser) : `
         <div class="zal-feed-card" style="grid-column: 1 / -1; text-align:center; color:#64748b; padding:28px;">
           현재 이 프로젝트에 오픈된 외주 구인 공고가 없습니다.
         </div>
@@ -7480,9 +8090,17 @@ async function submitNewProject(e) {
 }
 
 /* =========================================================================
-   TAB 4: EXTERNAL JOB BOARD & TARGET SOURCING
+   TAB 4: EXTERNAL JOB BOARD & TARGET SOURCING (UPGRADED WORKSPACE)
    ========================================================================= */
 function updateSourcingFilter(key, val) {
+  if (!state.sourcingFilters) {
+    state.sourcingFilters = {
+      status: 'ALL', grade: 'ALL', domain: 'ALL', keyword: '',
+      sortBy: 'URGENT', viewMode: 'CARD', kpiFilter: 'ALL',
+      skill: 'ALL', startMonth: 'ALL', location: 'ALL', maxRate: 'ALL',
+      detailPopoverOpen: false, openMenuPostingId: null, expandedApplicantPostings: []
+    };
+  }
   state.sourcingFilters[key] = val;
   if (key === 'keyword') {
     const grid = document.getElementById('sourcingCardsGrid');
@@ -7492,6 +8110,124 @@ function updateSourcingFilter(key, val) {
     }
   }
   renderSourcingTab();
+}
+
+function toggleSourcingKpiFilter(kpiKey) {
+  const cur = state.sourcingFilters?.kpiFilter || 'ALL';
+  state.sourcingFilters.kpiFilter = cur === kpiKey ? 'ALL' : kpiKey;
+  if (state.sourcingFilters.kpiFilter === 'OPEN_ONLY') {
+    state.sourcingFilters.status = 'OPEN';
+  }
+  renderSourcingTab();
+}
+
+function toggleSourcingDetailFilterPopover(event) {
+  if (event) event.stopPropagation();
+  state.sourcingFilters.detailPopoverOpen = !state.sourcingFilters.detailPopoverOpen;
+  state.sourcingFilters.openMenuPostingId = null;
+  renderSourcingTab();
+}
+
+function closeSourcingPopovers() {
+  let changed = false;
+  if (state.sourcingFilters?.detailPopoverOpen) {
+    state.sourcingFilters.detailPopoverOpen = false;
+    changed = true;
+  }
+  if (state.sourcingFilters?.openMenuPostingId) {
+    state.sourcingFilters.openMenuPostingId = null;
+    changed = true;
+  }
+  if (changed) renderSourcingTab();
+}
+
+function resetSourcingFilters() {
+  state.sourcingFilters = {
+    ...state.sourcingFilters,
+    status: 'ALL',
+    grade: 'ALL',
+    domain: 'ALL',
+    keyword: '',
+    kpiFilter: 'ALL',
+    skill: 'ALL',
+    startMonth: 'ALL',
+    location: 'ALL',
+    maxRate: 'ALL',
+    detailPopoverOpen: false
+  };
+  renderSourcingTab();
+}
+
+function togglePostingManageMenu(postingId, event) {
+  if (event) event.stopPropagation();
+  const cur = state.sourcingFilters?.openMenuPostingId;
+  state.sourcingFilters.openMenuPostingId = cur === postingId ? null : postingId;
+  state.sourcingFilters.detailPopoverOpen = false;
+  renderActiveTab();
+}
+
+function getActiveSourcingDetailFilterCount() {
+  const sf = state.sourcingFilters || {};
+  let cnt = 0;
+  if (sf.skill && sf.skill !== 'ALL') cnt++;
+  if (sf.startMonth && sf.startMonth !== 'ALL') cnt++;
+  if (sf.location && sf.location !== 'ALL') cnt++;
+  if (sf.maxRate && sf.maxRate !== 'ALL') cnt++;
+  return cnt;
+}
+
+function getFilteredAndSortedPostings() {
+  const { postings = [] } = state.data || {};
+  const sf = state.sourcingFilters || {};
+
+  const filtered = postings.filter(post => {
+    const meta = getPostingEnrichedMeta(post);
+    if (sf.status && sf.status !== 'ALL' && post.status !== sf.status) return false;
+    if (sf.grade && sf.grade !== 'ALL' && post.required_grade !== sf.grade) return false;
+    if (sf.domain && sf.domain !== 'ALL' && post.required_domain !== sf.domain) return false;
+    if (sf.skill && sf.skill !== 'ALL' && !(post.required_skills || []).includes(sf.skill)) return false;
+    if (sf.startMonth && sf.startMonth !== 'ALL' && meta.startYm !== sf.startMonth) return false;
+    if (sf.location && sf.location !== 'ALL' && !String(post.work_location || '').includes(sf.location)) return false;
+    if (sf.maxRate && sf.maxRate !== 'ALL' && meta.budgetRange.max < Number(sf.maxRate)) return false;
+
+    if (sf.kpiFilter === 'OPEN_ONLY' && post.status !== 'OPEN') return false;
+    if (sf.kpiFilter === 'UNREVIEWED' && meta.unreviewedCount === 0) return false;
+    if (sf.kpiFilter === 'URGENT' && !meta.isUrgent) return false;
+    if (sf.kpiFilter === 'FUNNEL' && meta.sentCount === 0) return false;
+
+    if (sf.keyword) {
+      const kw = sf.keyword.toLowerCase();
+      const appNames = meta.applicants.map(a => a.rawName).join(' ');
+      const hay = `${post.title} ${post.role_name} ${meta.clientName} ${meta.projectLabel} ${post.required_domain} ${(post.required_skills || []).join(' ')} ${post.work_location || ''} ${appNames}`.toLowerCase();
+      if (!hay.includes(kw)) return false;
+    }
+    return true;
+  });
+
+  const sortBy = sf.sortBy || 'URGENT';
+  return [...filtered].sort((a, b) => {
+    // Always keep OPEN postings above CLOSED unless filtered
+    if (a.status !== b.status) return a.status === 'OPEN' ? -1 : 1;
+    const ma = getPostingEnrichedMeta(a);
+    const mb = getPostingEnrichedMeta(b);
+    if (sortBy === 'URGENT') {
+      if (ma.dDay !== mb.dDay) return ma.dDay - mb.dDay;
+      return mb.unreviewedCount - ma.unreviewedCount;
+    }
+    if (sortBy === 'APPLICANTS') {
+      if (mb.appliedCount !== ma.appliedCount) return mb.appliedCount - ma.appliedCount;
+      return ma.dDay - mb.dDay;
+    }
+    if (sortBy === 'UNREVIEWED') {
+      if (mb.unreviewedCount !== ma.unreviewedCount) return mb.unreviewedCount - ma.unreviewedCount;
+      return mb.appliedCount - ma.appliedCount;
+    }
+    if (sortBy === 'RATE_HIGH') {
+      return mb.budgetRange.max - ma.budgetRange.max;
+    }
+    // RECENT
+    return String(b.created_at || '').localeCompare(String(a.created_at || ''));
+  });
 }
 
 function openNewPostingModal() {
@@ -7540,75 +8276,305 @@ async function submitNewPostingFromModal(e) {
   await loadState();
 }
 
-function renderSourcingCardsHtml() {
-  const { postings, permissions, currentUser } = state.data;
-  const sf = state.sourcingFilters || { status: 'ALL', grade: 'ALL', domain: 'ALL', keyword: '' };
+function renderSourcingPostingCard(post, permissions, currentUser) {
+  const meta = getPostingEnrichedMeta(post);
+  const isMenuOpen = state.sourcingFilters?.openMenuPostingId === post.id;
+  const isClosed = post.status !== 'OPEN';
+  const closedBadgeLabel = post.close_reason === 'STOPPED' ? '공고종료' : '충원완료';
 
-  const filteredPostings = postings.filter(post => {
-    if (sf.status !== 'ALL' && post.status !== sf.status) return false;
-    if (sf.grade !== 'ALL' && post.required_grade !== sf.grade) return false;
-    if (sf.domain !== 'ALL' && post.required_domain !== sf.domain) return false;
-    if (sf.keyword) {
-      const kw = sf.keyword.toLowerCase();
-      const hay = `${post.title} ${post.role_name} ${post.required_domain} ${(post.required_skills || []).join(' ')} ${post.work_location || ''}`.toLowerCase();
-      if (!hay.includes(kw)) return false;
-    }
-    return true;
-  });
+  return `
+    <article class="zal-feed-card src-posting-card ${meta.isUrgent ? 'is-urgent' : ''} ${isClosed ? 'is-closed' : ''}" onclick="openPostingDetailModal('${post.id}')">
+      <!-- [1] 상단 컨텍스트 & 배지 바 (등급/도메인/긴급도 D-Day 컬러 배지화 + 우측 아이콘 액션) -->
+      <div class="src-card-top-bar">
+        <div class="src-card-badges-row">
+          <span class="src-status-badge ${post.status === 'OPEN' ? 'open' : (post.close_reason === 'STOPPED' ? 'stopped' : 'filled')}">
+            <span class="src-status-dot"></span>
+            ${post.status === 'OPEN' ? '모집중' : closedBadgeLabel}
+          </span>
+          ${post.status === 'OPEN' ? `
+            <span class="src-dday-badge ${meta.isUrgent ? 'urgent' : 'normal'}" title="투입 시작월(${meta.startYm}) 기준 남은 일수">
+              ${meta.isUrgent ? '🔥 ' : ''}${meta.dDayBadgeText}
+            </span>
+          ` : ''}
+          <span class="src-grade-badge grade-${post.required_grade}">${post.required_grade} 기술자</span>
+          <span class="src-domain-badge">${post.required_domain}</span>
+        </div>
 
-  return filteredPostings.map(post => `
-    <article class="zal-feed-card" style="cursor:pointer;" onclick="openPostingDetailModal('${post.id}')">
-      <div class="zal-card-header">
-        <div class="zal-author-box">
-          <div>
-            <span class="zal-author-name">${post.role_name}</span>
-            <span class="zal-author-role">${post.required_grade} · ${post.required_domain}</span>
-            <div class="zal-card-time">${svgIcon('clock', 12)} 등록 ${post.created_at} | 타겟소싱 ${post.sourcing_sent_count}건</div>
+        <div class="src-card-quick-tools" onclick="event.stopPropagation();">
+          <button
+            type="button"
+            class="src-icon-tool-btn"
+            onclick="copyPostingWebLink('${post.id}')"
+            title="오픈 구인 웹 링크 복사하기"
+            aria-label="오픈 구인 웹 링크 복사하기"
+          >
+            ${svgIcon('link', 14)}
+          </button>
+          ${permissions.can_manage_postings ? `
+            <div class="src-manage-menu-wrap">
+              <button
+                type="button"
+                class="src-icon-tool-btn ${isMenuOpen ? 'active' : ''}"
+                onclick="togglePostingManageMenu('${post.id}', event)"
+                title="공고 관리 메뉴 (수정 / 복제 / 마감)"
+                aria-label="공고 관리 메뉴"
+              >
+                <span style="font-size:16px; font-weight:800; line-height:1; letter-spacing:1px;">⋯</span>
+              </button>
+              ${isMenuOpen ? `
+                <div class="src-manage-dropdown" onclick="event.stopPropagation();">
+                  <button type="button" class="src-dropdown-item" onclick="openPostingDetailModal('${post.id}')">
+                    ${svgIcon('eye', 13)} 공고 상세 · 지원자 관리
+                  </button>
+                  <button type="button" class="src-dropdown-item" onclick="openEditPostingModal('${post.id}')">
+                    ${svgIcon('edit', 13)} 공고 조건 수정
+                  </button>
+                  <button type="button" class="src-dropdown-item" onclick="duplicatePosting('${post.id}')">
+                    ${svgIcon('file', 13)} 공고 복제 (추가 TO 모집)
+                  </button>
+                  <div class="src-dropdown-divider"></div>
+                  ${post.status === 'OPEN' ? `
+                    <button type="button" class="src-dropdown-item danger" onclick="openPostingCloseConfirmModal('${post.id}')">
+                      ${svgIcon('lock', 13)} 충원완료 · 채용마감 처리
+                    </button>
+                  ` : `
+                    <button type="button" class="src-dropdown-item" onclick="togglePostingStatus('${post.id}')">
+                      ${svgIcon('bolt', 13)} 공고 재오픈 (모집 재개)
+                    </button>
+                  `}
+                </div>
+              ` : ''}
+            </div>
+          ` : ''}
+        </div>
+      </div>
+
+      <!-- [2] 프로젝트 라벨 + 중복 제거된 단일 포지션 타이틀 -->
+      <div class="src-card-title-block">
+        <div class="src-client-project-label">
+          <span class="src-project-name-text">${meta.projectLabel}</span>
+        </div>
+        <h3 class="src-position-main-title">${meta.cleanTitle}</h3>
+        <div class="src-card-meta-subline">
+          <span>${svgIcon('clock', 12)} 등록 ${post.created_at} <strong>(${meta.elapsedDays}일 경과)</strong></span>
+          ${meta.roleSubName ? `<span>· 담당: <strong style="color:#334155;">${meta.roleSubName}</strong></span>` : ''}
+          ${meta.unreviewedCount > 0 ? `<span class="src-attention-tag">● 신규 미검토 지원자 ${meta.unreviewedCount}명</span>` : ''}
+        </div>
+      </div>
+
+      <!-- [3] 핵심 조건 3종 (기간·근무지 / 단가 가이드 / 필수 스킬 배지) -->
+      <div class="src-spec-box">
+        <div class="src-spec-row">
+          <span class="src-spec-label">${svgIcon('calendar', 14)} 기간·근무</span>
+          <span class="src-spec-val"><strong>${post.period}</strong> <span class="src-spec-sub">(${post.work_location})</span></span>
+        </div>
+        <div class="src-spec-row">
+          <span class="src-spec-label">${svgIcon('dollar', 14)} 단가가이드</span>
+          <span class="src-spec-val highlight-rate">${post.rate_guide}</span>
+        </div>
+        <div class="src-spec-row">
+          <span class="src-spec-label">${svgIcon('code', 14)} 필수스킬</span>
+          <div class="src-spec-skills-wrap">
+            ${(post.required_skills || []).map(sk => `<span class="src-skill-chip">${sk}</span>`).join('')}
           </div>
         </div>
-        <span class="zal-status-pill ${post.status === 'OPEN' ? 'green' : 'gray'}">${post.status === 'OPEN' ? '모집중' : '마감됨'}</span>
       </div>
 
-      <div class="zal-card-title">${post.title}</div>
+      <!-- [4] 소싱 퍼널 세그먼트 탭 + 지원자 선별 파이프라인 -->
+      ${renderPostingApplicantBox(post)}
 
-      <div class="zal-meta-list">
-        <div class="zal-meta-row"><span class="zal-meta-label">${svgIcon('calendar', 14)} 기간</span><span class="zal-meta-val">${post.period} (${post.work_location})</span></div>
-        <div class="zal-meta-row"><span class="zal-meta-label">${svgIcon('dollar', 14)} 단가</span><span class="zal-meta-val">${post.rate_guide}</span></div>
-        <div class="zal-meta-row"><span class="zal-meta-label">${svgIcon('code', 14)} 스킬</span><span class="zal-meta-val">${post.required_skills.join(', ')}</span></div>
-      </div>
-
-      <div class="zal-card-footer">
-        <div class="zal-reaction-group" style="flex-wrap:wrap;">
-          <button type="button" class="btn btn-outline btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="event.stopPropagation(); copyPostingWebLink('${post.id}')">
-            ${svgIcon('link', 13)} 오픈 구인 웹 링크 복사하기
-          </button>
-          ${post.status === 'OPEN' && currentUser?.role_group !== 'MASTER' ? `
-            <button type="button" class="btn btn-primary btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="event.stopPropagation(); openEasyApplyModal('${post.id}')">
+      <!-- [6] 하단 액션 바 (보조·관리 액션 좌측 / 프라이머리 CTA 우측 끝 정렬) -->
+      <div class="src-card-action-footer" onclick="event.stopPropagation();">
+        <div class="src-footer-left-actions">
+          ${post.status === 'OPEN' && permissions.can_manage_postings && currentUser?.role_group !== 'MASTER' ? `
+            <button type="button" class="btn btn-outline btn-sm" style="display:inline-flex; align-items:center; gap:5px; font-weight:600;" onclick="openEasyApplyModal('${post.id}')">
               ${svgIcon('edit', 13)} ${currentUser?.role_group === 'INTERNAL' ? '사내 지인 추천' : '간편 지원하기'}
             </button>
           ` : ''}
-          ${permissions.can_manage_postings ? `
-            <button type="button" class="btn btn-outline btn-sm" style="display:inline-flex; align-items:center; gap:5px;" onclick="event.stopPropagation(); openTargetSourcingModal('${post.id}')">${svgIcon('target', 13)} 타겟 소싱 발송</button>
+          ${permissions.can_manage_postings ? (post.status === 'OPEN' ? `
+            <button
+              type="button"
+              class="src-safe-close-btn"
+              onclick="openPostingCloseConfirmModal('${post.id}')"
+              title="충원 완료 또는 공고 종료 처리 (확인 모달)"
+            >
+              마감·종료
+            </button>
+          ` : `
+            <button
+              type="button"
+              class="btn btn-outline btn-sm"
+              onclick="togglePostingStatus('${post.id}')"
+            >
+              재오픈
+            </button>
+          `) : ''}
+        </div>
+
+        <div class="src-footer-right-actions" style="margin-left:auto;">
+          ${permissions.can_manage_postings && post.status === 'OPEN' ? `
+            <button type="button" class="btn btn-primary btn-sm src-primary-cta-btn" onclick="openTargetSourcingModal('${post.id}')">
+              ${svgIcon('target', 14)} 타겟 소싱 발송(${meta.matchingPoolCount})
+            </button>
+          ` : (!permissions.can_manage_postings && post.status === 'OPEN' && currentUser?.role_group !== 'MASTER') ? `
+            <button type="button" class="btn btn-primary btn-sm src-primary-cta-btn" onclick="openEasyApplyModal('${post.id}')">
+              ${svgIcon('edit', 13)} ${currentUser?.role_group === 'INTERNAL' ? '사내 지인 추천' : '간편 지원하기'}
+            </button>
           ` : ''}
         </div>
       </div>
-
-      <div class="posting-bottom-row">
-        ${renderPostingApplicantBox(post)}
-        ${permissions.can_manage_postings ? `
-          <button type="button" class="btn btn-primary btn-sm" style="margin-left:auto; align-self:flex-end;" onclick="event.stopPropagation(); togglePostingStatus('${post.id}')">${post.status === 'OPEN' ? '채용마감' : '재오픈'}</button>
-        ` : ''}
-      </div>
     </article>
-  `).join('') || `
-    <div class="card" style="grid-column: 1 / -1; text-align:center; padding:40px;">
-      조건에 부합하는 오픈 구인 포지션이 없습니다.
+  `;
+}
+
+function renderSourcingListTableHtml(filteredPostings, permissions, currentUser) {
+  if (filteredPostings.length === 0) {
+    return `
+      <div class="card" style="text-align:center; padding:44px 20px; color:#475569;">
+        조건에 부합하는 구인·소싱 포지션이 없습니다.
+      </div>
+    `;
+  }
+
+  return `
+    <div class="src-list-table-wrap">
+      <table class="src-list-table">
+        <thead>
+          <tr>
+            <th style="width:130px;">상태 · 긴급도</th>
+            <th>고객사 · 포지션명 (등급/도메인)</th>
+            <th style="width:210px;">투입 기간 · 근무지 · 단가</th>
+            <th style="width:175px;">소싱 퍼널 현황</th>
+            <th style="width:250px;">지원자 파이프라인 (매칭률)</th>
+            <th style="width:185px; text-align:right;">업무 처리 액션</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${filteredPostings.map(post => {
+            const meta = getPostingEnrichedMeta(post);
+            const closedBadgeLabel = post.close_reason === 'STOPPED' ? '공고종료' : '충원완료';
+            return `
+              <tr onclick="openPostingDetailModal('${post.id}')" style="cursor:pointer;">
+                <td>
+                  <div style="display:flex; flex-direction:column; align-items:flex-start; gap:5px;">
+                    <span class="src-status-badge ${post.status === 'OPEN' ? 'open' : 'filled'}">
+                      <span class="src-status-dot"></span>
+                      ${post.status === 'OPEN' ? '모집중' : closedBadgeLabel}
+                    </span>
+                    ${post.status === 'OPEN' ? `
+                      <span class="src-dday-badge ${meta.isUrgent ? 'urgent' : 'normal'}">${meta.isUrgent ? '🔥 ' : ''}${meta.dDayBadgeText}</span>
+                    ` : `<span style="font-size:11.5px; color:#64748b;">등록 ${post.created_at}</span>`}
+                  </div>
+                </td>
+                <td>
+                  <div style="display:flex; flex-direction:column; gap:4px;">
+                    <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                      <span class="src-client-pill">${meta.clientName}</span>
+                      <span class="src-grade-badge grade-${post.required_grade}">${post.required_grade}</span>
+                      <span class="src-domain-badge">${post.required_domain}</span>
+                    </div>
+                    <strong style="font-size:14.5px; color:#0f172a;">${meta.cleanTitle}</strong>
+                    <div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:2px;">
+                      ${(post.required_skills || []).map(sk => `<span class="src-skill-chip">${sk}</span>`).join('')}
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <div style="font-size:13px; font-weight:700; color:#0f172a;">${post.period}</div>
+                  <div style="font-size:12px; color:#475569; margin-top:2px;">근무지: ${post.work_location}</div>
+                  <div style="font-size:12.5px; font-weight:700; color:#2563eb; margin-top:3px;">${post.rate_guide}</div>
+                </td>
+                <td onclick="event.stopPropagation(); openSourcingFunnelHistoryModal('${post.id}')">
+                  <div class="src-table-funnel-box" title="클릭하여 소싱 발송·응답 상세 보기">
+                    <div>타겟 발송: <strong>${meta.sentCount}건</strong></div>
+                    <div>참여 신청: <strong style="color:#e11d48;">${meta.appliedCount}명</strong></div>
+                    <div>면접·검증: <strong style="color:#2563eb;">${meta.interviewCount}명</strong></div>
+                  </div>
+                </td>
+                <td onclick="event.stopPropagation();">
+                  <div style="display:flex; flex-direction:column; gap:5px;">
+                    ${meta.applicants.slice(0, 3).map(app => `
+                      <div class="src-table-app-chip" onclick="openApplicantDetailFromPosting('${post.id}', ${app.idx})" title="${app.displayName} (${app.grade}·${app.expYears}년) 희망 ${app.desiredRate}만 / 가용 ${app.availShort}">
+                        <img src="${app.avatarUrl}" alt="${app.displayName}" style="width:22px; height:22px; border-radius:50%; object-fit:cover;" />
+                        <strong style="font-size:12.5px; color:#0f172a;">${app.displayName}</strong>
+                        <span class="src-applicant-match-chip ${app.matchPct >= 92 ? 'high' : 'mid'}">${app.matchPct}%</span>
+                        <span class="src-applicant-stage-pill ${app.pipeline.pillCls}">${app.pipeline.label}</span>
+                      </div>
+                    `).join('')}
+                    ${meta.applicants.length > 3 ? `<span style="font-size:11.5px; color:#64748b;">외 +${meta.applicants.length - 3}명</span>` : ''}
+                  </div>
+                </td>
+                <td onclick="event.stopPropagation();" style="text-align:right;">
+                  <div style="display:inline-flex; flex-direction:column; align-items:flex-end; gap:6px;">
+                    <div style="display:inline-flex; align-items:center; gap:5px;">
+                      ${meta.applicants.length >= 2 ? `
+                        <button type="button" class="btn btn-outline btn-sm" style="padding:0 9px; height:32px; font-size:12px;" onclick="openPostingApplicantsCompareModal('${post.id}')">
+                          비교(${meta.applicants.length})
+                        </button>
+                      ` : ''}
+                      ${permissions.can_manage_postings && post.status === 'OPEN' ? `
+                        <button type="button" class="btn btn-primary btn-sm" style="padding:0 10px; height:32px; font-size:12px;" onclick="openTargetSourcingModal('${post.id}')">
+                          타겟소싱
+                        </button>
+                      ` : ''}
+                    </div>
+                    <div style="display:inline-flex; align-items:center; gap:5px;">
+                      <button type="button" class="src-icon-tool-btn" style="width:28px; height:28px;" onclick="copyPostingWebLink('${post.id}')" title="웹 링크 복사">
+                        ${svgIcon('link', 13)}
+                      </button>
+                      ${permissions.can_manage_postings ? (post.status === 'OPEN' ? `
+                        <button type="button" class="src-safe-close-btn" style="height:28px; padding:0 9px; font-size:11.5px;" onclick="openPostingCloseConfirmModal('${post.id}')">
+                          마감·종료
+                        </button>
+                      ` : `
+                        <button type="button" class="btn btn-outline btn-sm" style="height:28px; padding:0 9px; font-size:11.5px;" onclick="togglePostingStatus('${post.id}')">
+                          재오픈
+                        </button>
+                      `) : ''}
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
     </div>
   `;
 }
 
+function renderSourcingMasonryColumnsHtml(list, permissions, currentUser) {
+  const cols = [[], []];
+  list.forEach((post, idx) => {
+    cols[idx % 2].push(renderSourcingPostingCard(post, permissions, currentUser));
+  });
+  return cols.map(colCards => `<div class="src-masonry-col">${colCards.join('')}</div>`).join('');
+}
+
+function renderSourcingCardsHtml() {
+  const { permissions, currentUser } = state.data;
+  const sf = state.sourcingFilters || {};
+  const filteredPostings = getFilteredAndSortedPostings();
+
+  if (sf.viewMode === 'LIST') {
+    return renderSourcingListTableHtml(filteredPostings, permissions, currentUser);
+  }
+
+  if (filteredPostings.length === 0) {
+    return `
+      <div class="card" style="grid-column: 1 / -1; text-align:center; padding:44px 20px;">
+        <div style="font-size:15px; font-weight:700; color:#0f172a; margin-bottom:6px;">조건에 부합하는 오픈 구인 포지션이 없습니다.</div>
+        <div style="font-size:13px; color:#64748b; margin-bottom:14px;">필터 조건을 완화하거나 초기화하여 전체 포지션을 확인해 보세요.</div>
+        <button type="button" class="btn btn-outline btn-sm" onclick="resetSourcingFilters()">필터 전체 초기화</button>
+      </div>
+    `;
+  }
+
+  return renderSourcingMasonryColumnsHtml(filteredPostings, permissions, currentUser);
+}
+
 function renderSourcingTab() {
-  const { postings, permissions, currentUser } = state.data;
+  const { postings = [], permissions, currentUser } = state.data;
   const el = document.getElementById('tab-sourcing');
 
   if (state.selectedPostingId) {
@@ -7620,48 +8586,192 @@ function renderSourcingTab() {
     state.selectedPostingId = null;
   }
 
-  const sf = state.sourcingFilters || { status: 'ALL', grade: 'ALL', domain: 'ALL', keyword: '' };
-
+  const sf = state.sourcingFilters || {};
   const openPostingsCount = postings.filter(p => p.status === 'OPEN').length;
   const closedPostingsCount = postings.filter(p => p.status !== 'OPEN').length;
 
-  el.innerHTML = `
-    <div class="filter-bar">
-      <button type="button" class="zal-chip-btn ${sf.status === 'ALL' ? 'active' : ''}" onclick="updateSourcingFilter('status', 'ALL')">
-        전체 (${postings.length})
-      </button>
-      <button type="button" class="zal-chip-btn ${sf.status === 'OPEN' ? 'active' : ''}" onclick="updateSourcingFilter('status', 'OPEN')">
-        모집중 (${openPostingsCount})
-      </button>
-      <button type="button" class="zal-chip-btn ${sf.status === 'CLOSED' ? 'active' : ''}" onclick="updateSourcingFilter('status', 'CLOSED')">
-        마감됨 (${closedPostingsCount})
-      </button>
-      <select class="zal-chip-select ${sf.grade !== 'ALL' ? 'active' : ''}" onchange="updateSourcingFilter('grade', this.value)">
-        <option value="ALL" ${sf.grade === 'ALL' ? 'selected' : ''}>전체 등급</option>
-        <option value="특급" ${sf.grade === '특급' ? 'selected' : ''}>특급</option>
-        <option value="고급" ${sf.grade === '고급' ? 'selected' : ''}>고급</option>
-        <option value="중급" ${sf.grade === '중급' ? 'selected' : ''}>중급</option>
-      </select>
-      <select class="zal-chip-select ${sf.domain !== 'ALL' ? 'active' : ''}" onchange="updateSourcingFilter('domain', this.value)">
-        <option value="ALL" ${sf.domain === 'ALL' ? 'selected' : ''}>전체 도메인</option>
-        <option value="퇴직연금" ${sf.domain === '퇴직연금' ? 'selected' : ''}>퇴직연금</option>
-        <option value="펀드" ${sf.domain === '펀드' ? 'selected' : ''}>펀드</option>
-        <option value="채권" ${sf.domain === '채권' ? 'selected' : ''}>채권</option>
-        <option value="계정계 코어" ${sf.domain === '계정계 코어' ? 'selected' : ''}>계정계 코어</option>
-        <option value="마이데이터" ${sf.domain === '마이데이터' ? 'selected' : ''}>마이데이터</option>
-        <option value="채널계" ${sf.domain === '채널계' ? 'selected' : ''}>채널계</option>
-        <option value="정보계/DW" ${sf.domain === '정보계/DW' ? 'selected' : ''}>정보계/DW</option>
-      </select>
-      ${renderChipSearchBox('sourcingSearchInput', sf.keyword, '포지션명, 프로젝트 공고명, 스킬(Java, ProFrame, React) 검색...', 'sourcing')}
-      ${permissions.can_manage_postings ? `
-        <button type="button" class="btn btn-primary" style="width:170px; height:42px; padding:0 14px; font-size:14.5px; font-weight:700; box-sizing:border-box; display:inline-flex; align-items:center; justify-content:center; gap:6px; margin-left:auto;" onclick="openNewPostingModal()">
-          ${svgIcon('briefcase', 15)} 구인 등록하기
-        </button>
-      ` : ''}
-    </div>
+  // Aggregate KPI metrics across all postings
+  const allMetas = postings.map(p => getPostingEnrichedMeta(p));
+  const totalApplicants = allMetas.reduce((acc, m) => acc + m.appliedCount, 0);
+  const totalUnreviewed = allMetas.reduce((acc, m) => acc + m.unreviewedCount, 0);
+  const totalInterviewed = allMetas.reduce((acc, m) => acc + m.interviewCount, 0);
+  const totalSent = allMetas.reduce((acc, m) => acc + m.sentCount, 0);
+  const urgentPostingsCount = allMetas.filter(m => m.isUrgent).length;
 
-    <div id="sourcingCardsGrid" class="dashboard-feed-masonry">
-      ${renderSourcingCardsHtml()}
+  // Dynamic skill options from postings
+  const skillSet = new Set(['Java', 'Spring Batch', 'Spring Boot', 'Oracle', 'ProFrame', 'React', 'TypeScript', 'WebSquare', '펀드회계']);
+  postings.forEach(p => (p.required_skills || []).forEach(s => skillSet.add(s)));
+  const skillOptions = Array.from(skillSet);
+  const activeDetailCount = getActiveSourcingDetailFilterCount();
+
+  // Build active filter chips
+  const activeChips = [];
+  if (sf.kpiFilter && sf.kpiFilter !== 'ALL') {
+    const kpiLabelMap = {
+      OPEN_ONLY: '모집중 공고만',
+      UNREVIEWED: '미검토 신규 지원자 보유',
+      URGENT: '12월 투입 임박 (D-15 이내)',
+      FUNNEL: '타겟 소싱 발송 공고'
+    };
+    activeChips.push({ key: 'kpiFilter', val: 'ALL', label: `KPI 필터: ${kpiLabelMap[sf.kpiFilter] || sf.kpiFilter}` });
+  }
+  if (sf.grade && sf.grade !== 'ALL') activeChips.push({ key: 'grade', val: 'ALL', label: `등급: ${sf.grade}` });
+  if (sf.domain && sf.domain !== 'ALL') activeChips.push({ key: 'domain', val: 'ALL', label: `도메인: ${sf.domain}` });
+  if (sf.skill && sf.skill !== 'ALL') activeChips.push({ key: 'skill', val: 'ALL', label: `필수스킬: ${sf.skill}` });
+  if (sf.startMonth && sf.startMonth !== 'ALL') activeChips.push({ key: 'startMonth', val: 'ALL', label: `투입시작월: ${sf.startMonth}` });
+  if (sf.location && sf.location !== 'ALL') activeChips.push({ key: 'location', val: 'ALL', label: `근무지: ${sf.location}` });
+  if (sf.maxRate && sf.maxRate !== 'ALL') activeChips.push({ key: 'maxRate', val: 'ALL', label: `단가가이드: 월 ${Number(sf.maxRate).toLocaleString()}만 이상` });
+
+  el.innerHTML = `
+    <div onclick="closeSourcingPopovers()">
+      <!-- [상단 필터·정렬·뷰 토글 바] -->
+      <div class="filter-bar" style="position:relative;">
+        <button type="button" class="zal-chip-btn ${sf.status === 'ALL' ? 'active' : ''}" onclick="updateSourcingFilter('status', 'ALL')">
+          전체 (${postings.length})
+        </button>
+        <button type="button" class="zal-chip-btn ${sf.status === 'OPEN' ? 'active' : ''}" onclick="updateSourcingFilter('status', 'OPEN')">
+          모집중 (${openPostingsCount})
+        </button>
+        <button
+          type="button"
+          class="zal-chip-btn ${sf.status === 'CLOSED' ? 'active' : ''} ${closedPostingsCount === 0 && sf.status !== 'CLOSED' ? 'is-empty-tab' : ''}"
+          onclick="updateSourcingFilter('status', 'CLOSED')"
+          title="${closedPostingsCount === 0 ? '현재 마감된 공고가 없습니다' : `마감된 공고 ${closedPostingsCount}건 보기`}"
+        >
+          마감됨 (${closedPostingsCount})
+        </button>
+
+        <select class="zal-chip-select ${sf.grade !== 'ALL' ? 'active' : ''}" onchange="updateSourcingFilter('grade', this.value)" title="요구 기술등급 필터">
+          <option value="ALL" ${sf.grade === 'ALL' ? 'selected' : ''}>전체 등급</option>
+          <option value="특급" ${sf.grade === '특급' ? 'selected' : ''}>특급</option>
+          <option value="고급" ${sf.grade === '고급' ? 'selected' : ''}>고급</option>
+          <option value="중급" ${sf.grade === '중급' ? 'selected' : ''}>중급</option>
+        </select>
+
+        <select class="zal-chip-select ${sf.domain !== 'ALL' ? 'active' : ''}" onchange="updateSourcingFilter('domain', this.value)" title="도메인 필터">
+          <option value="ALL" ${sf.domain === 'ALL' ? 'selected' : ''}>전체 도메인</option>
+          <option value="퇴직연금" ${sf.domain === '퇴직연금' ? 'selected' : ''}>퇴직연금</option>
+          <option value="펀드" ${sf.domain === '펀드' ? 'selected' : ''}>펀드</option>
+          <option value="채권" ${sf.domain === '채권' ? 'selected' : ''}>채권</option>
+          <option value="계정계 코어" ${sf.domain === '계정계 코어' ? 'selected' : ''}>계정계 코어</option>
+          <option value="마이데이터" ${sf.domain === '마이데이터' ? 'selected' : ''}>마이데이터</option>
+          <option value="채널계" ${sf.domain === '채널계' ? 'selected' : ''}>채널계</option>
+          <option value="정보계/DW" ${sf.domain === '정보계/DW' ? 'selected' : ''}>정보계/DW</option>
+        </select>
+
+        <select class="zal-chip-select ${(sf.sortBy || 'URGENT') !== 'URGENT' ? 'active' : ''}" onchange="updateSourcingFilter('sortBy', this.value)" title="공고 정렬 기준">
+          <option value="URGENT" ${(sf.sortBy || 'URGENT') === 'URGENT' ? 'selected' : ''}>정렬: 투입 임박순 (D-Day)</option>
+          <option value="UNREVIEWED" ${sf.sortBy === 'UNREVIEWED' ? 'selected' : ''}>정렬: 미검토 지원자순</option>
+          <option value="APPLICANTS" ${sf.sortBy === 'APPLICANTS' ? 'selected' : ''}>정렬: 지원자 많은 순</option>
+          <option value="RATE_HIGH" ${sf.sortBy === 'RATE_HIGH' ? 'selected' : ''}>정렬: 단가 높은 순</option>
+          <option value="RECENT" ${sf.sortBy === 'RECENT' ? 'selected' : ''}>정렬: 최신 등록순</option>
+        </select>
+
+        <div class="src-search-box-wide">
+          ${renderChipSearchBox('sourcingSearchInput', sf.keyword, '포지션, 고객사, 스킬(Java, React), 지원자명 검색...', 'sourcing')}
+        </div>
+
+        <!-- 상세 필터 팝오버 (투입 시작월 / 근무지 / 스킬 / 단가 범위) -->
+        <div class="inv-detail-filter-anchor" onclick="event.stopPropagation();">
+          <button
+            type="button"
+            style="width:32px; height:32px; padding:0; display:inline-flex; align-items:center; justify-content:center; background:transparent; border:none; color:${sf.detailPopoverOpen || activeDetailCount > 0 ? '#0f172a' : '#64748b'}; cursor:pointer;"
+            onclick="toggleSourcingDetailFilterPopover(event)"
+            title="상세 필터${activeDetailCount > 0 ? ` (${activeDetailCount}개 적용중)` : ''}"
+            aria-label="상세 필터"
+          >
+            ${svgIcon('settings', 17)}
+          </button>
+
+          ${sf.detailPopoverOpen ? `
+            <div class="inv-detail-filter-popover" onclick="event.stopPropagation();">
+              <div class="inv-popover-header">
+                <strong>구인·소싱 상세 조건 필터</strong>
+                <button type="button" class="inv-popover-reset-btn" onclick="resetSourcingFilters()">전체 초기화</button>
+              </div>
+              <div class="inv-popover-grid">
+                <div class="inv-popover-field">
+                  <label>투입 시작월</label>
+                  <select class="select" onchange="updateSourcingFilter('startMonth', this.value)">
+                    <option value="ALL" ${(sf.startMonth || 'ALL') === 'ALL' ? 'selected' : ''}>전체 시작월</option>
+                    <option value="2026.12" ${sf.startMonth === '2026.12' ? 'selected' : ''}>2026.12 (투입 임박 · D-11)</option>
+                    <option value="2027.01" ${sf.startMonth === '2027.01' ? 'selected' : ''}>2027.01 (차기 투입 · D-42)</option>
+                  </select>
+                </div>
+                <div class="inv-popover-field">
+                  <label>근무지 권역</label>
+                  <select class="select" onchange="updateSourcingFilter('location', this.value)">
+                    <option value="ALL" ${(sf.location || 'ALL') === 'ALL' ? 'selected' : ''}>전체 근무지</option>
+                    <option value="을지로" ${sf.location === '을지로' ? 'selected' : ''}>서울 을지로 (도심권)</option>
+                    <option value="여의도" ${sf.location === '여의도' ? 'selected' : ''}>서울 여의도 (금융권)</option>
+                  </select>
+                </div>
+                <div class="inv-popover-field">
+                  <label>필수 기술 스택</label>
+                  <select class="select" onchange="updateSourcingFilter('skill', this.value)">
+                    <option value="ALL" ${(sf.skill || 'ALL') === 'ALL' ? 'selected' : ''}>전체 스킬</option>
+                    ${skillOptions.map(sk => `<option value="${sk}" ${sf.skill === sk ? 'selected' : ''}>${sk}</option>`).join('')}
+                  </select>
+                </div>
+                <div class="inv-popover-field">
+                  <label>단가 가이드 상한</label>
+                  <select class="select" onchange="updateSourcingFilter('maxRate', this.value)">
+                    <option value="ALL" ${(sf.maxRate || 'ALL') === 'ALL' ? 'selected' : ''}>전체 단가 범위</option>
+                    <option value="950" ${sf.maxRate === '950' ? 'selected' : ''}>월 950만원 이상 가능</option>
+                    <option value="1050" ${sf.maxRate === '1050' ? 'selected' : ''}>월 1,050만원 이상 가능</option>
+                    <option value="1150" ${sf.maxRate === '1150' ? 'selected' : ''}>월 1,150만원 이상 가능</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          ` : ''}
+        </div>
+
+        <div class="src-toolbar-right">
+          <!-- 카드 / 리스트 뷰 토글 -->
+          <div class="src-view-toggle-group" title="카드 뷰 / 테이블 리스트 뷰 전환">
+            <button
+              type="button"
+              class="src-view-toggle-btn ${(sf.viewMode || 'CARD') === 'CARD' ? 'active' : ''}"
+              onclick="updateSourcingFilter('viewMode', 'CARD')"
+            >
+              카드
+            </button>
+            <button
+              type="button"
+              class="src-view-toggle-btn ${sf.viewMode === 'LIST' ? 'active' : ''}"
+              onclick="updateSourcingFilter('viewMode', 'LIST')"
+            >
+              리스트
+            </button>
+          </div>
+
+          ${permissions.can_manage_postings ? `
+            <button type="button" class="btn btn-primary" style="height:40px; padding:0 15px; font-size:14px; font-weight:700; display:inline-flex; align-items:center; justify-content:center; gap:6px; white-space:nowrap;" onclick="openNewPostingModal()">
+              ${svgIcon('briefcase', 15)} 구인 등록하기
+            </button>
+          ` : ''}
+        </div>
+      </div>
+
+      <!-- [적용된 필터 칩 & 초기화 바] -->
+      ${activeChips.length > 0 ? `
+        <div class="src-active-chips-bar">
+          <span class="src-active-chips-label">적용된 필터:</span>
+          ${activeChips.map(c => `
+            <button type="button" class="src-active-filter-chip" onclick="updateSourcingFilter('${c.key}', '${c.val}')">
+              <span>${c.label}</span>
+              <span class="src-chip-x">&times;</span>
+            </button>
+          `).join('')}
+          <button type="button" class="src-active-reset-link" onclick="resetSourcingFilters()">필터 전체 초기화</button>
+        </div>
+      ` : ''}
+
+      <!-- [공고 카드 그리드 or 테이블 리스트] -->
+      <div id="sourcingCardsGrid" class="${sf.viewMode === 'LIST' ? 'src-list-container' : 'dashboard-feed-masonry'}">
+        ${renderSourcingCardsHtml()}
+      </div>
     </div>
   `;
 }
@@ -7672,7 +8782,7 @@ function copyPostingWebLink(postingId) {
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(shareUrl).catch(() => {});
   }
-  showToast(`오픈 구인 웹 링크가 클립보드에 복사되었습니다! (${post ? post.role_name : postingId})`);
+  showToast(`🔗 오픈 구인 웹 링크가 클립보드에 복사되었습니다! (${post ? post.role_name : postingId})`);
 }
 
 function openPostingDetailModal(postingId, options = {}) {
@@ -7685,6 +8795,9 @@ function openPostingDetailModal(postingId, options = {}) {
     closeModal();
   }
 
+  if (state.sourcingFilters) {
+    state.sourcingFilters.openMenuPostingId = null;
+  }
   state.selectedPostingId = postingId;
   if (state.activeTab !== 'sourcing') {
     state.activeTab = 'sourcing';
@@ -7712,8 +8825,9 @@ function closePostingDetailPage(options = {}) {
 }
 
 function renderPostingDetailPageView(el, post, permissions, currentUser) {
-  const { projects } = state.data || {};
-  const prj = (projects || []).find(p => p.id === post.project_id);
+  const meta = getPostingEnrichedMeta(post);
+  const { prj } = meta;
+  const closedBadgeLabel = post.close_reason === 'STOPPED' ? '공고종료' : '충원완료';
 
   el.innerHTML = `
     <div class="zal-tab-top-bar">
@@ -7724,39 +8838,82 @@ function renderPostingDetailPageView(el, post, permissions, currentUser) {
         </svg>
       </button>
       <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-        <button type="button" class="btn btn-outline" style="height:42px; padding:0 16px; font-size:14px; font-weight:600; display:inline-flex; align-items:center; gap:6px;" onclick="copyPostingWebLink('${post.id}')">
-          ${svgIcon('link', 14)} 오픈 구인 웹 링크 복사하기
+        <button type="button" class="btn btn-outline" style="height:40px; padding:0 14px; font-size:13.5px; font-weight:600; display:inline-flex; align-items:center; gap:6px;" onclick="copyPostingWebLink('${post.id}')">
+          ${svgIcon('link', 14)} 웹 링크 복사
         </button>
+        ${meta.applicants.length >= 2 ? `
+          <button type="button" class="btn btn-outline" style="height:40px; padding:0 14px; font-size:13.5px; font-weight:600; display:inline-flex; align-items:center; gap:6px;" onclick="openPostingApplicantsCompareModal('${post.id}')">
+            ${svgIcon('users', 14)} 지원자 후보 비교 (${meta.applicants.length}명)
+          </button>
+        ` : ''}
         ${post.status === 'OPEN' && currentUser?.role_group !== 'MASTER' ? `
-          <button type="button" class="btn btn-primary" style="height:42px; padding:0 16px; font-size:14px; font-weight:700; display:inline-flex; align-items:center; gap:6px;" onclick="openEasyApplyModal('${post.id}')">
+          <button type="button" class="btn btn-outline" style="height:40px; padding:0 15px; font-size:13.5px; font-weight:700; display:inline-flex; align-items:center; gap:6px;" onclick="openEasyApplyModal('${post.id}')">
             ${svgIcon('edit', 14)} ${currentUser?.role_group === 'INTERNAL' ? '사내 지인 추천' : '간편 지원하기'}
           </button>
         ` : ''}
         ${permissions.can_manage_postings ? `
-          <button type="button" class="btn btn-outline" style="height:42px; padding:0 16px; font-size:14px; font-weight:600; display:inline-flex; align-items:center; gap:6px;" onclick="openTargetSourcingModal('${post.id}')">
-            ${svgIcon('target', 14)} 타겟 소싱 발송
-          </button>
-          <button type="button" class="btn btn-primary" style="width:140px; height:42px; padding:0 14px; font-size:14.5px; font-weight:700; box-sizing:border-box; display:inline-flex; align-items:center; justify-content:center; gap:6px;" onclick="togglePostingStatus('${post.id}', false)">
-            ${post.status === 'OPEN' ? '채용마감' : '재오픈'}
+          ${post.status === 'OPEN' ? `
+            <button type="button" class="src-safe-close-btn" style="height:40px; padding:0 15px; font-size:13.5px;" onclick="openPostingCloseConfirmModal('${post.id}', true)">
+              채용마감 · 종료
+            </button>
+          ` : `
+            <button type="button" class="btn btn-outline" style="height:40px; padding:0 15px; font-size:13.5px; font-weight:700;" onclick="togglePostingStatus('${post.id}', false)">
+              재오픈
+            </button>
+          `}
+          <button type="button" class="btn btn-primary" style="height:40px; padding:0 16px; font-size:13.5px; font-weight:700; display:inline-flex; align-items:center; gap:6px;" onclick="openTargetSourcingModal('${post.id}')">
+            ${svgIcon('target', 14)} 타겟 소싱 발송(${meta.matchingPoolCount})
           </button>
         ` : ''}
       </div>
     </div>
 
     <div class="zal-feed-card" style="margin-bottom:28px; gap:20px;">
-      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:14px; flex-wrap:wrap; padding:18px 20px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px;">
-        <div style="flex:1; min-width:240px;">
-          <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
-            <span class="zal-status-pill ${post.status === 'OPEN' ? 'green' : 'gray'}">${post.status === 'OPEN' ? '모집중' : '마감됨'}</span>
-            <span class="zal-status-pill blue">${post.required_domain}</span>
-            <span class="badge badge-grade">${post.required_grade}</span>
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; padding:18px 20px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px;">
+        <div style="flex:1; min-width:260px;">
+          <div style="display:flex; align-items:center; gap:7px; flex-wrap:wrap; margin-bottom:10px;">
+            <span class="src-status-badge ${post.status === 'OPEN' ? 'open' : 'filled'}">
+              <span class="src-status-dot"></span>
+              ${post.status === 'OPEN' ? '모집중' : closedBadgeLabel}
+            </span>
+            ${post.status === 'OPEN' ? `
+              <span class="src-dday-badge ${meta.isUrgent ? 'urgent' : 'normal'}">${meta.isUrgent ? '🔥 ' : ''}${meta.dDayBadgeText}</span>
+            ` : ''}
+            <span class="src-grade-badge grade-${post.required_grade}">${post.required_grade} 기술자</span>
+            <span class="src-domain-badge">${post.required_domain}</span>
           </div>
-          <div style="font-size:20px; font-weight:700; color:#0f172a; line-height:1.4;">${post.title}</div>
-          <div style="font-size:13.5px; color:#64748b; margin-top:6px;">
-            등록일: ${post.created_at} · 타겟 소싱 발송: ${post.sourcing_sent_count}건
+          <div class="src-client-project-label" style="margin-bottom:4px;">
+            <span class="src-project-name-text">${meta.projectLabel}</span>
+          </div>
+          <div style="font-size:20px; font-weight:800; color:#0f172a; line-height:1.35;">${meta.cleanTitle}</div>
+          <div style="font-size:13px; color:#475569; margin-top:6px;">
+            등록일: <strong>${post.created_at} (${meta.elapsedDays}일 경과)</strong> · 담당 역할: <strong>${post.role_name}</strong>
           </div>
         </div>
-        ${renderPostingApplicantBox(post)}
+
+        <!-- 소싱 퍼널 요약 박스 -->
+        <div class="src-funnel-strip" style="min-width:320px; margin:0;" onclick="openSourcingFunnelHistoryModal('${post.id}')">
+          <div class="src-funnel-step clickable">
+            <span class="src-funnel-icon">${svgIcon('target', 13)}</span>
+            <span class="src-funnel-name">타겟발송</span>
+            <strong class="src-funnel-num">${meta.sentCount}건</strong>
+          </div>
+          <span class="src-funnel-arrow">&rarr;</span>
+          <div class="src-funnel-step">
+            <span class="src-funnel-name">열람</span>
+            <strong class="src-funnel-num">${meta.openedCount}명</strong>
+          </div>
+          <span class="src-funnel-arrow">&rarr;</span>
+          <div class="src-funnel-step active">
+            <span class="src-funnel-name">참여신청</span>
+            <strong class="src-funnel-num highlight">${meta.appliedCount}명</strong>
+          </div>
+          <span class="src-funnel-arrow">&rarr;</span>
+          <div class="src-funnel-step done">
+            <span class="src-funnel-name">면접·검증</span>
+            <strong class="src-funnel-num">${meta.interviewCount}명</strong>
+          </div>
+        </div>
       </div>
 
       <div class="form-grid" style="margin-bottom:0;">
@@ -7768,14 +8925,14 @@ function renderPostingDetailPageView(el, post, permissions, currentUser) {
         <div style="padding:16px 18px; border:1px solid #e2e8f0; border-radius:14px;">
           <div style="font-size:13px; color:#64748b; margin-bottom:6px;">단가 가이드 · 계약 형태</div>
           <div style="font-size:16px; font-weight:700; color:#2563eb;">${post.rate_guide}</div>
-          <div style="font-size:13.5px; color:#475569; margin-top:4px;">발주 고객사: ${prj ? prj.client : '금융권 고객사'} (${prj?.contract_type || '일괄도급'})</div>
+          <div style="font-size:13.5px; color:#475569; margin-top:4px;">발주 고객사: ${prj ? prj.client : meta.clientName} (${prj?.contract_type || '일괄도급'})</div>
         </div>
       </div>
 
       <div style="padding:18px 20px; border:1px solid #e2e8f0; border-radius:14px;">
         <div style="font-size:15px; font-weight:700; color:#0f172a; margin-bottom:10px;">요구 기술 스택 및 자격 요건</div>
         <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;">
-          ${(post.required_skills || []).map(sk => `<span class="badge badge-skill">${sk}</span>`).join('')}
+          ${(post.required_skills || []).map(sk => `<span class="src-skill-chip" style="font-size:12.5px; padding:4px 10px;">${sk}</span>`).join('')}
         </div>
         <ul style="margin:0; padding-left:18px; font-size:14px; color:#334155; line-height:1.7;">
           <li><strong>담당 역할:</strong> ${post.role_name} (${post.required_grade} 기술자)</li>
@@ -7790,64 +8947,58 @@ function renderPostingDetailPageView(el, post, permissions, currentUser) {
 }
 
 function renderPostingApplicantsListSection(post, permissions, currentUser) {
-  const { interviews = [], profiles = [] } = state.data || {};
-  const defaultMap = {
-    post_1: ['양동근', '김도현', '이준호'],
-    post_2: ['한지민', '박성진'],
-    post_3: ['오세훈', '김도윤', '최민수']
-  };
-  const rawApplicants = Array.isArray(post.applicants) && post.applicants.length > 0
-    ? post.applicants
-    : (defaultMap[post.id] || []);
+  const meta = getPostingEnrichedMeta(post);
+  const sortedApplicants = [...meta.applicants].sort((a, b) => b.matchPct - a.matchPct);
   const canRequest = Boolean(permissions?.can_schedule_interviews || permissions?.can_manage_postings);
-  const canViewSensitive = Boolean(permissions?.can_view_sensitive_info) && currentUser?.role_group !== 'INTERNAL';
 
   return `
     <div style="padding:18px 20px; border:1px solid #e2e8f0; border-radius:14px; background:#ffffff;">
       <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:14px;">
-        <div style="display:flex; align-items:center; gap:8px;">
-          <strong style="font-size:15.5px; font-weight:700; color:#0f172a;">지원자 목록 및 인터뷰 요청</strong>
-          <span class="zal-status-pill blue">${rawApplicants.length}명 지원</span>
+        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+          <strong style="font-size:15.5px; font-weight:700; color:#0f172a;">지원자 선별 파이프라인 및 인터뷰 요청</strong>
+          <span class="zal-status-pill blue">${sortedApplicants.length}명 참여신청</span>
+          ${meta.unreviewedCount > 0 ? `<span class="src-applicant-stage-summary urgent">미검토·신규 ${meta.unreviewedCount}명</span>` : ''}
         </div>
-        <span style="font-size:12.5px; color:#64748b;">지원자별 프로필을 검토하고 인터뷰 일정 및 사내 면접관을 배정하여 요청을 발송합니다.</span>
+        <div style="display:flex; align-items:center; gap:8px;">
+          ${sortedApplicants.length >= 2 ? `
+            <button type="button" class="btn btn-outline btn-sm" style="height:32px; padding:0 11px; font-size:12.5px; font-weight:700;" onclick="openPostingApplicantsCompareModal('${post.id}')">
+              ${svgIcon('users', 13)} 후보자 ${sortedApplicants.length}명 한눈에 비교
+            </button>
+          ` : ''}
+        </div>
       </div>
 
-      ${rawApplicants.length > 0 ? `
+      ${sortedApplicants.length > 0 ? `
         <div style="display:flex; flex-direction:column; gap:10px;">
-          ${rawApplicants.map((name, idx) => {
-            const rawName = String(name || '').trim().replace(/\*\*$/, '');
-            const matchedInv = interviews.find(i => i.posting_id === post.id && i.candidate_name === rawName)
-              || interviews.find(i => i.candidate_name === rawName);
-            const prof = profiles.find(p => (matchedInv?.candidate_profile_id && p.id === matchedInv.candidate_profile_id) || p.name === rawName);
-            const fb = APPLICANT_FALLBACK_MAP[rawName] || {};
-
-            const grade = matchedInv?.tech_grade || prof?.tech_grade || fb.tech_grade || post.required_grade || '고급';
-            const expYears = matchedInv?.experience_years || prof?.experience_years || fb.experience_years || 9;
-            const empType = matchedInv?.candidate_type || prof?.employment_type || fb.candidate_type || '프리랜서';
-            const availDate = matchedInv?.available_from || prof?.available_date || fb.available_from || '2026-11-25';
-            const rate = matchedInv?.desired_rate ?? prof?.desired_rate ?? fb.desired_rate ?? null;
-            const skills = matchedInv?.skills || prof?.skills || fb.skills || post.required_skills || ['Java', 'Oracle'];
-            const stageMeta = matchedInv ? getInterviewStageBadgeMeta(matchedInv) : { stage: '지원 접수', label: '지원 접수 (인터뷰 요청 전)', cls: 'stage-doc' };
-            const intDateText = matchedInv?.interview_date ? `${matchedInv.interview_date} (${matchedInv.interview_method || '화상'}) · 면접관 ${matchedInv.interviewer_name || '미지정'}` : '인터뷰 일정 미지정';
+          ${sortedApplicants.map(app => {
+            const intDateText = app.interviewDate
+              ? `인터뷰: ${app.interviewDate} · 면접관 ${app.interviewerName || '배정완료'}`
+              : '인터뷰 일정 미지정 (서류 검토 단계)';
 
             return `
               <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px; padding:14px 16px; border:1px solid #e2e8f0; border-radius:12px; background:#f8fafc;">
                 <div style="display:flex; align-items:center; gap:12px; min-width:240px; flex:1;">
-                  <img src="${getAvatarForId(prof?.id || rawName)}" alt="${rawName}" style="width:42px; height:42px; border-radius:50%; object-fit:cover; border:1.5px solid #ffffff; box-shadow:0 1px 3px rgba(15,23,42,0.1);" />
+                  <div class="src-applicant-avatar-wrap">
+                    <img src="${app.avatarUrl}" alt="${app.displayName}" style="width:44px; height:44px; border-radius:50%; object-fit:cover; border:1.5px solid #ffffff; box-shadow:0 1px 3px rgba(15,23,42,0.1);" />
+                  </div>
                   <div style="display:flex; flex-direction:column; gap:4px;">
                     <div style="display:flex; align-items:center; gap:7px; flex-wrap:wrap;">
-                      <strong style="font-size:15.5px; color:#0f172a;">${rawName}</strong>
-                      <span class="inv-grade-pill grade-${grade}">${grade}</span>
-                      <span style="font-size:12.5px; color:#475569;">경력 ${expYears}년 · ${empType}</span>
-                      <span class="inv-status-badge ${stageMeta.cls}" style="border-radius:999px; padding:2px 9px; font-size:11.5px;">${stageMeta.label}</span>
+                      <strong style="font-size:15.5px; color:#0f172a;">${app.displayName}</strong>
+                      <span class="src-applicant-grade-chip grade-${app.grade}">${app.grade} · 경력 ${app.expYears}년</span>
+                      <span class="src-applicant-match-chip ${app.matchPct >= 92 ? 'high' : 'mid'}">요건 적합도 ${app.matchPct}%</span>
+                      <span class="src-applicant-stage-pill ${app.pipeline.pillCls}">${app.pipeline.label}</span>
+                      <span style="font-size:11.5px; color:#64748b;">(${app.sourceType})</span>
                     </div>
-                    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-size:12.5px; color:#64748b;">
-                      <span>투입 가능일: <strong style="color:#0f172a;">${availDate}</strong></span>
-                      ${canViewSensitive && rate ? `<span>· 희망 단가: <strong style="color:#0f172a;">월 ${Number(rate).toLocaleString()}만원</strong></span>` : ''}
+                    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-size:12.5px; color:#475569;">
+                      <span>투입 가능일: <strong style="color:#0f172a;">${app.availDate}</strong></span>
+                      ${app.canViewSensitive ? `<span>· 희망 단가: <strong style="color:#0f172a;">월 ${app.desiredRate.toLocaleString()}만원</strong> <em class="src-rate-fit-text ${app.rateFitTone}">(${app.rateFitLabel})</em></span>` : ''}
                       <span>· ${intDateText}</span>
                     </div>
                     <div style="display:flex; align-items:center; gap:5px; flex-wrap:wrap; margin-top:2px;">
-                      ${skills.slice(0, 5).map(sk => `<span class="inv-skill-pill" style="font-size:11.5px; padding:2px 8px;">${sk}</span>`).join('')}
+                      ${app.reqSkills.map(reqSk => {
+                        const hit = app.matchedSkills.includes(reqSk);
+                        return `<span class="src-hover-skill-tag ${hit ? 'hit' : 'miss'}">${hit ? '✓ ' : ''}${reqSk}</span>`;
+                      }).join('')}
                     </div>
                   </div>
                 </div>
@@ -7857,7 +9008,7 @@ function renderPostingApplicantsListSection(post, permissions, currentUser) {
                     type="button"
                     class="btn btn-outline btn-sm"
                     style="height:36px; padding:0 13px; font-weight:600;"
-                    onclick="openApplicantDetailFromPosting('${post.id}', ${idx})"
+                    onclick="openApplicantDetailFromPosting('${post.id}', ${app.idx})"
                   >
                     상세 프로필
                   </button>
@@ -7866,10 +9017,10 @@ function renderPostingApplicantsListSection(post, permissions, currentUser) {
                       type="button"
                       class="btn btn-primary btn-sm"
                       style="height:36px; padding:0 14px; font-weight:600; display:inline-flex; align-items:center; gap:5px;"
-                      onclick="openSourcingInterviewRequestModal('${post.id}', '${rawName}', '${matchedInv?.id || ''}')"
+                      onclick="openSourcingInterviewRequestModal('${post.id}', '${app.rawName}', '${app.interviewId}')"
                     >
                       ${svgIcon('calendar', 13)}
-                      <span>${matchedInv?.interview_date ? '인터뷰 일정 변경·재요청' : '인터뷰 요청'}</span>
+                      <span>${app.interviewDate ? '일정 변경·재요청' : '인터뷰 요청'}</span>
                     </button>
                   ` : ''}
                 </div>
@@ -7878,12 +9029,533 @@ function renderPostingApplicantsListSection(post, permissions, currentUser) {
           }).join('')}
         </div>
       ` : `
-        <div style="padding:24px; text-align:center; color:#94a3b8; font-size:13.5px;">
+        <div style="padding:24px; text-align:center; color:#64748b; font-size:13.5px;">
           현재 이 구인 공고에 접수된 지원자가 없습니다.
         </div>
       `}
     </div>
   `;
+}
+
+/* =========================================================================
+   NEW SOURCING MODALS:
+   1. 채용마감/충원완료 확인 모달 (P0 오클릭 방지 & 사유 분리)
+   2. 지원자 후보 비교 모달 (B. 후보 선별 비교)
+   3. 타겟 소싱 퍼널 발송·응답 내역 모달 (A & P1 퍼널 가시성)
+   4. 공고 조건 수정 및 복제 (C. ⋯ 관리 메뉴)
+   ========================================================================= */
+function openPostingCloseConfirmModal(postingId, fromDetailPage = false) {
+  const post = (state.data?.postings || []).find(p => p.id === postingId);
+  if (!post) return;
+  const meta = getPostingEnrichedMeta(post);
+
+  openModal(`구인 공고 마감 확인 — ${meta.cleanTitle}`, `
+    <form onsubmit="submitPostingCloseConfirm(event, '${post.id}', ${Boolean(fromDetailPage)})">
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        <div style="padding:14px 16px; background:#fff7ed; border:1px solid #fed7aa; border-radius:12px; color:#9a3412; font-size:13px; line-height:1.55;">
+          <strong>⚠️ 공고 마감 전 확인해 주세요</strong><br/>
+          마감 처리 시 오픈 구인 웹 링크를 통한 신규 참여신청 접수가 중단됩니다. 현재 이 공고에는 <strong>참여신청 지원자 ${meta.appliedCount}명</strong>(미검토 ${meta.unreviewedCount}명 · 면접/검증 ${meta.interviewCount}명)이 있습니다.
+        </div>
+
+        <div class="form-field" style="margin-bottom:0;">
+          <label style="font-weight:700; color:#0f172a; margin-bottom:8px; display:block;">마감 유형 선택 (충원 완료 vs 공고 종료 분리)</label>
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <label class="src-close-reason-option">
+              <input type="radio" name="close_reason" value="FILLED" checked />
+              <div>
+                <strong style="font-size:13.5px; color:#0f172a;">✅ 충원 완료 (적임자 선발 및 투입 확정)</strong>
+                <div style="font-size:12px; color:#64748b;">프로젝트 TO 배정이 완료되어 구인을 정상 마감합니다.</div>
+              </div>
+            </label>
+            <label class="src-close-reason-option">
+              <input type="radio" name="close_reason" value="STOPPED" />
+              <div>
+                <strong style="font-size:13.5px; color:#0f172a;">⏸️ 공고 종료 (고객사 일정 변경 / 모집 보류)</strong>
+                <div style="font-size:12px; color:#64748b;">충원 없이 공고 노출만 중단하며, 필요 시 언제든 재오픈할 수 있습니다.</div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-field" style="margin-bottom:0;">
+          <label>마감 비고 메모 (선택)</label>
+          <input class="input" name="close_note" placeholder="예: 양동근 특급 개발자 최종 선정 완료에 따른 마감" />
+        </div>
+
+        <label style="display:flex; align-items:center; gap:8px; font-size:13px; color:#334155; cursor:pointer; padding:10px 12px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px;">
+          <input type="checkbox" name="notify_applicants" checked />
+          <span>현재 참여신청 지원자 <strong>${meta.appliedCount}명</strong>에게 모집 마감 안내 알림을 자동 발송합니다.</span>
+        </label>
+
+        <div style="display:flex; justify-content:flex-end; gap:10px; padding-top:4px;">
+          <button type="button" class="btn btn-outline" onclick="closeModal()">취소</button>
+          <button type="submit" class="btn btn-primary" style="background:#0f172a;">마감 확정하기</button>
+        </div>
+      </div>
+    </form>
+  `);
+}
+
+async function submitPostingCloseConfirm(e, postingId) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const closeReason = fd.get('close_reason') || 'FILLED';
+  const notify = fd.get('notify_applicants') === 'on';
+  await apiCall('/api/postings/toggle', 'POST', {
+    posting_id: postingId,
+    target_status: 'CLOSED',
+    close_reason: closeReason,
+    close_note: fd.get('close_note') || '',
+    notify_applicants: notify
+  });
+  closeModal();
+  const label = closeReason === 'STOPPED' ? '공고 종료(모집 중단)' : '충원 완료';
+  showToast(`✅ 구인 공고가 '${label}' 상태로 마감되었습니다.${notify ? ' (지원자 알림 발송 완료)' : ''}`);
+  await loadState();
+}
+
+function getScopedApplicantsForCompare(meta, scope = 'APPLIED') {
+  const base = scope === 'INTERVIEW'
+    ? meta.applicants.filter(c => c.pipeline.code !== 'NEW' && c.pipeline.code !== 'REVIEW')
+    : meta.applicants;
+  return [...base].sort((a, b) => b.matchPct - a.matchPct);
+}
+
+function getPostingCompareSelectedNames(postingId, allSorted, scope = 'APPLIED') {
+  if (!state.sourcingCompareMap) state.sourcingCompareMap = {};
+  const mapKey = `${postingId}_${scope}`;
+  const validNames = new Set(allSorted.map(c => c.rawName));
+  let cur = state.sourcingCompareMap[mapKey];
+  if (Array.isArray(cur)) {
+    cur = cur.filter(n => validNames.has(n));
+  }
+  if (!Array.isArray(cur) || cur.length === 0) {
+    cur = allSorted.slice(0, 4).map(c => c.rawName);
+    state.sourcingCompareMap[mapKey] = cur;
+  }
+  return cur;
+}
+
+function togglePostingCompareCandidate(postingId, rawName) {
+  const post = (state.data?.postings || []).find(p => p.id === postingId);
+  if (!post) return;
+  const scope = state.sourcingCompareScope || 'APPLIED';
+  const mapKey = `${postingId}_${scope}`;
+  const meta = getPostingEnrichedMeta(post);
+  const allSorted = getScopedApplicantsForCompare(meta, scope);
+  const cur = [...getPostingCompareSelectedNames(postingId, allSorted, scope)];
+  const idx = cur.indexOf(rawName);
+  if (idx >= 0) {
+    if (cur.length <= 1) {
+      showToast('최소 1명 이상의 비교 후보가 선택되어야 합니다.');
+      return;
+    }
+    cur.splice(idx, 1);
+  } else {
+    if (cur.length >= 4) {
+      showToast('한눈에 비교하기 위해 최대 4명까지 동시 선택할 수 있습니다. 기존 후보를 먼저 해제해 주세요.');
+      return;
+    }
+    cur.push(rawName);
+  }
+  state.sourcingCompareMap[mapKey] = cur;
+  openPostingApplicantsCompareModal(postingId, scope);
+}
+
+function applyPostingComparePreset(postingId, preset) {
+  const post = (state.data?.postings || []).find(p => p.id === postingId);
+  if (!post) return;
+  const scope = state.sourcingCompareScope || 'APPLIED';
+  const mapKey = `${postingId}_${scope}`;
+  const meta = getPostingEnrichedMeta(post);
+  const allSorted = getScopedApplicantsForCompare(meta, scope);
+  if (!state.sourcingCompareMap) state.sourcingCompareMap = {};
+
+  let picked = [];
+  if (preset === 'NEW') {
+    picked = allSorted.filter(c => c.pipeline.code === 'NEW' || c.pipeline.code === 'REVIEW').slice(0, 4);
+  } else if (preset === 'INTERVIEW') {
+    picked = allSorted.filter(c => c.pipeline.code !== 'NEW' && c.pipeline.code !== 'REVIEW').slice(0, 4);
+  }
+  if (picked.length === 0) {
+    picked = allSorted.slice(0, 4);
+  }
+  state.sourcingCompareMap[mapKey] = picked.map(c => c.rawName);
+  openPostingApplicantsCompareModal(postingId, scope);
+}
+
+function openPostingApplicantsCompareModal(postingId, scopeMode = null) {
+  const post = (state.data?.postings || []).find(p => p.id === postingId);
+  if (!post) return;
+  if (scopeMode) {
+    state.sourcingCompareScope = scopeMode;
+  } else if (!state.sourcingCompareScope) {
+    state.sourcingCompareScope = 'APPLIED';
+  }
+  const scope = state.sourcingCompareScope;
+  const meta = getPostingEnrichedMeta(post);
+  const allSorted = getScopedApplicantsForCompare(meta, scope);
+  const selectedNames = getPostingCompareSelectedNames(postingId, allSorted, scope);
+  const cands = allSorted.filter(c => selectedNames.includes(c.rawName));
+  const topCandidateName = allSorted[0]?.rawName || '';
+  const permissions = state.data?.permissions || {};
+  const canRequest = Boolean(permissions.can_schedule_interviews || permissions.can_manage_postings);
+  const modalTitlePrefix = scope === 'INTERVIEW' ? '면접·검증 대상자 후보 비교 분석' : '지원자 후보 비교 분석';
+
+  openModal(`${modalTitlePrefix} — ${meta.cleanTitle} (${allSorted.length >= 4 ? `${cands.length} / 총 ${allSorted.length}명` : `${cands.length}명`})`, `
+    <div style="display:flex; flex-direction:column; gap:14px;">
+      <!-- 공고 요구 기준 배너 -->
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; padding:12px 16px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px;">
+        <div>
+          <div style="font-size:12px; color:#64748b;">공고 요구 기준 (${meta.projectLabel})</div>
+          <div style="font-size:13.5px; font-weight:700; color:#0f172a; margin-top:2px;">
+            요구등급: <span style="color:#2563eb;">${post.required_grade}</span> · 예산단가: <span style="color:#2563eb;">${post.rate_guide}</span> · 투입시기: <span style="color:#2563eb;">${post.period}</span>
+          </div>
+        </div>
+        <div style="display:flex; flex-wrap:wrap; gap:4px;">
+          ${(post.required_skills || []).map(sk => `<span class="src-skill-chip">${sk}</span>`).join('')}
+        </div>
+      </div>
+
+      <!-- 전체 지원자 중 비교 대상 선택 바 (지원자가 4명 이상일 때만 표시, 최대 4명 동시 비교) -->
+      ${allSorted.length >= 4 ? `
+        <div class="src-cmp-selector-bar">
+          <div class="src-cmp-selector-top">
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+              <strong style="font-size:13px; color:#0f172a;">비교 대상 후보 선택 (${cands.length}/4명 선택됨 · 전체 ${allSorted.length}명)</strong>
+              <span style="font-size:12px; color:#64748b;">지원자가 많을 때 최대 4명까지 골라 한 화면에서 비교할 수 있습니다.</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+              <button type="button" class="src-cmp-preset-btn" onclick="applyPostingComparePreset('${post.id}', 'TOP4')">AI 적합도 Top 4</button>
+              ${meta.unreviewedCount > 0 ? `<button type="button" class="src-cmp-preset-btn" onclick="applyPostingComparePreset('${post.id}', 'NEW')">미검토 신규 (${meta.unreviewedCount})</button>` : ''}
+              ${meta.interviewCount > 0 ? `<button type="button" class="src-cmp-preset-btn" onclick="applyPostingComparePreset('${post.id}', 'INTERVIEW')">면접·검증 (${meta.interviewCount})</button>` : ''}
+            </div>
+          </div>
+          <div class="src-cmp-selector-chips">
+            ${allSorted.map(c => {
+              const isSelected = selectedNames.includes(c.rawName);
+              return `
+                <button
+                  type="button"
+                  class="src-cmp-cand-pill ${isSelected ? 'active' : ''}"
+                  onclick="togglePostingCompareCandidate('${post.id}', '${c.rawName}')"
+                  title="${isSelected ? '클릭하여 비교 테이블에서 제외' : '클릭하여 비교 테이블에 추가 (최대 4명)'}"
+                >
+                  <img src="${c.avatarUrl}" alt="${c.displayName}" style="width:20px; height:20px; border-radius:50%; object-fit:cover;" />
+                  <span>${c.displayName}</span>
+                  <span class="src-cmp-pill-pct">${c.matchPct}%</span>
+                  <span style="font-size:11px; opacity:0.85;">${isSelected ? '✓' : '+'}</span>
+                </button>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      ` : ''}
+
+      <div style="overflow-x:auto;">
+        <table class="src-compare-table">
+          <thead>
+            <tr>
+              <th style="width:140px;">비교 항목</th>
+              ${cands.map(c => `
+                <th>
+                  <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+                    <div style="display:flex; align-items:center; gap:9px;">
+                      <img src="${c.avatarUrl}" alt="${c.displayName}" style="width:36px; height:36px; border-radius:50%; object-fit:cover; border:1.5px solid #e2e8f0;" />
+                      <div>
+                        <div style="display:flex; align-items:center; gap:5px; flex-wrap:wrap;">
+                          <strong style="font-size:14.5px; color:#0f172a;">${c.displayName}</strong>
+                          ${c.rawName === topCandidateName ? `<span class="src-best-fit-tag">AI 1순위</span>` : ''}
+                        </div>
+                        <span style="font-size:11.5px; color:#64748b; font-weight:500;">${c.empType} · ${c.sourceType}</span>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      class="cmp-card-remove-btn"
+                      onclick="togglePostingCompareCandidate('${post.id}', '${c.rawName}')"
+                      title="비교 목록에서 제외"
+                      aria-label="제외"
+                    >
+                      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                      </svg>
+                    </button>
+                  </div>
+                </th>
+              `).join('')}
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="src-cmp-label">AI 요건 적합도</td>
+              ${cands.map(c => `
+                <td>
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    <strong style="font-size:16px; color:${c.matchPct >= 92 ? '#1d4ed8' : '#0f172a'};">${c.matchPct}%</strong>
+                    <div style="flex:1; height:7px; background:#e2e8f0; border-radius:999px; overflow:hidden; max-width:90px;">
+                      <div style="width:${c.matchPct}%; height:100%; background:${c.matchPct >= 92 ? '#2563eb' : '#64748b'};"></div>
+                    </div>
+                  </div>
+                </td>
+              `).join('')}
+            </tr>
+            <tr>
+              <td class="src-cmp-label">현재 전형 상태</td>
+              ${cands.map(c => `
+                <td>
+                  <span class="src-applicant-stage-pill ${c.pipeline.pillCls}">${c.pipeline.label}</span>
+                  <div style="font-size:11.5px; color:#64748b; margin-top:3px;">${c.pipeline.subLabel}</div>
+                </td>
+              `).join('')}
+            </tr>
+            <tr>
+              <td class="src-cmp-label">기술등급 · 경력</td>
+              ${cands.map(c => `
+                <td>
+                  <span class="src-applicant-grade-chip grade-${c.grade}">${c.grade} 기술자</span>
+                  <strong style="margin-left:6px; color:#0f172a;">${c.expYears}년차</strong>
+                </td>
+              `).join('')}
+            </tr>
+            <tr>
+              <td class="src-cmp-label">희망 단가 (예산 대비)</td>
+              ${cands.map(c => `
+                <td>
+                  ${c.canViewSensitive ? `
+                    <strong style="font-size:14px; color:#0f172a;">월 ${c.desiredRate.toLocaleString()}만원</strong>
+                    <div class="src-rate-fit-text ${c.rateFitTone}" style="font-size:12px; margin-top:2px;">${c.rateFitLabel}</div>
+                  ` : `<span style="color:#94a3b8;">열람 권한 필요</span>`}
+                </td>
+              `).join('')}
+            </tr>
+            <tr>
+              <td class="src-cmp-label">투입 가능일</td>
+              ${cands.map(c => `
+                <td>
+                  <strong style="color:#0f172a;">${c.availDate}</strong>
+                  <div style="font-size:11.5px; color:#16a34a; margin-top:2px;">✓ ${meta.startYm} 투입 일정 부합</div>
+                </td>
+              `).join('')}
+            </tr>
+            <tr>
+              <td class="src-cmp-label">필수 스킬 매칭 (${(post.required_skills || []).length}종)</td>
+              ${cands.map(c => `
+                <td>
+                  <div style="font-size:12px; font-weight:700; color:#0f172a; margin-bottom:5px;">
+                    ${c.matchedSkills.length} / ${c.reqSkills.length}개 일치
+                  </div>
+                  <div style="display:flex; flex-wrap:wrap; gap:4px;">
+                    ${c.reqSkills.map(reqSk => {
+                      const hit = c.matchedSkills.includes(reqSk);
+                      return `<span class="src-hover-skill-tag ${hit ? 'hit' : 'miss'}">${hit ? '✓ ' : '✕ '}${reqSk}</span>`;
+                    }).join('')}
+                  </div>
+                </td>
+              `).join('')}
+            </tr>
+            <tr>
+              <td class="src-cmp-label">핵심 수행 요약</td>
+              ${cands.map(c => `
+                <td style="font-size:12.5px; color:#334155; line-height:1.5;">
+                  ${c.summaryText}
+                </td>
+              `).join('')}
+            </tr>
+            <tr>
+              <td class="src-cmp-label">빠른 액션</td>
+              ${cands.map(c => `
+                <td>
+                  <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                    <button type="button" class="btn btn-outline btn-sm" onclick="closeModal(); openApplicantDetailFromPosting('${post.id}', ${c.idx})">
+                      상세 이력서
+                    </button>
+                    ${canRequest ? `
+                      <button type="button" class="btn btn-primary btn-sm" onclick="closeModal(); openSourcingInterviewRequestModal('${post.id}', '${c.rawName}', '${c.interviewId}')">
+                        ${c.interviewDate ? '일정 변경' : '인터뷰 요청'}
+                      </button>
+                    ` : ''}
+                  </div>
+                </td>
+              `).join('')}
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `);
+  const dialog = document.getElementById('modalDialog');
+  if (dialog) dialog.classList.add('wide-compare-modal-dialog');
+}
+
+function openSourcingFunnelHistoryModal(postingId) {
+  const post = (state.data?.postings || []).find(p => p.id === postingId);
+  if (!post) return;
+  const meta = getPostingEnrichedMeta(post);
+  const { profiles = [] } = state.data || {};
+  const externalProfiles = profiles.filter(p => !p.is_internal);
+
+  // Build synthetic/realistic target sourcing recipient rows
+  const recipientRows = meta.applicants.map((app, i) => ({
+    name: app.displayName,
+    avatarUrl: app.avatarUrl,
+    grade: app.grade,
+    domain: post.required_domain,
+    sentAt: `${post.created_at} 10:${15 + i * 12}`,
+    channel: i === 0 ? '타겟소싱 초청 (알림톡·메일)' : '오픈구인 웹 링크 유입',
+    funnelStatus: app.pipeline.code === 'NEW' ? '참여신청 완료 (검토대기)' : `참여신청 → ${app.pipeline.label}`,
+    statusTone: app.pipeline.code === 'NEW' ? 'amber' : 'blue'
+  }));
+
+  while (recipientRows.length < meta.sentCount && externalProfiles[recipientRows.length]) {
+    const ep = externalProfiles[recipientRows.length];
+    recipientRows.push({
+      name: ep.name,
+      avatarUrl: getAvatarForId(ep.id),
+      grade: ep.tech_grade,
+      domain: (ep.domains || [])[0] || post.required_domain,
+      sentAt: `${post.created_at} 14:20`,
+      channel: '타겟소싱 초청 (알림톡·메일)',
+      funnelStatus: '공고 열람 완료 (응답 대기)',
+      statusTone: 'gray'
+    });
+  }
+
+  openModal(`타겟 소싱 퍼널 현황 — ${meta.cleanTitle}`, `
+    <div style="display:flex; flex-direction:column; gap:16px;">
+      <div class="src-modal-funnel-grid">
+        <div class="src-modal-funnel-box">
+          <span class="src-modal-funnel-label">1단계 · 타겟소싱 발송</span>
+          <strong class="src-modal-funnel-val">${meta.sentCount}건</strong>
+          <span class="src-modal-funnel-sub">인재 DB 매칭 후보 초청</span>
+        </div>
+        <div class="src-modal-funnel-box">
+          <span class="src-modal-funnel-label">2단계 · 공고 열람</span>
+          <strong class="src-modal-funnel-val">${meta.openedCount}명</strong>
+          <span class="src-modal-funnel-sub">오픈 구인 링크 확인</span>
+        </div>
+        <div class="src-modal-funnel-box active">
+          <span class="src-modal-funnel-label">3단계 · 참여신청 접수</span>
+          <strong class="src-modal-funnel-val" style="color:#e11d48;">${meta.appliedCount}명</strong>
+          <span class="src-modal-funnel-sub">미검토 신규 ${meta.unreviewedCount}명</span>
+        </div>
+        <div class="src-modal-funnel-box">
+          <span class="src-modal-funnel-label">4단계 · 인터뷰·검증</span>
+          <strong class="src-modal-funnel-val" style="color:#2563eb;">${meta.interviewCount}명</strong>
+          <span class="src-modal-funnel-sub">면접관 배정 및 기술검증</span>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size:13.5px; font-weight:700; color:#0f172a; margin-bottom:8px;">소싱 발송 및 지원 유입 상세 내역</div>
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          ${recipientRows.map(r => `
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding:11px 14px; border:1px solid #e2e8f0; border-radius:10px; background:#f8fafc;">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <img src="${r.avatarUrl}" alt="${r.name}" style="width:32px; height:32px; border-radius:50%; object-fit:cover;" />
+                <div>
+                  <div style="font-size:13.5px; font-weight:700; color:#0f172a;">${r.name} <span style="font-size:12px; font-weight:500; color:#64748b;">(${r.grade} · ${r.domain})</span></div>
+                  <div style="font-size:11.5px; color:#64748b;">${r.channel} · ${r.sentAt}</div>
+                </div>
+              </div>
+              <span class="zal-status-pill ${r.statusTone === 'blue' ? 'blue' : r.statusTone === 'amber' ? 'green' : 'gray'}">${r.funnelStatus}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; padding-top:6px;">
+        <button type="button" class="btn btn-outline btn-sm" onclick="copyPostingWebLink('${post.id}')">
+          ${svgIcon('link', 13)} 오픈 구인 웹 링크 복사
+        </button>
+        <div style="display:flex; gap:8px;">
+          <button type="button" class="btn btn-outline" onclick="closeModal()">닫기</button>
+          <button type="button" class="btn btn-primary" onclick="closeModal(); openTargetSourcingModal('${post.id}')">
+            ${svgIcon('target', 14)} 추가 타겟 소싱 발송
+          </button>
+        </div>
+      </div>
+    </div>
+  `);
+}
+
+function openEditPostingModal(postingId) {
+  const post = (state.data?.postings || []).find(p => p.id === postingId);
+  if (!post) return;
+  state.sourcingFilters.openMenuPostingId = null;
+
+  openModal(`구인 공고 조건 수정 — ${post.role_name}`, `
+    <form onsubmit="submitEditPostingModal(event, '${post.id}')">
+      <div class="form-grid">
+        <div class="form-field" style="grid-column: span 2;">
+          <label>공고 타이틀</label>
+          <input class="input" name="title" value="${post.title}" required />
+        </div>
+        <div class="form-field">
+          <label>담당 포지션명</label>
+          <input class="input" name="role_name" value="${post.role_name}" required />
+        </div>
+        <div class="form-field">
+          <label>요구 기술등급</label>
+          <select class="select" name="required_grade">
+            ${['특급', '고급', '중급', '초급'].map(g => `<option value="${g}" ${post.required_grade === g ? 'selected' : ''}>${g}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-field">
+          <label>전문 도메인</label>
+          <input class="input" name="required_domain" value="${post.required_domain}" required />
+        </div>
+        <div class="form-field">
+          <label>근무지</label>
+          <input class="input" name="work_location" value="${post.work_location}" required />
+        </div>
+        <div class="form-field">
+          <label>투입 기간</label>
+          <input class="input" name="period" value="${post.period}" required />
+        </div>
+        <div class="form-field">
+          <label>단가 가이드</label>
+          <input class="input" name="rate_guide" value="${post.rate_guide}" required />
+        </div>
+        <div class="form-field" style="grid-column: span 2;">
+          <label>필수 기술 스택 (쉼표로 구분)</label>
+          <input class="input" name="required_skills" value="${(post.required_skills || []).join(', ')}" required />
+        </div>
+      </div>
+      <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:14px;">
+        <button type="button" class="btn btn-outline" onclick="closeModal()">취소</button>
+        <button type="submit" class="btn btn-primary">수정사항 저장</button>
+      </div>
+    </form>
+  `);
+}
+
+async function submitEditPostingModal(e, postingId) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const skills = String(fd.get('required_skills') || '').split(',').map(s => s.trim()).filter(Boolean);
+  await apiCall('/api/postings/update', 'POST', {
+    posting_id: postingId,
+    title: fd.get('title'),
+    role_name: fd.get('role_name'),
+    required_grade: fd.get('required_grade'),
+    required_domain: fd.get('required_domain'),
+    work_location: fd.get('work_location'),
+    period: fd.get('period'),
+    rate_guide: fd.get('rate_guide'),
+    required_skills: skills
+  });
+  closeModal();
+  showToast('✅ 구인 공고 조건이 수정되었습니다.');
+  await loadState();
+}
+
+async function duplicatePosting(postingId) {
+  state.sourcingFilters.openMenuPostingId = null;
+  await apiCall('/api/postings/duplicate', 'POST', { posting_id: postingId });
+  showToast('📋 구인 공고가 복제되어 추가 모집 공고로 등록되었습니다.');
+  await loadState();
 }
 
 function openSourcingInterviewRequestModal(postingId, candidateName, interviewId = '') {
@@ -8004,33 +9676,56 @@ function openTargetSourcingModal(postingId) {
   const { postings, profiles } = state.data;
   const post = postings.find(p => p.id === postingId);
   if (!post) return;
-  const matchingPool = profiles.filter(p => !p.is_internal);
+  const meta = getPostingEnrichedMeta(post);
+  const reqSkills = post.required_skills || [];
+  const matchingPool = profiles
+    .filter(p => !p.is_internal)
+    .map(p => {
+      const hitSkills = reqSkills.filter(sk => (p.skills || []).includes(sk));
+      const domHit = (p.domains || []).includes(post.required_domain);
+      const fitScore = Math.min(98, Math.max(74, Math.round((hitSkills.length / Math.max(1, reqSkills.length)) * 55 + (domHit ? 25 : 10) + 18)));
+      return { ...p, hitSkills, domHit, fitScore };
+    })
+    .sort((a, b) => b.fitScore - a.fitScore);
 
-  openModal(`인재 풀 타겟 소싱 메일·알림 발송 — ${post.role_name}`, `
+  openModal(`AI 추천 인재 풀 타겟 소싱 발송 — ${meta.cleanTitle}`, `
     <form onsubmit="submitTargetSourcing(event, '${post.id}')">
       <div style="margin-bottom:14px;">
-        <label style="font-size:12px; font-weight:700; display:block; margin-bottom:6px;">타겟 소싱 발송 대상 선택 (${matchingPool.length}명)</label>
-        <div style="display:flex; flex-direction:column; gap:8px; max-height:200px; overflow-y:auto; border:1px solid #e2e8f0; padding:12px; border-radius:12px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <label style="font-size:13px; font-weight:700; color:#0f172a;">AI 매칭 타겟 소싱 발송 대상 (${matchingPool.length}명)</label>
+          <span style="font-size:12px; color:#64748b;">요구 도메인: <strong style="color:#2563eb;">${post.required_domain}</strong> · 등급: <strong style="color:#0f172a;">${post.required_grade}</strong></span>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:8px; max-height:240px; overflow-y:auto; border:1px solid #e2e8f0; padding:12px; border-radius:12px; background:#f8fafc;">
           ${matchingPool.map(p => `
-            <label style="display:flex; align-items:center; justify-content:space-between; font-size:12.5px; cursor:pointer;">
-              <span>
-                <input type="checkbox" name="candidate_id" value="${p.id}" checked />
-                <strong>${p.name}</strong> (${p.tech_grade} · 가용일 ${p.available_date})
-              </span>
-              <span style="color:#64748b;">${p.email}</span>
+            <label style="display:flex; align-items:center; justify-content:space-between; gap:10px; font-size:12.5px; cursor:pointer; padding:8px 10px; background:#ffffff; border:1px solid #e2e8f0; border-radius:10px;">
+              <div style="display:flex; align-items:center; gap:9px;">
+                <input type="checkbox" name="candidate_id" value="${p.id}" ${p.fitScore >= 82 ? 'checked' : ''} />
+                <img src="${getAvatarForId(p.id)}" alt="${p.name}" style="width:30px; height:30px; border-radius:50%; object-fit:cover;" />
+                <div>
+                  <div style="display:flex; align-items:center; gap:6px;">
+                    <strong style="font-size:13.5px; color:#0f172a;">${p.name}</strong>
+                    <span class="src-applicant-grade-chip grade-${p.tech_grade}">${p.tech_grade}</span>
+                    <span class="src-applicant-match-chip ${p.fitScore >= 90 ? 'high' : 'mid'}">매칭 ${p.fitScore}%</span>
+                  </div>
+                  <div style="font-size:11.5px; color:#64748b; margin-top:2px;">
+                    가용일: <strong style="color:#0f172a;">${p.available_date}</strong> · 스킬: ${(p.skills || []).slice(0, 3).join(', ')}
+                  </div>
+                </div>
+              </div>
+              <span style="font-size:11.5px; color:#64748b;">${p.email}</span>
             </label>
           `).join('')}
         </div>
       </div>
 
       <div class="form-field" style="margin-bottom:14px;">
-        <label>소싱 초청 안내 메시지</label>
-        <textarea class="textarea" name="custom_message">[잘될 플랫폼 소싱 안내] '${post.title}' 포지션에 귀하의 ${post.required_domain} 수행 경험이 부합하여 우선 초청드립니다.</textarea>
+        <label>소싱 초청 안내 메시지 (오픈 구인 웹 지원 링크 자동 첨부)</label>
+        <textarea class="textarea" name="custom_message" rows="3">[잘될(ZAL) 타겟 소싱 초청] 안녕하세요. '${meta.clientName} ${meta.cleanTitle}' 포지션(${post.period}, ${post.rate_guide})에 귀하의 ${post.required_domain} 수행 이력이 부합하여 우선 초청드립니다.</textarea>
       </div>
 
       <div style="display:flex; justify-content:flex-end; gap:10px;">
         <button type="button" class="btn btn-outline" onclick="closeModal()">취소</button>
-        <button type="submit" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:5px;">${svgIcon('send', 14)} 일괄 발송</button>
+        <button type="submit" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:6px;">${svgIcon('send', 14)} 선택 후보자 일괄 발송</button>
       </div>
     </form>
   `);
@@ -9333,59 +11028,56 @@ function openInterviewComparisonModal() {
 
   const favIds = scoped.filter(i => i.favorite).map(i => i.id).slice(0, 4);
 
-  openModal(`후보자 핵심 역량 및 조건 비교 (${targets.length}명)`, `
-    <div style="display:flex; flex-direction:column; gap:12px;">
-      <div style="position:relative; display:flex; justify-content:center; align-items:center; min-height:32px; font-size:13px; color:#64748b;">
-        <span style="display:inline-flex; align-items:center; gap:6px; text-align:center;">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; color:#64748b;">
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="12" y1="8" x2="12" y2="12"></line>
-            <line x1="12" y1="16" x2="12.01" y2="16"></line>
-          </svg>
-          <span>후보자별 기술 역량, 경력 연수, 투입 가능일${!hideSensitive ? ', 희망 단가' : ''}, 면접 종합 평가 점수를 한눈에 비교합니다.</span>
-        </span>
-        <div style="position:absolute; right:0; display:flex; align-items:center; gap:6px;">
-          ${favIds.length > 0 ? `
-            <button type="button" class="btn btn-outline btn-sm" onclick="compareFavoriteCandidates()">
-              ★ 관심 후보자 일괄 불러오기 (${favIds.length}명)
-            </button>
-          ` : ''}
+  openModal(`후보자 핵심 역량 및 조건 비교 분석 (${targets.length}명)`, `
+    <div style="display:flex; flex-direction:column; gap:16px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; padding:12px 16px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px;">
+        <div>
+          <div style="font-size:12px; color:#64748b;">면접·검증 후보자 비교 기준</div>
+          <div style="font-size:13.5px; font-weight:700; color:#0f172a; margin-top:2px;">
+            후보자별 기술 역량 · 경력 연수 · 투입 가능일${!hideSensitive ? ' · 희망 단가' : ''} · 면접 종합 평가 점수 비교
+          </div>
         </div>
+        ${favIds.length > 0 ? `
+          <button type="button" class="btn btn-outline btn-sm" onclick="compareFavoriteCandidates()">
+            ★ 관심 후보자 일괄 불러오기 (${favIds.length}명)
+          </button>
+        ` : ''}
       </div>
 
       ${targets.length > 0 ? `
-        <div style="overflow-x:auto; padding-bottom:4px;">
-          <table class="inv-compare-card-table">
+        <div style="overflow-x:auto;">
+          <table class="src-compare-table">
             <thead>
               <tr>
-                <th class="cmp-label-col"></th>
+                <th style="width:140px;">비교 항목</th>
                 ${targets.map(inv => {
-                  const stageMeta = getInterviewStageBadgeMeta(inv);
+                  const prof = profiles.find(p => p.id === inv.candidate_profile_id || p.name === inv.candidate_name);
+                  const yrs = inv.experience_years || prof?.experience_years || 9;
                   return `
-                    <th class="cmp-cand-card-head">
-                      <div style="display:flex; flex-direction:column; gap:8px;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; width:100%; gap:6px;">
-                          <span class="inv-status-badge ${stageMeta.cls}">${stageMeta.label}</span>
-                          <button
-                            type="button"
-                            class="cmp-card-remove-btn"
-                            onclick="removeCandidateFromComparison('${inv.id}')"
-                            title="비교 목록에서 제외"
-                            aria-label="제외"
-                          >
-                            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                              <line x1="18" y1="6" x2="6" y2="18"></line>
-                              <line x1="6" y1="6" x2="18" y2="18"></line>
-                            </svg>
-                          </button>
-                        </div>
+                    <th>
+                      <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
                         <div style="display:flex; align-items:center; gap:9px;">
-                          <img src="${getAvatarForId(inv.candidate_profile_id || inv.candidate_name)}" alt="${inv.candidate_name}" style="width:34px; height:34px; border-radius:50%; object-fit:cover; border:1.5px solid #ffffff; box-shadow:0 1px 3px rgba(15,23,42,0.1);" />
-                          <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
-                            <strong style="font-size:16.5px; color:#0f172a;">${inv.candidate_name}</strong>
-                            <span class="inv-grade-pill grade-${inv.tech_grade}">${inv.tech_grade}</span>
+                          <img src="${getAvatarForId(inv.candidate_profile_id || inv.candidate_name)}" alt="${inv.candidate_name}" style="width:36px; height:36px; border-radius:50%; object-fit:cover; border:1.5px solid #e2e8f0;" />
+                          <div>
+                            <div style="display:flex; align-items:center; gap:5px; flex-wrap:wrap;">
+                              <strong style="font-size:14.5px; color:#0f172a;">${inv.candidate_name}</strong>
+                              <span class="src-applicant-grade-chip grade-${inv.tech_grade}">${inv.tech_grade}</span>
+                            </div>
+                            <span style="font-size:11.5px; color:#64748b; font-weight:500;">${inv.candidate_type || '프리랜서'} · ${yrs}년차</span>
                           </div>
                         </div>
+                        <button
+                          type="button"
+                          class="cmp-card-remove-btn"
+                          onclick="removeCandidateFromComparison('${inv.id}')"
+                          title="비교 목록에서 제외"
+                          aria-label="제외"
+                        >
+                          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                          </svg>
+                        </button>
                       </div>
                     </th>
                   `;
@@ -9394,46 +11086,67 @@ function openInterviewComparisonModal() {
             </thead>
             <tbody>
               <tr>
-                <td class="cmp-label-col">지원 포지션</td>
-                ${targets.map(inv => `<td class="cmp-cand-card-cell" style="font-weight:600; color:#0f172a;">${inv.position_name || '-'}<br/><span style="font-size:12px; font-weight:400; color:#64748b;">${inv.project_name || ''}</span></td>`).join('')}
-              </tr>
-              <tr>
-                <td class="cmp-label-col">경력 · 소속유형</td>
+                <td class="src-cmp-label">현재 전형 상태</td>
                 ${targets.map(inv => {
-                  const prof = profiles.find(p => p.id === inv.candidate_profile_id || p.name === inv.candidate_name);
-                  const yrs = inv.experience_years || prof?.experience_years || 9;
-                  return `<td class="cmp-cand-card-cell"><strong>경력 ${yrs}년</strong> (${inv.job_title || '선임'}) · ${inv.candidate_type}</td>`;
+                  const stageMeta = getInterviewStageBadgeMeta(inv);
+                  return `
+                    <td>
+                      <span class="inv-status-badge ${stageMeta.cls}">${stageMeta.label}</span>
+                    </td>
+                  `;
                 }).join('')}
               </tr>
               <tr>
-                <td class="cmp-label-col">핵심 기술 스택</td>
+                <td class="src-cmp-label">지원 포지션</td>
                 ${targets.map(inv => `
-                  <td class="cmp-cand-card-cell">
+                  <td>
+                    <strong style="color:#0f172a;">${inv.position_name || '-'}</strong>
+                    <div style="font-size:11.5px; color:#64748b; margin-top:2px;">${inv.project_name || ''}</div>
+                  </td>
+                `).join('')}
+              </tr>
+              <tr>
+                <td class="src-cmp-label">기술등급 · 경력</td>
+                ${targets.map(inv => {
+                  const prof = profiles.find(p => p.id === inv.candidate_profile_id || p.name === inv.candidate_name);
+                  const yrs = inv.experience_years || prof?.experience_years || 9;
+                  return `
+                    <td>
+                      <span class="src-applicant-grade-chip grade-${inv.tech_grade}">${inv.tech_grade} 기술자</span>
+                      <strong style="margin-left:6px; color:#0f172a;">${yrs}년차</strong>
+                    </td>
+                  `;
+                }).join('')}
+              </tr>
+              ${!hideSensitive ? `
+                <tr>
+                  <td class="src-cmp-label">희망 단가</td>
+                  ${targets.map(inv => `<td><strong style="font-size:14px; color:#0f172a;">${inv.desired_rate ? `월 ${Number(inv.desired_rate).toLocaleString()}만원` : '협의'}</strong></td>`).join('')}
+                </tr>
+              ` : ''}
+              <tr>
+                <td class="src-cmp-label">투입 가능일</td>
+                ${targets.map(inv => `<td><strong style="color:#0f172a;">${inv.available_from || '즉시 가능'}</strong></td>`).join('')}
+              </tr>
+              <tr>
+                <td class="src-cmp-label">핵심 기술 스택</td>
+                ${targets.map(inv => `
+                  <td>
                     <div style="display:flex; flex-wrap:wrap; gap:4px;">
-                      ${(inv.skills || []).map(sk => `<span class="inv-skill-pill">${sk}</span>`).join('')}
+                      ${(inv.skills || []).map(sk => `<span class="src-hover-skill-tag hit">${sk}</span>`).join('')}
                     </div>
                   </td>
                 `).join('')}
               </tr>
               <tr>
-                <td class="cmp-label-col">투입 가능일</td>
-                ${targets.map(inv => `<td class="cmp-cand-card-cell" style="font-weight:700; color:#0f172a;">${inv.available_from || '즉시 가능'}</td>`).join('')}
-              </tr>
-              ${!hideSensitive ? `
-                <tr>
-                  <td class="cmp-label-col">희망 단가</td>
-                  ${targets.map(inv => `<td class="cmp-cand-card-cell" style="font-weight:700; color:#0f172a;">${inv.desired_rate ? `월 ${Number(inv.desired_rate).toLocaleString()}만원` : '협의'}</td>`).join('')}
-                </tr>
-              ` : ''}
-              <tr>
-                <td class="cmp-label-col">영역별 역량 평가</td>
+                <td class="src-cmp-label">영역별 역량 평가</td>
                 ${targets.map(inv => {
                   const stage = normalizeInterviewStage(inv);
                   const isEval = (stage === '평가 완료' || stage === '최종 결과') && Number(inv.total_score || 0) > 0;
                   const c = inv.competency_scores || { technical: inv.total_score, execution: inv.total_score, communication: inv.total_score };
-                  if (!isEval) return `<td class="cmp-cand-card-cell" style="color:#94a3b8;">평가 미완료</td>`;
+                  if (!isEval) return `<td style="color:#94a3b8;">평가 미완료</td>`;
                   return `
-                    <td class="cmp-cand-card-cell" style="font-size:12.5px; line-height:1.6;">
+                    <td style="font-size:12.5px; line-height:1.6;">
                       기술 역량: <strong>★ ${Number(c.technical || inv.total_score).toFixed(1)}</strong><br/>
                       업무 수행: <strong>★ ${Number(c.execution || inv.total_score).toFixed(1)}</strong><br/>
                       커뮤니케이션: <strong>★ ${Number(c.communication || inv.total_score).toFixed(1)}</strong>
@@ -9442,31 +11155,31 @@ function openInterviewComparisonModal() {
                 }).join('')}
               </tr>
               <tr>
-                <td class="cmp-label-col">종합 평가 점수</td>
+                <td class="src-cmp-label">종합 평가 점수</td>
                 ${targets.map(inv => {
                   const stage = normalizeInterviewStage(inv);
                   const isEval = (stage === '평가 완료' || stage === '최종 결과') && Number(inv.total_score || 0) > 0;
                   return isEval
-                    ? `<td class="cmp-cand-card-cell"><strong style="font-size:16px; color:#0f172a;"><span style="color:#f59e0b;">★</span> ${Number(inv.total_score).toFixed(1)}</strong> <span style="font-size:12px; color:#64748b;">/ 5.0</span></td>`
-                    : `<td class="cmp-cand-card-cell" style="color:#94a3b8;">평가 미완료</td>`;
+                    ? `<td><strong style="font-size:15px; color:#0f172a;"><span style="color:#f59e0b;">★</span> ${Number(inv.total_score).toFixed(1)}</strong> <span style="font-size:12px; color:#64748b;">/ 5.0</span></td>`
+                    : `<td style="color:#94a3b8;">평가 미완료</td>`;
                 }).join('')}
               </tr>
               <tr>
-                <td class="cmp-label-col">주요 수행 요약</td>
-                ${targets.map(inv => `<td class="cmp-cand-card-cell" style="font-size:12.5px; color:#334155; line-height:1.5;">${inv.career_highlight || inv.resume_summary || '-'}</td>`).join('')}
+                <td class="src-cmp-label">주요 수행 요약</td>
+                ${targets.map(inv => `<td style="font-size:12.5px; color:#334155; line-height:1.5;">${inv.career_highlight || inv.resume_summary || '-'}</td>`).join('')}
               </tr>
-              <tr class="cmp-last-row">
-                <td class="cmp-label-col">바로가기</td>
+              <tr>
+                <td class="src-cmp-label">빠른 액션</td>
                 ${targets.map(inv => {
                   const stage = normalizeInterviewStage(inv);
                   const isEval = (stage === '평가 완료' || stage === '최종 결과') && Number(inv.total_score || 0) > 0;
                   return `
-                    <td class="cmp-cand-card-cell">
-                      <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                    <td>
+                      <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                        <button type="button" class="btn btn-outline btn-sm" onclick="closeModal(); openCandidateResumeModal('${inv.id}')">상세 이력서</button>
                         ${isEval
-                          ? `<button type="button" class="btn btn-primary btn-sm" style="flex:1;" onclick="openInterviewResultViewModal('${inv.id}')">결과 보기</button>`
-                          : `<button type="button" class="btn btn-primary btn-sm" style="flex:1;" onclick="openEvaluateChecklistModal('${inv.id}')">평가 작성</button>`}
-                        <button type="button" class="btn btn-outline btn-sm" style="flex:1;" onclick="openCandidateResumeModal('${inv.id}')">상세</button>
+                          ? `<button type="button" class="btn btn-primary btn-sm" onclick="closeModal(); openInterviewResultViewModal('${inv.id}')">결과 보기</button>`
+                          : `<button type="button" class="btn btn-primary btn-sm" onclick="closeModal(); openEvaluateChecklistModal('${inv.id}')">평가 작성</button>`}
                       </div>
                     </td>
                   `;
