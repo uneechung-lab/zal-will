@@ -3,7 +3,7 @@ const path = require('node:path');
 const os = require('node:os');
 const zlib = require('node:zlib');
 
-const TMP_STORE_PATH = path.join(os.tmpdir(), 'zalwill-vercel-store-v21.json');
+const TMP_STORE_PATH = path.join(os.tmpdir(), 'zalwill-vercel-store-v25.json');
 
 function getInitialStore() {
   return {
@@ -629,21 +629,30 @@ function getInitialStore() {
     interviews: [
       {
         id: 'int_1', posting_id: 'post_1', project_id: 'prj_1', slot_id: 'slot_103', candidate_profile_id: 'p_5',
-        candidate_name: '양동근', candidate_type: '프리랜서', candidate_phone: '010-8282-4911', candidate_email: 'dg.yang.dev@gmail.com',
+        candidate_name: '양동근', candidate_type: '프리랜서', job_title: '과장', experience_years: 7,
+        candidate_phone: '010-8282-4911', candidate_email: 'dg.yang.dev@gmail.com',
         available_from: '2026-11-25', recommender: '정윤희 부장 (사내추천)', desired_rate: 850,
+        position_name: '연금 로보일임·수수료 배치 선임개발',
+        project_name: '미래에셋증권 퇴직연금 로보어드바이저 및 디폴트옵션 차세대 구축',
         resume_summary: '퇴직연금 코어/배치 7년차 중급(과장급). 신한은행/교보생명 퇴직연금 정산 배치 수행.',
-        tech_grade: '중급', skills: ['Java', 'Spring Batch', 'Oracle', 'ProFrame'], domains: ['퇴직연금', '계정계 코어'],
-        status: '인터뷰통보완료', interview_date: '2026-11-16 14:00', interview_method: '화상(Zoom/Teams)',
+        career_highlight: '교보생명 퇴직연금 코어 시스템 고도화 (배치/정산 선임개발, 2025.02 ~ 2026.11)',
+        tech_grade: '중급', skills: ['Java', 'Spring Batch', 'Oracle', 'ProFrame', 'BXM', '대용량정산'], domains: ['퇴직연금', '계정계 코어'],
+        status: '인터뷰 예정', final_result: '', interview_date: '2026-11-16 14:00', interview_method: '화상(Zoom/Teams)',
         interviewer_user_id: 'u_master', interviewer_name: '조성현 상무', template_id: 'tpl_pension_batch',
-        checklist_results: [], total_score: 0, interviewer_opinion: '', final_decision_note: '', created_at: '2026-11-12'
+        checklist_results: [], competency_scores: null, interviewer_evaluations: [],
+        total_score: 0, interviewer_opinion: '', final_decision_note: '', verified: true, favorite: true, created_at: '2026-11-12'
       },
       {
         id: 'int_2', posting_id: 'post_2', project_id: 'prj_1', slot_id: 'slot_104', candidate_profile_id: 'p_6',
-        candidate_name: '한지민', candidate_type: '개인사업자', candidate_phone: '010-6320-1184', candidate_email: 'jm.han.fin@naver.com',
+        candidate_name: '한지민', candidate_type: '개인사업자', job_title: '차장', experience_years: 9,
+        candidate_phone: '010-6320-1184', candidate_email: 'jm.han.fin@naver.com',
         available_from: '2026-11-18', recommender: '타겟소싱 지원', desired_rate: 950,
+        position_name: '개인형IRP 비대면 채널 프론트/백엔드',
+        project_name: '미래에셋증권 퇴직연금 로보어드바이저 및 디폴트옵션 차세대 구축',
         resume_summary: '카카오뱅크 IRP 채널 및 KB증권 마이데이터 프론트/백엔드 9년차 고급 개발자.',
-        tech_grade: '고급', skills: ['React', 'TypeScript', 'WebSquare', 'Spring Boot'], domains: ['마이데이터', '채널계', '퇴직연금'],
-        status: '면접진행완료', interview_date: '2026-11-13 10:00', interview_method: '화상(Zoom/Teams)',
+        career_highlight: '카카오뱅크 개인형IRP/퇴직연금 모바일 채널 개편 (프론트엔드 리드, 2025.01 ~ 2026.10)',
+        tech_grade: '고급', skills: ['React', 'TypeScript', 'WebSquare', 'Spring Boot', 'Next.js'], domains: ['마이데이터', '채널계', '퇴직연금'],
+        status: '평가 완료', final_result: '', interview_date: '2026-11-13 10:00', interview_method: '화상(Zoom/Teams)',
         interviewer_user_id: 'u_master', interviewer_name: '조성현 상무', template_id: 'tpl_channel_front',
         checklist_results: [
           { question: '개인형IRP 비대면 계좌개설 UI 플로우 구현 경험', score: 5, checked: true, note: '카카오뱅크 IRP 비대면 개설 리딩' },
@@ -651,16 +660,32 @@ function getInitialStore() {
           { question: '기획·디자인·백엔드 간 UI/API 스펙 조율 및 협업 스타일', score: 5, checked: true, note: '커뮤니케이션이 매우 유연하고 적극적임' },
           { question: '통합테스트/일정 압박 상황에서의 책임감 및 마감 준수 성향', score: 4.5, checked: true, note: '차분하고 책임감 있게 완수하는 성향' }
         ],
+        competency_scores: {
+          technical: 4.9,
+          technical_note: 'React/TypeScript 및 WebSquare5 하이브리드 금융 채널 아키텍처 숙련도 최상',
+          execution: 4.7,
+          execution_note: '비대면 IRP 계좌개설·상품변경 업무 플로우 및 금소법 UI 요건 완벽 이해',
+          communication: 4.9,
+          communication_note: '기획·디자인·백엔드 파트 간 인터페이스 조율 및 소통 태도 매우 우수'
+        },
+        interviewer_evaluations: [
+          { interviewer_id: 'u_master', interviewer_name: '조성현 상무', role: '총괄 면접관', score: 4.8, comment: '비대면 퇴직연금/IRP 채널 경험이 매우 탁월함. 즉시 선발 강력 추천.', date: '2026-11-13 11:10' },
+          { interviewer_id: 'u_internal_pl', interviewer_name: '정윤희 부장', role: '기술·기획 배석', score: 4.8, comment: '금융 채널 UI 컴포넌트 설계 및 현업 피드백 대응력이 검증됨.', date: '2026-11-13 11:05' }
+        ],
         total_score: 4.8, interviewer_opinion: '비대면 퇴직연금/IRP 채널 경험이 매우 탁월함. 즉시 선발 강력 추천.',
-        final_decision_note: '', created_at: '2026-11-11'
+        final_decision_note: '채널 파트 핵심 리드급 인력으로 평가 완료됨. 최종 선정 컨펌 대기.', verified: true, favorite: true, created_at: '2026-11-11'
       },
       {
         id: 'int_3', posting_id: 'post_1', project_id: 'prj_1', slot_id: 'slot_103', candidate_profile_id: 'p_8',
-        candidate_name: '김도현', candidate_type: '협력사', candidate_phone: '010-5512-7789', candidate_email: 'dh.kim.batch@gmail.com',
+        candidate_name: '김도현', candidate_type: '협력사', job_title: '차장', experience_years: 11,
+        candidate_phone: '010-5512-7789', candidate_email: 'dh.kim.batch@gmail.com',
         available_from: '2026-11-22', recommender: '타겟소싱 지원 (신규)', desired_rate: 1080,
+        position_name: '연금 로보일임·수수료 배치 선임개발',
+        project_name: '미래에셋증권 퇴직연금 로보어드바이저 및 디폴트옵션 차세대 구축',
         resume_summary: '농협은행·우리은행 퇴직연금 디폴트옵션 및 일마감 정산 배치 개발 11년차 고급/특급 개발자.',
+        career_highlight: 'NH농협은행 퇴직연금 디폴트옵션 및 수수료 정산 구축 (배치 선임개발, 2024.05 ~ 2026.10)',
         tech_grade: '특급', skills: ['Java', 'Spring Batch', 'Oracle', 'SQL튜닝', 'ProFrame'], domains: ['퇴직연금', '계정계 코어'],
-        status: '면접진행완료', interview_date: '2026-11-13 15:00', interview_method: '화상(Zoom/Teams)',
+        status: '평가 완료', final_result: '', interview_date: '2026-11-13 15:00', interview_method: '화상(Zoom/Teams)',
         interviewer_user_id: 'u_master', interviewer_name: '조성현 상무', template_id: 'tpl_pension_batch',
         checklist_results: [
           { question: 'DB/DC/IRP 제도별 퇴직연금 부담금 산출 및 수수료 정산 배치 설계 경험이 있는가?', score: 4.5, checked: true, note: '농협·우리은행 디폴트옵션 정산 배치 직접 구현' },
@@ -668,18 +693,112 @@ function getInitialStore() {
           { question: '야간 일마감 배치 장애나 현업의 급박한 요건 변경 상황에서 동료·PL과 어떻게 소통하며 해결하는가?', score: 4.5, checked: true, note: '침착하게 원인 공유 후 해결하는 태도' },
           { question: '장기 금융 SI 상주 프로젝트에서 팀워크를 해치지 않고 본인의 책임을 끝까지 완수하는 성향인가?', score: 5.0, checked: true, note: '성실하고 책임감이 높음' }
         ],
+        competency_scores: {
+          technical: 4.6,
+          technical_note: 'Spring Batch 대용량 청크 처리 및 Oracle SQL 실행계획 튜닝 역량 우수',
+          execution: 4.6,
+          execution_note: '시중은행 디폴트옵션 및 수수료 일마감 정산 배치 구축 실무 경험 풍부',
+          communication: 4.7,
+          communication_note: '배치 장애 대응 및 PL·동료 간 이슈 공유 태도가 침착하고 신뢰감 있음'
+        },
+        interviewer_evaluations: [
+          { interviewer_id: 'u_master', interviewer_name: '조성현 상무', role: '총괄 면접관', score: 4.6, comment: '당사 프로젝트 수행 이력은 없으나, 타사 퇴직연금 배치 경험과 직무·성향 인터뷰 평가 결과가 우수하여 신규 투입 추천함.', date: '2026-11-13 16:00' }
+        ],
         total_score: 4.6, interviewer_opinion: '당사 프로젝트 수행 이력은 없으나, 타사 퇴직연금 배치 경험과 직무·성향 인터뷰 평가 결과가 우수하여 신규 투입 추천함.',
-        final_decision_note: '', created_at: '2026-11-12'
+        final_decision_note: '신규 협력사 특급 배치 개발자로 기술 검증 통과. 단가 협의 및 최종 선발 결정 대기.', verified: false, favorite: false, created_at: '2026-11-12'
       },
       {
         id: 'int_4', posting_id: 'post_3', project_id: 'prj_2', slot_id: 'slot_202', candidate_profile_id: 'p_7',
-        candidate_name: '오세훈', candidate_type: '반프리', candidate_phone: '010-4119-7723', candidate_email: 'sh.oh.bond@daum.net',
+        candidate_name: '오세훈', candidate_type: '반프리', job_title: '차장', experience_years: 10,
+        candidate_phone: '010-4119-7723', candidate_email: 'sh.oh.bond@daum.net',
         available_from: '2026-12-05', recommender: '김지영 이사 (기검증풀 초청)', desired_rate: 1030,
+        position_name: '외화채권 시가평가 및 펀드결제 응용개발',
+        project_name: 'KB증권 글로벌 채권·외화펀드 통합 중개 플랫폼 구축',
         resume_summary: '한국자산평가 채권/장외파생 시가평가 엔진 및 외화펀드 기준가(NAV) 결제 개발 10년차.',
+        career_highlight: '한국자산평가 채권/장외파생 평가엔진 고도화 (응용개발, 2024.08 ~ 2026.11)',
         tech_grade: '고급', skills: ['Java', 'Spring Boot', 'Oracle', '채권평가', '펀드회계'], domains: ['채권', '펀드'],
-        status: '인터뷰통보완료', interview_date: '2026-11-18 11:00', interview_method: '대면(여의도)',
+        status: '인터뷰 예정', final_result: '', interview_date: '2026-11-18 11:00', interview_method: '대면(여의도)',
         interviewer_user_id: 'u_manager', interviewer_name: '김지영 이사', template_id: 'tpl_bond_fund',
-        checklist_results: [], total_score: 0, interviewer_opinion: '', final_decision_note: '', created_at: '2026-11-12'
+        checklist_results: [], competency_scores: null, interviewer_evaluations: [],
+        total_score: 0, interviewer_opinion: '', final_decision_note: '', verified: true, favorite: false, created_at: '2026-11-12'
+      },
+      {
+        id: 'int_5', posting_id: 'post_1', project_id: 'prj_1', slot_id: 'slot_103', candidate_profile_id: 'p_9',
+        candidate_name: '이준호', candidate_type: '프리랜서', job_title: '과장', experience_years: 9,
+        candidate_phone: '010-3901-8821', candidate_email: 'jh.lee.pension@naver.com',
+        available_from: '2026-11-28', recommender: '오픈 구인 직접 지원 (신규)', desired_rate: 960,
+        position_name: '연금 로보일임·수수료 배치 선임개발',
+        project_name: '미래에셋증권 퇴직연금 로보어드바이저 및 디폴트옵션 차세대 구축',
+        resume_summary: 'IBK기업은행 및 시중은행 퇴직연금 비대면 운용지시·정산 배치 개발 9년차 고급 개발자.',
+        career_highlight: '기업은행 퇴직연금 비대면 운용지시 및 정산 개선 (백엔드/배치 개발, 2024.04 ~ 2026.09)',
+        tech_grade: '고급', skills: ['Java', 'Spring Boot', 'Spring Batch', 'Oracle'], domains: ['퇴직연금', '수신/신탁'],
+        status: '인터뷰 예정', final_result: '', interview_date: '2026-11-19 15:00', interview_method: '화상(Zoom/Teams)',
+        interviewer_user_id: 'u_master', interviewer_name: '조성현 상무', template_id: 'tpl_pension_batch',
+        checklist_results: [], competency_scores: null, interviewer_evaluations: [],
+        total_score: 0, interviewer_opinion: '', final_decision_note: '', verified: false, favorite: false, created_at: '2026-11-14'
+      },
+      {
+        id: 'int_6', posting_id: 'post_2', project_id: 'prj_1', slot_id: 'slot_104', candidate_profile_id: null,
+        candidate_name: '박성진', candidate_type: '프리랜서', job_title: '차장', experience_years: 11,
+        candidate_phone: '010-4412-9081', candidate_email: 'sj.park.channel@gmail.com',
+        available_from: '2026-11-25', recommender: '오픈 구인 직접 지원 (신규)', desired_rate: 980,
+        position_name: '개인형IRP 비대면 채널 프론트/백엔드',
+        project_name: '미래에셋증권 퇴직연금 로보어드바이저 및 디폴트옵션 차세대 구축',
+        resume_summary: '메이저 증권사·빅테크 비대면 개인형IRP 가입/운용지시 채널 및 WebSquare5·React 하이브리드 UI 개발 11년차.',
+        career_highlight: '한국투자증권 개인형IRP 비대면 채널 및 로보일임 화면 고도화 (채널 선임, 2024.06 ~ 2026.10)',
+        tech_grade: '고급', skills: ['React', 'TypeScript', 'WebSquare', 'Spring Boot', 'Next.js'], domains: ['퇴직연금', '채널계', '마이데이터'],
+        status: '평가 대기', final_result: '', interview_date: '2026-11-15 16:00', interview_method: '화상(Zoom/Teams)',
+        interviewer_user_id: 'u_internal_pl', interviewer_name: '정윤희 부장', template_id: 'tpl_channel_front',
+        checklist_results: [], competency_scores: null, interviewer_evaluations: [],
+        total_score: 0, interviewer_opinion: '', final_decision_note: '', verified: false, favorite: false, created_at: '2026-11-12'
+      },
+      {
+        id: 'int_7', posting_id: 'post_3', project_id: 'prj_2', slot_id: 'slot_202', candidate_profile_id: null,
+        candidate_name: '김도윤', candidate_type: '프리랜서', job_title: '과장', experience_years: 9,
+        candidate_phone: '010-5812-9034', candidate_email: 'dy.kim.bond@naver.com',
+        available_from: '2026-12-10', recommender: '오픈 구인 직접 지원 (신규)', desired_rate: 1000,
+        position_name: '외화채권 시가평가 및 펀드결제 응용개발',
+        project_name: 'KB증권 글로벌 채권·외화펀드 통합 중개 플랫폼 구축',
+        resume_summary: '외화채권 결제 및 펀드 기준가(NAV) 산출 원장/대외계 인터페이스 개발 9년차 고급 개발자.',
+        career_highlight: 'NH투자증권 글로벌 채권 및 외화펀드 결제 시스템 구축 (백엔드 개발, 2024.03 ~ 2026.09)',
+        tech_grade: '고급', skills: ['Java', 'Spring Boot', 'Oracle', '펀드회계', 'Spring Cloud'], domains: ['채권', '펀드'],
+        status: '평가 대기', final_result: '', interview_date: '2026-11-20 10:00', interview_method: '화상(Zoom/Teams)',
+        interviewer_user_id: 'u_internal_pl', interviewer_name: '정윤희 부장', template_id: 'tpl_bond_fund',
+        checklist_results: [], competency_scores: null, interviewer_evaluations: [],
+        total_score: 0, interviewer_opinion: '', final_decision_note: '', verified: false, favorite: false, created_at: '2026-11-13'
+      },
+      {
+        id: 'int_8', posting_id: 'post_3', project_id: 'prj_2', slot_id: 'slot_202', candidate_profile_id: null,
+        candidate_name: '최민수', candidate_type: '반프리', job_title: '차장', experience_years: 10,
+        candidate_phone: '010-7721-3349', candidate_email: 'ms.choi.bond@daum.net',
+        available_from: '2026-12-15', recommender: '타겟소싱 지원 (신규)', desired_rate: 1020,
+        position_name: '외화채권 시가평가 및 펀드결제 응용개발',
+        project_name: 'KB증권 글로벌 채권·외화펀드 통합 중개 플랫폼 구축',
+        resume_summary: '투자자산운용사 보유. 채권 시가평가 및 장외파생 상품 정산 엔진 개발 10년차 고급 기술자.',
+        career_highlight: '키움증권 채권 시가평가 및 장외파생 원장 고도화 (응용개발, 2024.05 ~ 2026.10)',
+        tech_grade: '고급', skills: ['Java', 'Spring Boot', 'Oracle', '채권평가', '파생상품'], domains: ['채권', '파생상품'],
+        status: '최종 결과', final_result: '선정', interview_date: '2026-11-12 11:00', interview_method: '대면(여의도)',
+        interviewer_user_id: 'u_manager', interviewer_name: '김지영 이사', template_id: 'tpl_bond_fund',
+        checklist_results: [
+          { question: '채권 종류별 경과이자 계산 및 시가평가/듀레이션 산출 로직을 이해하고 있는가?', score: 4.5, checked: true, note: '투자자산운용사 자격 보유, 채권 단가/듀레이션 산식 숙지' },
+          { question: '펀드 설정/환매 및 일별 기준가(NAV) 산출 시 예탁원/채권평가사 대외 전문 연동 경험이 있는가?', score: 5.0, checked: true, note: '예탁원 및 채권평가 3사 대외 전문 송수신/대사 직접 개발' },
+          { question: '운용역/회계팀 등 현업의 잦은 산식 변경 요청이나 긴급 데이터 검증 요청 시 어떻게 소통하며 우선순위를 조율하는가?', score: 4.5, checked: true, note: '현업 요구사항을 산식 문서로 정리 후 신속 대응' },
+          { question: '사내 정규직 PL 및 외부 프리랜서 동료들과 상주 협업할 때 본인이 선호하는 업무 공유 방식과 팀 적응 스타일은?', score: 4.5, checked: true, note: '일일 이슈 공유가 명확하고 협업 태도가 원만함' }
+        ],
+        competency_scores: {
+          technical: 4.7,
+          technical_note: '채권 시가평가 및 예탁원 대외 전문 연동 개발 역량 우수',
+          execution: 4.8,
+          execution_note: '증권사 채권·파생 원장 고도화 실무 완수 경험 검증 완료',
+          communication: 4.5,
+          communication_note: '운용/회계 현업과의 산식 조율 및 개발팀 내 소통 원활'
+        },
+        interviewer_evaluations: [
+          { interviewer_id: 'u_manager', interviewer_name: '김지영 이사', role: '소싱·기술 면접관', score: 4.7, comment: '채권 시가평가 및 대외 전문 연동 실무 역량이 검증되어 KB증권 프로젝트 우선 선발 적임자로 평가함.', date: '2026-11-12 14:20' }
+        ],
+        total_score: 4.7, interviewer_opinion: '채권 시가평가 및 대외 전문 연동 실무 역량이 검증되어 KB증권 프로젝트 우선 선발 적임자로 평가함.',
+        final_decision_note: '기술 검증 결과(4.7점) 및 도메인 적합도가 우수하여 최종 선정 확정. 통합 인재 DB에 기검증 인력으로 자산화 연동 완료.',
+        decided_by: '조성현 상무', decided_at: '2026-11-13', verified: true, favorite: false, created_at: '2026-11-11'
       }
     ],
     notifications: [
@@ -1778,6 +1897,20 @@ module.exports = async (req, res) => {
       contract_rate: perms.can_view_sensitive_info ? p.contract_rate : null
     }));
 
+    const sanitizedInterviews = store.interviews.map(inv => {
+      const isOwnInterviewer = Boolean(currentUser && inv.interviewer_user_id === currentUser.id);
+      const isInternalRole = currentUser?.role_group === 'INTERNAL';
+      const canSeeRate = Boolean(perms.can_view_sensitive_info);
+      const canSeeConfidentialNote = Boolean(perms.can_view_sensitive_info || currentUser?.role_group === 'MANAGER');
+      return {
+        ...inv,
+        desired_rate: canSeeRate ? inv.desired_rate : null,
+        final_decision_note: canSeeConfidentialNote ? (inv.final_decision_note || '') : '',
+        is_assigned_to_me: isOwnInterviewer,
+        hide_sensitive_for_interviewer: isInternalRole && !canSeeRate
+      };
+    });
+
     return send(200, {
       currentUser,
       permissions: perms,
@@ -1790,7 +1923,7 @@ module.exports = async (req, res) => {
       })),
       postings: store.postings,
       templates: store.templates,
-      interviews: store.interviews,
+      interviews: sanitizedInterviews,
       notifications: store.notifications.slice(0, 20),
       kpis: {
         internal_db_rate: 100,
@@ -2025,39 +2158,10 @@ module.exports = async (req, res) => {
           updated_at: new Date().toISOString().slice(0, 10)
         });
       }
-      store.interviews.unshift({
-        id: 'int_' + Date.now(),
-        posting_id: post.id,
-        project_id: post.project_id,
-        slot_id: post.slot_id,
-        candidate_profile_id: candId,
-        candidate_name: body.candidate_name,
-        candidate_type: body.candidate_type || '외주 프리랜서',
-        candidate_phone: body.candidate_phone,
-        candidate_email: body.candidate_email,
-        available_from: body.available_from,
-        recommender: body.recommender,
-        desired_rate: Number(body.desired_rate || 1000),
-        resume_summary: body.resume_summary,
-        tech_grade: body.tech_grade || post.required_grade,
-        skills: post.required_skills,
-        domains: [post.required_domain],
-        status: '서류검토중',
-        interview_date: '',
-        interview_method: '',
-        interviewer_user_id: '',
-        interviewer_name: '',
-        template_id: 'tpl_pension_batch',
-        checklist_results: [],
-        total_score: 0,
-        interviewer_opinion: '',
-        final_decision_note: '',
-        created_at: new Date().toISOString().slice(0, 10)
-      });
+      const prj = store.projects.find(p => p.id === post.project_id);
       const fullName = (body.candidate_name || '지원자').trim();
       post.applicants = Array.isArray(post.applicants) ? [...post.applicants, fullName] : [fullName];
       post.applicant_count = (post.applicant_count || 0) + 1;
-      const prj = store.projects.find(p => p.id === post.project_id);
       if (prj) {
         prj.applicant_count = (prj.applicant_count || 0) + 1;
       }
@@ -2066,38 +2170,274 @@ module.exports = async (req, res) => {
     return send(201, { ok: true });
   }
 
+  if (pathname === '/api/interviews/favorite' && req.method === 'POST') {
+    const inv = store.interviews.find(i => i.id === body.interview_id);
+    if (inv) {
+      inv.favorite = Boolean(body.favorite !== undefined ? body.favorite : !inv.favorite);
+      saveStore(store);
+    }
+    return send(200, { ok: true, favorite: Boolean(inv?.favorite) });
+  }
+
+  if (pathname === '/api/profiles/favorite' && req.method === 'POST') {
+    const prof = store.profiles.find(p => p.id === body.profile_id);
+    if (prof) {
+      prof.favorite = Boolean(body.favorite !== undefined ? body.favorite : !prof.favorite);
+      saveStore(store);
+    }
+    return send(200, { ok: true, favorite: Boolean(prof?.favorite) });
+  }
+
+  if (pathname === '/api/interviews/review-doc' && req.method === 'POST') {
+    const inv = store.interviews.find(i => i.id === body.interview_id);
+    if (inv) {
+      inv.doc_review_note = body.doc_review_note || '';
+      if (body.decision === 'PASS') {
+        inv.status = body.next_status || '인터뷰 예정';
+        if (body.interview_date) inv.interview_date = body.interview_date;
+        if (body.interview_method) inv.interview_method = body.interview_method;
+        if (body.interviewer_user_id) {
+          const interviewer = store.users.find(u => u.id === body.interviewer_user_id);
+          inv.interviewer_user_id = body.interviewer_user_id;
+          inv.interviewer_name = interviewer ? interviewer.name : (inv.interviewer_name || '정윤희 부장');
+          if (interviewer && interviewer.role_group === 'INTERNAL') interviewer.perm_interviewer = 1;
+        }
+        if (body.template_id) inv.template_id = body.template_id;
+      } else if (body.decision === 'HOLD') {
+        inv.status = '최종 결과';
+        inv.final_result = '보류';
+        inv.final_decision_note = body.doc_review_note || '서류 검토 단계 보류 처리';
+        inv.decided_by = currentUser?.name || '조성현 상무';
+        inv.decided_at = new Date().toISOString().slice(0, 10);
+      } else if (body.decision === 'REJECT') {
+        inv.status = '최종 결과';
+        inv.final_result = '불합격';
+        inv.final_decision_note = body.doc_review_note || '서류 검토 단계 불합격 처리';
+        inv.decided_by = currentUser?.name || '조성현 상무';
+        inv.decided_at = new Date().toISOString().slice(0, 10);
+      }
+      saveStore(store);
+    }
+    return send(200, { ok: true, status: inv?.status, final_result: inv?.final_result });
+  }
+
   if (pathname === '/api/interviews/schedule' && req.method === 'POST') {
     const inv = store.interviews.find(i => i.id === body.interview_id);
     const interviewer = store.users.find(u => u.id === body.interviewer_user_id);
     if (inv) {
-      inv.status = '인터뷰통보완료';
+      inv.status = body.status || '인터뷰 예정';
       inv.interview_date = body.interview_date;
       inv.interview_method = body.interview_method;
       inv.interviewer_user_id = body.interviewer_user_id;
       inv.interviewer_name = interviewer ? interviewer.name : '정윤희 부장';
       inv.template_id = body.template_id;
+      if (body.invite_message) inv.invite_message = body.invite_message;
       if (interviewer && interviewer.role_group === 'INTERNAL') interviewer.perm_interviewer = 1;
       saveStore(store);
     }
-    return send(200, { ok: true });
+    return send(200, { ok: true, status: inv?.status });
+  }
+
+  if (pathname === '/api/interviews/request' && req.method === 'POST') {
+    const post = store.postings.find(p => p.id === body.posting_id);
+    const prj = store.projects.find(p => p.id === (post?.project_id || body.project_id));
+    const interviewer = store.users.find(u => u.id === body.interviewer_user_id);
+    const candName = String(body.candidate_name || '').trim();
+    const prof = store.profiles.find(p => (body.candidate_profile_id && p.id === body.candidate_profile_id) || p.name === candName);
+
+    let inv = store.interviews.find(i =>
+      (body.interview_id && i.id === body.interview_id) ||
+      (body.posting_id && i.posting_id === body.posting_id && i.candidate_name === candName) ||
+      (candName && i.candidate_name === candName)
+    );
+
+    if (inv) {
+      inv.status = '인터뷰 예정';
+      inv.interview_date = body.interview_date || '2026-11-21 14:00';
+      inv.interview_method = body.interview_method || '화상(Zoom/Teams)';
+      inv.interviewer_user_id = body.interviewer_user_id || 'u_master';
+      inv.interviewer_name = interviewer ? interviewer.name : '조성현 상무';
+      inv.template_id = body.template_id || inv.template_id || 'tpl_pension_batch';
+      inv.invite_message = body.invite_message || '';
+    } else {
+      inv = {
+        id: 'int_' + Date.now(),
+        posting_id: post ? post.id : (body.posting_id || 'post_1'),
+        project_id: prj ? prj.id : (post?.project_id || 'prj_1'),
+        slot_id: post ? post.slot_id : 'slot_103',
+        candidate_profile_id: prof ? prof.id : null,
+        candidate_name: candName || '신규 지원자',
+        candidate_type: prof?.employment_type || body.candidate_type || '프리랜서',
+        job_title: prof?.job_title || body.job_title || '차장',
+        experience_years: Number(prof?.experience_years || body.experience_years || 9),
+        position_name: post ? post.role_name : (body.position_name || '선임개발'),
+        project_name: prj ? prj.name : (post ? post.title : '차세대 금융 프로젝트'),
+        candidate_phone: prof?.phone || body.candidate_phone || '010-0000-0000',
+        candidate_email: prof?.email || body.candidate_email || 'talent@zalwill.co.kr',
+        available_from: prof?.available_date || body.available_from || '2026-11-25',
+        recommender: body.recommender || '구인·소싱 인터뷰 요청',
+        desired_rate: Number(prof?.desired_rate || body.desired_rate || 980),
+        resume_summary: prof?.review_summary || body.resume_summary || '',
+        career_highlight: prof?.career_history?.[0]?.project || body.resume_summary || '',
+        tech_grade: prof?.tech_grade || body.tech_grade || post?.required_grade || '고급',
+        skills: prof?.skills || body.skills || post?.required_skills || ['Java', 'Spring Boot'],
+        domains: prof?.domains || body.domains || [post?.required_domain || '퇴직연금'],
+        status: '인터뷰 예정',
+        final_result: '',
+        interview_date: body.interview_date || '2026-11-21 14:00',
+        interview_method: body.interview_method || '화상(Zoom/Teams)',
+        interviewer_user_id: body.interviewer_user_id || 'u_master',
+        interviewer_name: interviewer ? interviewer.name : '조성현 상무',
+        template_id: body.template_id || 'tpl_pension_batch',
+        invite_message: body.invite_message || '',
+        checklist_results: [],
+        competency_scores: null,
+        interviewer_evaluations: [],
+        total_score: 0,
+        interviewer_opinion: '',
+        final_decision_note: '',
+        verified: Boolean(prof?.verified),
+        favorite: false,
+        created_at: new Date().toISOString().slice(0, 10)
+      };
+      store.interviews.unshift(inv);
+    }
+
+    if (interviewer && interviewer.role_group === 'INTERNAL') {
+      interviewer.perm_interviewer = 1;
+    }
+
+    store.notifications.unshift({
+      id: 'noti_' + Date.now(),
+      target_role: 'EXTERNAL',
+      type: 'INTERVIEW_INVITE',
+      title: `[인터뷰 요청 발송] ${post ? post.role_name : inv.position_name}`,
+      message: `${inv.candidate_name} 님에게 ${inv.interview_date} (${inv.interview_method}) 인터뷰 요청이 발송되었습니다. (면접관: ${inv.interviewer_name})`,
+      created_at: new Date().toISOString().slice(0, 16).replace('T', ' ')
+    });
+
+    saveStore(store);
+    return send(200, { ok: true, interview_id: inv.id, status: inv.status });
   }
 
   if (pathname === '/api/interviews/evaluate' && req.method === 'POST') {
     const inv = store.interviews.find(i => i.id === body.interview_id);
     const results = body.checklist_results || [];
-    const avgScore = results.length ? Number((results.reduce((a, c) => a + Number(c.score || 0), 0) / results.length).toFixed(1)) : 4.5;
+    const comp = body.competency_scores || null;
+    const qAvg = results.length ? (results.reduce((a, c) => a + Number(c.score || 0), 0) / results.length) : 4.5;
+    const compAvg = comp
+      ? ((Number(comp.technical || qAvg) + Number(comp.execution || qAvg) + Number(comp.communication || qAvg)) / 3)
+      : qAvg;
+    const avgScore = Number(((qAvg * 0.6) + (compAvg * 0.4)).toFixed(1));
+
     if (inv) {
       inv.checklist_results = results;
+      if (comp) {
+        inv.competency_scores = {
+          technical: Number(comp.technical || 4.5),
+          technical_note: comp.technical_note || '직무 핵심 기술 역량 검증 완료',
+          execution: Number(comp.execution || 4.5),
+          execution_note: comp.execution_note || '프로젝트 과업 수행 및 문제 해결 역량 검증',
+          communication: Number(comp.communication || 4.5),
+          communication_note: comp.communication_note || '현업 및 팀원 커뮤니케이션·협업 태도 검증'
+        };
+      }
       inv.total_score = avgScore;
-      inv.interviewer_opinion = body.interviewer_opinion;
-      inv.status = body.final_status || '면접진행완료';
-      const prof = store.profiles.find(p => p.id === inv.candidate_profile_id);
+      inv.interviewer_opinion = body.interviewer_opinion || inv.interviewer_opinion;
+
+      const evalAuthorId = currentUser?.id || inv.interviewer_user_id || 'u_master';
+      const evalAuthorName = currentUser?.name || inv.interviewer_name || '조성현 상무';
+      const evalAuthorRole = currentUser?.role_group === 'MASTER' ? '총괄 면접관' : currentUser?.role_group === 'MANAGER' ? '소싱·기술 면접관' : '기술 면접관(PL)';
+      const nowTime = new Date().toISOString().slice(0, 16).replace('T', ' ');
+      const existingEvals = Array.isArray(inv.interviewer_evaluations) ? inv.interviewer_evaluations.slice() : [];
+      const evalIdx = existingEvals.findIndex(e => e.interviewer_id === evalAuthorId || e.interviewer_name === evalAuthorName);
+      const newEvalEntry = {
+        interviewer_id: evalAuthorId,
+        interviewer_name: evalAuthorName,
+        role: evalAuthorRole,
+        score: avgScore,
+        comment: inv.interviewer_opinion,
+        date: nowTime
+      };
+      if (evalIdx >= 0) {
+        existingEvals[evalIdx] = newEvalEntry;
+      } else {
+        existingEvals.unshift(newEvalEntry);
+      }
+      inv.interviewer_evaluations = existingEvals;
+
+      const rawFinal = body.final_status || '평가 완료';
+      if (['최종선정', '선정', '보류', '불합격', '탈락'].includes(rawFinal)) {
+        inv.status = '최종 결과';
+        inv.final_result = (rawFinal === '최종선정' || rawFinal === '선정') ? '선정' : (rawFinal === '보류' ? '보류' : '불합격');
+        if (body.final_decision_note !== undefined) inv.final_decision_note = body.final_decision_note;
+        inv.decided_by = currentUser?.name || '조성현 상무';
+        inv.decided_at = new Date().toISOString().slice(0, 10);
+      } else {
+        inv.status = '평가 완료';
+        if (body.final_decision_note !== undefined) inv.final_decision_note = body.final_decision_note;
+      }
+
+      let prof = store.profiles.find(p => (inv.candidate_profile_id && p.id === inv.candidate_profile_id) || p.name === inv.candidate_name);
+      if (!prof && (inv.status === '평가 완료' || inv.status === '최종 결과')) {
+        const newProfId = inv.candidate_profile_id || ('p_' + Date.now());
+        inv.candidate_profile_id = newProfId;
+        prof = {
+          id: newProfId,
+          name: inv.candidate_name,
+          employment_type: inv.candidate_type || '프리랜서',
+          is_internal: 0,
+          tech_grade: inv.tech_grade || '고급',
+          experience_years: Number(inv.experience_years || 9),
+          birth_year: 1991,
+          phone: inv.candidate_phone || '010-0000-0000',
+          email: inv.candidate_email || 'talent@zalwill.co.kr',
+          education: '컴퓨터공학 학사',
+          certifications: ['정보처리기사'],
+          skills: inv.skills || ['Java', 'Spring Boot'],
+          domains: inv.domains || ['퇴직연금'],
+          availability_status: '즉시투입가능',
+          available_date: inv.available_from || '2026-11-25',
+          current_end_date: '',
+          desired_rate: Number(inv.desired_rate || 980),
+          contract_rate: 0,
+          rating: avgScore,
+          review_summary: inv.interviewer_opinion,
+          verified: (inv.final_result === '선정' || avgScore >= 4.0) ? 1 : 0,
+          resourced_count: 0,
+          parse_seconds: 55,
+          career_history: inv.career_highlight ? [{ project: inv.career_highlight, client: '주요 금융사', period: '2024 ~ 2026', role: inv.position_name || '선임개발', tech: (inv.skills || []).join(', ') }] : [],
+          interview_history: [],
+          updated_at: new Date().toISOString().slice(0, 10)
+        };
+        store.profiles.unshift(prof);
+      }
       if (prof) {
         prof.rating = avgScore;
-        prof.review_summary = `[인터뷰 ${inv.status}] ${body.interviewer_opinion}`;
-        if (inv.status === '최종선정' || avgScore >= 4.0) prof.verified = 1;
+        const resultLabel = inv.status === '최종 결과' ? `최종 ${inv.final_result}` : '인터뷰 평가완료';
+        prof.review_summary = `[${resultLabel} · ★${avgScore}] ${inv.interviewer_opinion}`;
+        if (inv.final_result === '선정' || avgScore >= 4.0) {
+          prof.verified = 1;
+          inv.verified = true;
+        }
+        prof.interview_history = Array.isArray(prof.interview_history) ? prof.interview_history : [];
+        prof.interview_history.unshift({
+          interview_id: inv.id,
+          project_id: inv.project_id,
+          project_name: inv.project_name || '',
+          position_name: inv.position_name || '',
+          interview_date: inv.interview_date,
+          interviewer_name: evalAuthorName,
+          total_score: avgScore,
+          competency_scores: inv.competency_scores,
+          status: inv.status,
+          final_result: inv.final_result || '',
+          opinion: inv.interviewer_opinion,
+          final_decision_note: inv.final_decision_note || '',
+          recorded_at: new Date().toISOString().slice(0, 10)
+        });
       }
-      if (inv.status === '최종선정') {
+      if (inv.status === '최종 결과' && inv.final_result === '선정') {
         const prj = store.projects.find(p => p.id === inv.project_id);
         const slot = prj?.to_slots.find(s => s.slot_id === inv.slot_id);
         if (slot) {
@@ -2110,7 +2450,94 @@ module.exports = async (req, res) => {
       }
       saveStore(store);
     }
-    return send(200, { ok: true, avgScore, status: body.final_status });
+    return send(200, { ok: true, avgScore, status: inv?.status, final_result: inv?.final_result });
+  }
+
+  if (pathname === '/api/interviews/final-decision' && req.method === 'POST') {
+    const inv = store.interviews.find(i => i.id === body.interview_id);
+    if (inv) {
+      const decision = body.final_result || '선정'; // '선정' | '보류' | '불합격'
+      inv.status = '최종 결과';
+      inv.final_result = decision;
+      inv.final_decision_note = body.final_decision_note || inv.final_decision_note || '';
+      inv.decided_by = currentUser?.name || '조성현 상무';
+      inv.decided_at = new Date().toISOString().slice(0, 10);
+
+      const scoreVal = Number(inv.total_score || 0);
+      let prof = store.profiles.find(p => (inv.candidate_profile_id && p.id === inv.candidate_profile_id) || p.name === inv.candidate_name);
+      if (!prof && body.sync_to_profile_db !== false) {
+        const newProfId = inv.candidate_profile_id || ('p_' + Date.now());
+        inv.candidate_profile_id = newProfId;
+        prof = {
+          id: newProfId,
+          name: inv.candidate_name,
+          employment_type: inv.candidate_type || '프리랜서',
+          is_internal: 0,
+          tech_grade: inv.tech_grade || '고급',
+          experience_years: Number(inv.experience_years || 9),
+          birth_year: 1991,
+          phone: inv.candidate_phone || '010-0000-0000',
+          email: inv.candidate_email || 'talent@zalwill.co.kr',
+          education: '컴퓨터공학 학사',
+          certifications: ['정보처리기사'],
+          skills: inv.skills || ['Java', 'Spring Boot'],
+          domains: inv.domains || ['퇴직연금'],
+          availability_status: '즉시투입가능',
+          available_date: inv.available_from || '2026-11-25',
+          current_end_date: '',
+          desired_rate: Number(inv.desired_rate || 980),
+          contract_rate: decision === '선정' ? Number(inv.desired_rate || 980) : 0,
+          rating: scoreVal,
+          review_summary: `[최종 ${decision} · ★${scoreVal}] ${inv.final_decision_note || inv.interviewer_opinion}`,
+          verified: (decision === '선정' || (decision === '보류' && scoreVal >= 4.0)) ? 1 : 0,
+          resourced_count: decision === '선정' ? 1 : 0,
+          parse_seconds: 55,
+          career_history: inv.career_highlight ? [{ project: inv.career_highlight, client: '주요 금융사', period: '2024 ~ 2026', role: inv.position_name || '선임개발', tech: (inv.skills || []).join(', ') }] : [],
+          interview_history: [],
+          updated_at: new Date().toISOString().slice(0, 10)
+        };
+        store.profiles.unshift(prof);
+      }
+      if (prof) {
+        if (scoreVal > 0) prof.rating = scoreVal;
+        prof.review_summary = `[최종 ${decision}${scoreVal > 0 ? ` · ★${scoreVal}` : ''}] ${inv.final_decision_note || inv.interviewer_opinion}`;
+        if (decision === '선정' || (decision === '보류' && scoreVal >= 4.0)) {
+          prof.verified = 1;
+          inv.verified = true;
+        }
+        prof.interview_history = Array.isArray(prof.interview_history) ? prof.interview_history : [];
+        prof.interview_history.unshift({
+          interview_id: inv.id,
+          project_id: inv.project_id,
+          project_name: inv.project_name || '',
+          position_name: inv.position_name || '',
+          interview_date: inv.interview_date,
+          interviewer_name: inv.interviewer_name || '조성현 상무',
+          total_score: scoreVal,
+          competency_scores: inv.competency_scores,
+          status: inv.status,
+          final_result: decision,
+          opinion: inv.interviewer_opinion,
+          final_decision_note: inv.final_decision_note,
+          decided_by: inv.decided_by,
+          recorded_at: inv.decided_at
+        });
+      }
+
+      if (decision === '선정' && body.assign_to_slot !== false) {
+        const prj = store.projects.find(p => p.id === inv.project_id);
+        const slot = prj?.to_slots.find(s => s.slot_id === inv.slot_id);
+        if (slot) {
+          slot.assigned_profile_id = inv.candidate_profile_id;
+          slot.assigned_name = `${inv.candidate_name} (${inv.candidate_type})`;
+          slot.status = '확정';
+        }
+        const post = store.postings.find(p => p.id === inv.posting_id);
+        if (post) post.status = 'CLOSED';
+      }
+      saveStore(store);
+    }
+    return send(200, { ok: true, status: inv?.status, final_result: inv?.final_result, profile_id: inv?.candidate_profile_id });
   }
 
   if (pathname === '/api/question-templates' && req.method === 'POST') {
