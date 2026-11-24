@@ -2205,11 +2205,14 @@ module.exports = async (req, res) => {
   }
 
   if (pathname === '/api/postings/duplicate' && req.method === 'POST') {
-    const post = store.postings.find(p => p.id === body.posting_id);
+    const postIdx = store.postings.findIndex(p => p.id === body.posting_id);
+    const post = postIdx >= 0 ? store.postings[postIdx] : null;
+    let cloned = null;
     if (post) {
-      const cloned = {
+      cloned = {
         ...post,
         id: 'post_' + Date.now(),
+        duplicated_from_id: post.id,
         role_name: `${post.role_name} (추가모집)`,
         title: `${post.title} (추가모집)`,
         status: 'OPEN',
@@ -2221,10 +2224,19 @@ module.exports = async (req, res) => {
       delete cloned.close_reason;
       delete cloned.close_note;
       delete cloned.closed_at;
-      store.postings.unshift(cloned);
+      store.postings.splice(postIdx + 1, 0, cloned);
       saveStore(store);
     }
-    return send(201, { ok: true });
+    return send(201, { ok: true, cloned_id: cloned?.id || null });
+  }
+
+  if (pathname === '/api/postings/delete' && req.method === 'POST') {
+    const postIdx = store.postings.findIndex(p => p.id === body.posting_id);
+    if (postIdx >= 0) {
+      store.postings.splice(postIdx, 1);
+      saveStore(store);
+    }
+    return send(200, { ok: true });
   }
 
   if (pathname === '/api/postings/target-sourcing' && req.method === 'POST') {

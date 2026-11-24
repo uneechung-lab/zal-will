@@ -9561,7 +9561,7 @@ function getFilteredAndSortedPostings() {
   });
 
   const sortBy = sf.sortBy || 'URGENT';
-  return [...filtered].sort((a, b) => {
+  const sorted = [...filtered].sort((a, b) => {
     // Always keep OPEN postings above CLOSED unless filtered
     if (a.status !== b.status) return a.status === 'OPEN' ? -1 : 1;
     const ma = getPostingEnrichedMeta(a);
@@ -9584,6 +9584,26 @@ function getFilteredAndSortedPostings() {
     // RECENT
     return String(b.created_at || '').localeCompare(String(a.created_at || ''));
   });
+
+  // 복제된 공고는 원본 공고 바로 옆(다음 순서)에 배치되도록 정렬 보정
+  const withDuplicatesAdjacent = [];
+  const dupChildrenMap = new Map();
+  sorted.forEach(item => {
+    if (item.duplicated_from_id && sorted.some(s => s.id === item.duplicated_from_id)) {
+      if (!dupChildrenMap.has(item.duplicated_from_id)) dupChildrenMap.set(item.duplicated_from_id, []);
+      dupChildrenMap.get(item.duplicated_from_id).push(item);
+    }
+  });
+  sorted.forEach(item => {
+    if (item.duplicated_from_id && dupChildrenMap.has(item.duplicated_from_id)) {
+      return;
+    }
+    withDuplicatesAdjacent.push(item);
+    if (dupChildrenMap.has(item.id)) {
+      withDuplicatesAdjacent.push(...dupChildrenMap.get(item.id));
+    }
+  });
+  return withDuplicatesAdjacent;
 }
 
 function openNewPostingModal() {
@@ -9636,9 +9656,10 @@ function renderSourcingPostingCard(post, permissions, currentUser) {
   const meta = getPostingEnrichedMeta(post);
   const isClosed = post.status !== 'OPEN';
   const closedBadgeLabel = post.close_reason === 'STOPPED' ? '공고종료' : '충원완료';
+  const isJustDuplicated = state.justDuplicatedPostingId === post.id;
 
   return `
-    <article class="zal-feed-card src-posting-card ${meta.isUrgent ? 'is-urgent' : ''} ${isClosed ? 'is-closed' : ''}" onclick="openPostingDetailModal('${post.id}')">
+    <article data-posting-id="${post.id}" class="zal-feed-card src-posting-card ${meta.isUrgent ? 'is-urgent' : ''} ${isClosed ? 'is-closed' : ''} ${isJustDuplicated ? 'is-just-duplicated' : ''}" onclick="openPostingDetailModal('${post.id}')">
       <!-- [1] 상단 컨텍스트 & 배지 바 (등급/도메인/긴급도 D-Day 컬러 배지화) -->
       <div class="src-card-top-bar">
         <div class="src-card-badges-row">
@@ -9696,6 +9717,16 @@ function renderSourcingPostingCard(post, permissions, currentUser) {
           ${post.status === 'OPEN' && permissions.can_manage_postings && currentUser?.role_group !== 'MASTER' ? `
             <button type="button" class="btn btn-outline btn-sm" style="display:inline-flex; align-items:center; gap:5px; font-weight:600;" onclick="openEasyApplyModal('${post.id}')">
               ${svgIcon('edit', 13)} ${currentUser?.role_group === 'INTERNAL' ? '사내 지인 추천' : '간편 지원하기'}
+            </button>
+          ` : ''}
+          ${permissions.can_manage_postings ? `
+            <button
+              type="button"
+              class="src-safe-close-btn"
+              onclick="openDeletePostingConfirmLayer('${post.id}')"
+              title="구인 공고 삭제"
+            >
+              공고삭제
             </button>
           ` : ''}
           ${permissions.can_manage_postings ? (post.status === 'OPEN' ? `
@@ -9783,8 +9814,9 @@ function renderSourcingListTableHtml(filteredPostings, permissions, currentUser)
           ${filteredPostings.map(post => {
             const meta = getPostingEnrichedMeta(post);
             const closedBadgeLabel = post.close_reason === 'STOPPED' ? '공고종료' : '충원완료';
+            const isJustDuplicated = state.justDuplicatedPostingId === post.id;
             return `
-              <tr onclick="openPostingDetailModal('${post.id}')" style="cursor:pointer;">
+              <tr data-posting-id="${post.id}" class="${isJustDuplicated ? 'is-just-duplicated' : ''}" onclick="openPostingDetailModal('${post.id}')" style="cursor:pointer;">
                 <td>
                   <div style="display:flex; flex-direction:column; align-items:flex-start; gap:5px;">
                     <span class="src-status-badge ${post.status === 'OPEN' ? 'open' : 'filled'}">
@@ -9849,6 +9881,11 @@ function renderSourcingListTableHtml(filteredPostings, permissions, currentUser)
                       ` : ''}
                     </div>
                     <div style="display:inline-flex; align-items:center; gap:5px;">
+                      ${permissions.can_manage_postings ? `
+                        <button type="button" class="src-safe-close-btn" style="height:28px; padding:0 9px; font-size:11.5px;" onclick="openDeletePostingConfirmLayer('${post.id}')">
+                          공고삭제
+                        </button>
+                      ` : ''}
                       ${permissions.can_manage_postings ? (post.status === 'OPEN' ? `
                         <button type="button" class="src-safe-close-btn" style="height:28px; padding:0 9px; font-size:11.5px;" onclick="openPostingCloseConfirmModal('${post.id}')">
                           마감·종료
@@ -10901,8 +10938,63 @@ async function submitEditPostingModal(e, postingId) {
 
 async function duplicatePosting(postingId) {
   state.sourcingFilters.openMenuPostingId = null;
-  await apiCall('/api/postings/duplicate', 'POST', { posting_id: postingId });
+  const res = await apiCall('/api/postings/duplicate', 'POST', { posting_id: postingId });
+  state.justDuplicatedPostingId = res?.cloned_id || null;
   showToast('📋 구인 공고가 복제되어 추가 모집 공고로 등록되었습니다.');
+  await loadState();
+  if (state.justDuplicatedPostingId) {
+    const targetId = state.justDuplicatedPostingId;
+    requestAnimationFrame(() => {
+      const dupEl = document.querySelector(`[data-posting-id="${targetId}"]`);
+      if (dupEl) {
+        dupEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    });
+    setTimeout(() => {
+      if (state.justDuplicatedPostingId === targetId) {
+        state.justDuplicatedPostingId = null;
+      }
+      document.querySelectorAll(`[data-posting-id="${targetId}"]`).forEach(el => {
+        el.classList.remove('is-just-duplicated');
+      });
+    }, 2200);
+  }
+}
+
+function openDeletePostingConfirmLayer(postingId) {
+  closeQuestionDeleteConfirmLayer();
+  const post = (state.data?.postings || []).find(p => p.id === postingId);
+  if (!post) return;
+  const meta = getPostingEnrichedMeta(post);
+
+  const backdrop = document.createElement('div');
+  backdrop.id = 'zalLayerAlertBackdrop';
+  backdrop.className = 'zal-layer-alert-backdrop';
+  backdrop.innerHTML = `
+    <div class="zal-layer-alert-card" onclick="event.stopPropagation();">
+      <div class="zal-layer-alert-head">
+        <div class="zal-layer-alert-icon">${svgIcon('trash', 16)}</div>
+        <h4 class="zal-layer-alert-title">구인 공고 삭제 확인</h4>
+      </div>
+      <div class="zal-layer-alert-desc">
+        <strong>'${meta.cleanTitle}'</strong> 공고를 삭제하시겠습니까?<br/>삭제된 공고는 목록에서 즉시 제거됩니다.
+      </div>
+      <div class="zal-layer-alert-actions">
+        <button type="button" class="btn btn-outline" style="height:36px; padding:0 16px;" onclick="closeQuestionDeleteConfirmLayer()">취소</button>
+        <button type="button" class="btn btn-primary" style="height:36px; padding:0 16px;" onclick="confirmDeletePosting('${post.id}')">확인</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(backdrop);
+}
+
+async function confirmDeletePosting(postingId) {
+  closeQuestionDeleteConfirmLayer();
+  await apiCall('/api/postings/delete', 'POST', { posting_id: postingId });
+  if (state.selectedPostingId === postingId) {
+    state.selectedPostingId = null;
+  }
+  showToast('구인 공고가 삭제되었습니다.');
   await loadState();
 }
 
